@@ -1,0 +1,87 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}Youtube Scrapper{% endblock %}
+
+{% include 'nav.html' %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 text-center">
+        <h1>Hello, discoverer !</h1>
+      </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
+        <h3>Search</h3>
+        <p>Please see documentation first on :
+          <a href="https://developers.google.com/youtube/v3/docs/search">google.com/youtube/v3/docs/search</a>
+        </p>
+      </div>
+      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
+        <h3>Video-info</h3>
+        <p>Please see documentation first on :
+          <a href="https://developers.google.com/youtube/v3/docs/videos">google.com/youtube/v3/docs/videos</a>
+        </p>
+      </div>
+      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
+        <h3>Comments</h3>
+        <p>Please see documentation first on :
+          <a href="https://developers.google.com/youtube/v3/docs/comments">google.com/youtube/v3/docs/comments</a>
+        </p>
+      </div>
+      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
+        <h3>Captions</h3>
+        <p>Please see documentation first on :
+          <a href="https://developers.google.com/youtube/v3/docs/captions">google.com/youtube/v3/docs/captions</a>
+        </p>
+      </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+      <div class="col-md-offset-2 col-md-8 ">
+        <h2>How it works ?</h2>
+        <ol>
+          <li>Explore video info individualy and look for what you might be interested</li>
+          <li>Unzoom and request a query as a list of vidéo</li>
+          <li>Export and aggregate information</li>
+        </ol>
+      </div>
+    </div>
+
+    <hr/>
+
+    <div class="row">
+      <div class="col-md-offset-2 col-md-8 ">
+        <h3>Know limitations :</h3>
+        <ul>
+          <li>Youtube results (api & browser) can only provide ~500 results (to get more it need to be outdated every 500 results. see :
+            <br>
+             <a href="http://stackoverflow.com/questions/27500231/how-can-get-all-results-from-youtube-api-search-api-response">how-can-get-all-results-from-youtube-api-search-api-response</a>
+             )</li>
+          <br>
+          <li>Automatic captions seems to cannot be retrieve via API. The author must havec activated CC on his video. It need to get a little tricky with xml version like :
+            <a href="http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M">http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M</a>
+            <br>
+            For more see :
+            <a href="http://stackoverflow.com/questions/23665343/get-closed-caption-cc-for-youtube-video">get-closed-caption-cc-for-youtube-video</a>
+            <br>
+            or :
+            <a href="http://stackoverflow.com/questions/14013431/extract-automatic-captions-from-youtube-video">extract-automatic-captions-from-youtube-video</a>
+          </li>
+          <br>
+          <li>Comments get only one hierachical level</li>
+          <br>
+          <li>Search provide playlist incorporated in results as a video</li>
+        </ul>
+
+
+      </div>
+    </div>
+
+  </div>
+{% endblock %}

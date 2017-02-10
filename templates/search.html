@@ -1,0 +1,53 @@
+{% extends "bootstrap/base.html" %}
+{% include 'nav.html' %}
+{% block content %}
+
+<div class="container">
+  <div class="col-md-8 col-md-offset-2">
+
+    <h2>Search</h2>
+
+    {% if message %}
+      {{ message }}
+    {% endif %}
+
+    <hr>
+
+    <form action="/search" method="POST">
+      <div class="form-group">
+        <h4>Query</h4>
+        <input type="text" name="query" class="form-control" placeholder="Search">
+        <hr/>
+
+        <h4>Max results</h4>
+        <input type="number" name="maxResults" class="form-control" placeholder="50" min="1" max="50">
+        <hr/>
+
+        <h4>Language</h4>
+        <p>see : <a href="https://en.wikipedia.org/wiki/ISO_639-1">wikipeda</a></p>
+        <input type="text" name="language" class="form-control" placeholder="fr">
+        <hr/>
+
+        <h4>Ranking</h4>
+        <select class="form-control" name="ranking">
+          <option>relevance</option>
+          <option>date</option>
+          <option>rating</option>
+          <option>title</option>
+          <option>viewCount</option>
+          <option>videoCount</option>
+        </select>
+        <hr/>
+
+        <h4>Part</h4>
+        <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+        <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet">snippet</label>
+        <hr/>
+
+        <button type="submit" class="btn btn-default">Submit</button>
+
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

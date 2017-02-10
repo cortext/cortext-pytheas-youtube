@@ -1,0 +1,6 @@
+Flask
+Flask-Bootstrap
+Flask-PyMongo
+pymongo
+requests
+pprint
