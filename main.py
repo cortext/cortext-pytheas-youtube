@@ -13,9 +13,10 @@ from flask import request
 from flask import session
 from flask_bootstrap import Bootstrap
 from flask_pymongo import PyMongo
-from bson import json_util, ObjectId
+from bson import json_util
 
 from youtube import YouTube
+from youtube import IO
 
 def create_app():
     app = Flask(__name__)
@@ -34,6 +35,7 @@ data_dir = 'data/'
 def home():
     return render_template('home.html')
 
+
 @app.route('/video_info', methods = ['POST', 'GET'])
 def video_info():
     if request.method == 'POST':
@@ -50,10 +52,57 @@ def video_info():
             api = YouTube(api_key=api_key)
             video_result = api.get_search('videos', id=id_video, part=part)
             video_result_string = json.dumps(video_result, sort_keys = True, indent = 2, separators = (',', ': '))
-            return render_template('results.html', video_result=video_result, string=video_result_string)
+            return render_template('results.html', result=video_result, string=video_result_string)
         else:
             return render_template('video_info.html', message='api key not set')
     return render_template('video_info.html')
+
+
+@app.route('/channel_info', methods = ['POST', 'GET'])
+def channel_info():
+    if request.method == 'POST':
+        if 'api_key' in session:
+            id_channel = request.form.get('unique_id_channel')
+            if 'youtube.com/user/' in id_channel:
+                if 'https':
+                    id_channel = id_channel.replace('https://www.youtube.com/user/', '')
+                else:
+                    id_channel = id_channel.replace('http://www.youtube.com/user/', '')
+            print(id_channel)
+            part = ', '.join(request.form.getlist('part'))
+            api_key = session['api_key']
+            api = YouTube(api_key=api_key)
+            channel_result = api.get_search('channels', forUsername=id_channel, part=part)
+            channel_result_string = json.dumps(channel_result, sort_keys = True, indent = 2, separators = (',', ': '))
+            print(channel_result_string)
+            return render_template('results.html', result=channel_result, string=channel_result_string)
+            # return jsonify(channel_result)
+        else:
+            return render_template('channel_info.html', message='api key not set')
+    return render_template('channel_info.html')
+
+
+@app.route('/playlist_info', methods = ['POST', 'GET'])
+def playlist_info():
+    if request.method == 'POST':
+        if 'api_key' in session:
+            id_playlist = request.form.get('unique_id_playlist')
+            # if 'youtube.com/watch?v=' in id_playlist:
+            #     if 'https':
+            #         id_playlist = id_playlist.replace('https://www.youtube.com/watch?v=', '')
+            #     else:
+            #         id_playlist = id_playlist.replace('http://www.youtube.com/watch?v=', '')
+            print(id_playlist)
+            part = ', '.join(request.form.getlist('part'))
+            api_key = session['api_key']
+            api = YouTube(api_key=api_key)
+            playlist_info = api.get_search('playlists', id=id_playlist, part=part)
+            pp.pprint(playlist_info)
+            playlist_info_string = json.dumps(playlist_info, sort_keys = True, indent = 2, separators = (',', ': '))
+            return render_template('results.html', result=playlist_info, string=playlist_info_string)
+        else:
+            return render_template('playlist_info.html', message='api key not set')
+    return render_template('playlist_info.html')
 
 
 @app.route('/search', methods = ['POST', 'GET'])
@@ -124,14 +173,9 @@ def search():
 @app.route('/process_results')
 def process_results():
     ## prepare dir & files
-    path_query = data_dir + session['request']['query'] + '_' + session['request']['language'] + '_' + session['request']['ranking'] + '/'
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-        if not os.path.exists(path_query):
-            os.makedirs(path_query)
-    else:
-        if not os.path.exists(path_query):
-            os.makedirs(path_query)
+    path_query = session['request']['query'] + '_' + session['request']['language'] + '_' + session['request']['ranking'] + '/'
+    IO().create_dir(path_query)
+
     ## build request based on session
     session['counter'] = 0
     api = YouTube(api_key=session['api_key'])
@@ -151,10 +195,11 @@ def process_results():
         'etag' : search_results['etag'],
         'kind' : search_results['kind']
     }
-    with open(path_query + 'meta_info.txt', 'w') as outfile:
-        json.dump(meta_inf, outfile)
-    with open(path_query + name_file, 'w') as outfile:
-        json.dump(search_results['items'], outfile)
+    meta_info_file = path_query + 'meta_info.txt'
+    search_results_file = path_query + name_file
+    IO().save_json(meta_info_file, meta_inf)
+    IO().save_json(search_results_file, search_results['items'])
+
     ## mongo Insert
     ytb_db = mongo.db
     ## avoid duplicates
@@ -194,15 +239,15 @@ def process_results():
         if not search_results['items']:
             return render_template('download_process.html', message='ok it is done')
         ## save items
-        with open(path_query + name_file, 'w') as outfile:
-            json.dump(search_results['items'], outfile)
+        search_results_file = path_query + name_file
+        IO().save_json(search_results_file, search_results['items'])
+
         ## insert video-info
         for each in search_results['items']:
             each.update({'query_id' : str(uid)})
             ytb_db.videos.insert_one(each)
 
     return render_template('download_process.html', message='ok it is done')
-
 
 
 @app.route('/aggregate_results', methods = ['POST', 'GET'])
@@ -226,30 +271,17 @@ def aggregate_results():
                 api = YouTube(api_key=api_key)
 
                 ## Get list of video from list of vid (search)
-                items_videoId = []
-                items_playlist = []
-                for json_file in os.listdir(path_dir):
-                    if any(word in json_file for word in ['comments', 'captions', 'meta_info.txt']):
-                        continue
-                    path_file = path_dir + '/' + json_file
-                    with open(path_file, 'r') as json_data:
-                        search_data = json.load(json_data)
-                        for item in search_data:
-                            if 'videoId' in item['id']:
-                                id_video = item['id']['videoId']
-                                items_videoId.append(id_video)
-                            elif 'playlistId'in item['id']:
-                                id_playlist = item['id']['playlistId']
-                                items_playlist.append(id_playlist)
+                items = IO.list_file(path_dir)
+                items_videoId = items['items_videoId']
+                items_playlist = items['items_playlist']
+
                 print(query_name)
                 print('count of video :', len(items_videoId))
                 print('count of playlist :', len(items_playlist))
-
                 ############################
                 if 'comments' in options_api:
-                    path_comments = path_dir + '/comments/'
-                    if not os.path.exists(path_comments):
-                        os.makedirs(path_comments)
+                    path_comments = dir_to_check + '/comments/'
+                    IO().create_dir(path_comments)
                     i = 0
                     ## prepare mongopy Cursor
                     ytb_db = mongo.db
@@ -275,9 +307,9 @@ def aggregate_results():
                             )
                             ## save file
                             each_sanitized = json.loads(json_util.dumps(each['snippet']))
-                            with open(path_comments + str(i) + '_commentThread.json', 'w') as outfile:
-                                json.dump(each_sanitized, outfile)
-                                i += 1
+                            comments_file = path_comments + str(i) + '_commentThread.json'
+                            IO().save_json(comments_file, each_sanitized)
+                            i += 1
                         ## Loop and save
                         while 'nextPageToken' in commentThreads_result:
                             commentThreads_result = api.get_search(
@@ -298,16 +330,14 @@ def aggregate_results():
                                 )
                                 ## save file
                                 each_sanitized = json.loads(json_util.dumps(each['snippet']))
-                                with open(path_comments + str(i) + '_commentThread.json', 'w') as outfile:
-                                    json.dump(each_sanitized, outfile)
-                                    i += 1
+                                comments_file = path_comments + str(i) + '_commentThread.json'
+                                IO().save_json(comments_file, each_sanitized)
+                                i += 1
                         print(i)
-
                 ############################
                 if 'captions' in options_api:
                     path_captions = path_dir + '/captions/'
-                    if not os.path.exists(path_captions):
-                        os.makedirs(path_captions)
+                    IO().create_dir(path_captions)
                     ## for each video loop to captions
                     for id_video in items_videoId:
                         captions_result = api.get_search(
@@ -370,6 +400,8 @@ def reset():
 
 
 if __name__ == '__main__':
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
     app.secret_key = os.urandom(24)
     app.run(debug=True)
     session['api_key'] = ''
