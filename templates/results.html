@@ -1,10 +1,8 @@
-{% extends "bootstrap/base.html" %}
-{% include 'nav.html' %}
+{% extends "base.html" %}
+
 {% block content %}
-
-
 <div class="container">
-    {% if video_result is defined %}
+    {% if result %}
       <div class="col-md-7">
         <pre>{{ string }}</pre>
       </div>
@@ -13,13 +11,13 @@
 
         <h3>Video info - not item</h3>
         <ul>
-          <li>{{ video_result['etag']|safe }}</li>
-          <li>{{ video_result['pageInfo']|safe }}</li>
-          <li>{{ video_result['kind']|safe }}</li>
+          <li>{{ result['etag']|safe }}</li>
+          <li>{{ result['pageInfo']|safe }}</li>
+          <li>{{ result['kind']|safe }}</li>
         </ul>
 
         <h3>Item info</h3>
-        {% for  dict_item in video_result['items'] %}
+        {% for  dict_item in result['items'] %}
           <ul>
             {% for subkey, subvalue in dict_item.items() %}
               <li>{{ subkey }}</li>
@@ -47,7 +45,7 @@
   {% elif search_results is defined %}
     <div class="row">
       <ul class="pagination">
-        {% if video_result is defined %}
+        {% if result is defined %}
         {% elif counter > 0 %}
           <li>
             <a href="?prevPageToken={{ prev }}"> Prev </a>

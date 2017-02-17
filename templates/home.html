@@ -1,7 +1,4 @@
-{% extends "bootstrap/base.html" %}
-{% block title %}Youtube Scrapper{% endblock %}
-
-{% include 'nav.html' %}
+{% extends "base.html" %}
 
 {% block content %}
   <div class="container">
@@ -14,29 +11,9 @@
     <hr/>
 
     <div class="row">
-      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
-        <h3>Search</h3>
-        <p>Please see documentation first on :
-          <a href="https://developers.google.com/youtube/v3/docs/search">google.com/youtube/v3/docs/search</a>
-        </p>
-      </div>
-      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
-        <h3>Video-info</h3>
-        <p>Please see documentation first on :
-          <a href="https://developers.google.com/youtube/v3/docs/videos">google.com/youtube/v3/docs/videos</a>
-        </p>
-      </div>
-      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
-        <h3>Comments</h3>
-        <p>Please see documentation first on :
-          <a href="https://developers.google.com/youtube/v3/docs/comments">google.com/youtube/v3/docs/comments</a>
-        </p>
-      </div>
-      <div class="col-md-3 col-sm-3 col-xs-6 text-center">
-        <h3>Captions</h3>
-        <p>Please see documentation first on :
-          <a href="https://developers.google.com/youtube/v3/docs/captions">google.com/youtube/v3/docs/captions</a>
-        </p>
+      <div class="col-md-12 col-sm-12 col-xs-12 text-center">
+        <h3>Please see Youtube API documentation first :</h3>
+        <a class="btn btn-primary" href="https://developers.google.com/youtube/v3/docs/" role="button">Documentation here</a>
       </div>
     </div>
 
@@ -82,6 +59,8 @@
 
       </div>
     </div>
-
   </div>
-{% endblock %}
+
+
+
+{% endblock  %}

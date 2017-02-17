@@ -6,9 +6,11 @@
       </div>
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
-          <li {%- if request.path == "/video_info" %} class="active"{% endif %}><a href="/video_info">1. Get video info</a></li>
-          <li {%- if request.path == "/search" %} class="active"{% endif %}><a href="/search">2. Search </a></li>
-          <li {%- if request.path == "/aggregate_results" %} class="active"{% endif %}><a href="/aggregate_results">3. Aggregate results</a></li>
+          <li {%- if request.path == "/video_info" %} class="active"{% endif %}><a href="/video_info">Video info</a></li>
+          <li {%- if request.path == "/channel_info" %} class="active"{% endif %}><a href="/channel_info">Channel infos</a></li>
+          <li {%- if request.path == "/playlist_info" %} class="active"{% endif %}><a href="/playlist_info">Playlist infos</a></li>
+          <li {%- if request.path == "/search" %} class="active"{% endif %}><a href="/search">Search </a></li>
+          <li {%- if request.path == "/aggregate_results" %} class="active"{% endif %}><a href="/aggregate_results">Aggregate results</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <li {%- if request.path == "/config" %} class="active"{% endif %}><a href="/config">Settings</a></li>
