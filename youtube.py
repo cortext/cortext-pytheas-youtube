@@ -30,7 +30,8 @@ class YouTube:
         kwargs = json.dumps(kwargs)
         kwargs = json.loads(kwargs)
         url = self.api_base_url+endpoint
-        # print(kwargs)
+        print(kwargs)
+        print(url)
         try:
             req = requests.get(url, kwargs)
         except requests.exceptions.RequestException as e:
@@ -40,49 +41,6 @@ class YouTube:
 
     def get_comments(self, id_video):
         # Get list of video from list of vid (search)
-
-
-        # print(len(items_videoId))
-        ###################################
-        # if 'comments' in options_api:
-        #     path_comments = path_dir + '/comments/'
-        #     if not os.path.exists(path_comments):
-        #         os.makedirs(path_comments)
-        #     print(path_comments)
-        #     i = 0
-        #     # for each video loop to comments
-        #     for id_video in items_videoId:
-        #         commentThreads_result = api.get_search(
-        #             'commentThreads',
-        #             videoId=id_video,
-        #             part='id, replies, snippet'
-        #         )
-        #         # Check if error (eg unactivated comments)
-        #         if 'error' in commentThreads_result:
-        #             disabled_comments = commentThreads_result['error']['errors'][0]['reason']
-        #             if 'commentsDisabled' in disabled_comments:
-        #                 continue
-        #         # get OneByOne commentThreads & save json
-        #         for key, val in commentThreads_result.items():
-        #             if key == 'items':
-        #                 for item in val:
-        #                     with open(path_comments + str(i) + '_commentThread.json', 'w') as td:
-        #                         json.dump(item, td)
-        #                         i += 1
-        #         # Loop and save
-        #         while 'nextPageToken' in commentThreads_result:
-        #             commentThreads_result = api.get_search(
-        #                 'commentThreads',
-        #                 videoId=id_video,
-        #                 part='id, replies, snippet',
-        #                 pageToken=commentThreads_result['nextPageToken']
-        #             )
-        #             for key, val in commentThreads_result.items():
-        #                 if key == 'items':
-        #                     for item in val:
-        #                         with open(path_comments + str(i) + '_commentThread.json', 'w') as td:
-        #                             json.dump(item, td)
-        #                             i += 1
         return
 
         #/* Alternative approach with new built in paginateResults function */
@@ -180,7 +138,6 @@ class IO:
     def process(path):
         return
 
-
 class Mongo:
     data_db = "youtube"
 
@@ -200,9 +157,6 @@ class Mongo:
             each.update({'query_id' : str(uid)})
             ytb_db.videos.insert_one(each)
         return
-
-
-
 
 
 # class JSONEncoder(json.JSONEncoder):

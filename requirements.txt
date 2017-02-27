@@ -4,3 +4,4 @@ Flask-PyMongo
 pymongo
 requests
 pprint
+furl

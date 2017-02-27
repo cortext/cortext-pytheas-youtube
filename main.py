@@ -11,9 +11,12 @@ from flask import jsonify
 from flask import render_template
 from flask import request
 from flask import session
+from flask import send_file
+
 from flask_bootstrap import Bootstrap
 from flask_pymongo import PyMongo
 from bson import json_util
+from furl import furl
 
 from youtube import YouTube
 from youtube import IO
@@ -24,6 +27,7 @@ def create_app():
         TEMPLATES_AUTO_RELOAD = True
     )
     app.config['MONGO_DBNAME'] = 'youtube'
+    app._static_folder = 'static/'
     Bootstrap(app)
     return app
 
@@ -35,6 +39,13 @@ data_dir = 'data/'
 def home():
     return render_template('home.html')
 
+@app.route('/getCSV') # this is a job for GET, not POST
+def getCSV(data):
+
+    return send_file('outputs/Adjacency.csv',
+                     mimetype='text/csv',
+                     attachment_filename='Adjacency.csv',
+                     as_attachment=True)
 
 @app.route('/video_info', methods = ['POST', 'GET'])
 def video_info():
@@ -42,11 +53,10 @@ def video_info():
         if 'api_key' in session:
             id_video = request.form.get('unique_id_video')
             if 'youtube.com/watch?v=' in id_video:
-                if 'https':
+                if 'https' in id_video:
                     id_video = id_video.replace('https://www.youtube.com/watch?v=', '')
                 else:
                     id_video = id_video.replace('http://www.youtube.com/watch?v=', '')
-            print(id_video)
             part = ', '.join(request.form.getlist('part'))
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
@@ -63,20 +73,19 @@ def channel_info():
     if request.method == 'POST':
         if 'api_key' in session:
             id_channel = request.form.get('unique_id_channel')
-            if 'youtube.com/user/' in id_channel:
-                if 'https':
-                    id_channel = id_channel.replace('https://www.youtube.com/user/', '')
+            if 'youtube.com/channel/' in id_channel:
+                if 'https' in id_channel:
+                    id_channel = id_channel.replace('https://www.youtube.com/channel/', '')
                 else:
-                    id_channel = id_channel.replace('http://www.youtube.com/user/', '')
-            print(id_channel)
+                    id_channel = id_channel.replace('http://www.youtube.com/channel/', '')
+            elif 'youtube.com/user/' in id_channel:
+                return render_template('channel_info.html', message='YoutubeAPI cannot retrieve user (different from channel)...')
             part = ', '.join(request.form.getlist('part'))
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
-            channel_result = api.get_search('channels', forUsername=id_channel, part=part)
+            channel_result = api.get_search('channels', id=id_channel, part=part)
             channel_result_string = json.dumps(channel_result, sort_keys = True, indent = 2, separators = (',', ': '))
-            print(channel_result_string)
             return render_template('results.html', result=channel_result, string=channel_result_string)
-            # return jsonify(channel_result)
         else:
             return render_template('channel_info.html', message='api key not set')
     return render_template('channel_info.html')
@@ -87,17 +96,13 @@ def playlist_info():
     if request.method == 'POST':
         if 'api_key' in session:
             id_playlist = request.form.get('unique_id_playlist')
-            # if 'youtube.com/watch?v=' in id_playlist:
-            #     if 'https':
-            #         id_playlist = id_playlist.replace('https://www.youtube.com/watch?v=', '')
-            #     else:
-            #         id_playlist = id_playlist.replace('http://www.youtube.com/watch?v=', '')
-            print(id_playlist)
+            if 'youtube.com/watch?v=' in id_playlist:
+                f = furl(id_playlist)
+                id_playlist = f.args['list']
             part = ', '.join(request.form.getlist('part'))
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
             playlist_info = api.get_search('playlists', id=id_playlist, part=part)
-            pp.pprint(playlist_info)
             playlist_info_string = json.dumps(playlist_info, sort_keys = True, indent = 2, separators = (',', ': '))
             return render_template('results.html', result=playlist_info, string=playlist_info_string)
         else:
@@ -110,6 +115,8 @@ def search():
     if request.method == 'POST':
         session['counter'] = 0
         if 'api_key' in session:
+            # if request.form.get('advanced'):
+            # return
             ## build query in session
             session['request'] = {
                 'query':request.form.get('query'),
@@ -336,7 +343,7 @@ def aggregate_results():
                         print(i)
                 ############################
                 if 'captions' in options_api:
-                    path_captions = path_dir + '/captions/'
+                    path_captions = dir_to_check + '/captions/'
                     IO().create_dir(path_captions)
                     ## for each video loop to captions
                     for id_video in items_videoId:
@@ -365,7 +372,7 @@ def aggregate_results():
                                     if req_xml.text:
                                         #saving cap
                                         name_file = id_video + '_' + lang_caption + '.xml'
-                                        with open(path_captions + name_file, 'w') as f:
+                                        with open(data_dir + path_captions + name_file, 'w') as f:
                                             f.write(req_xml.text)
 
                 return render_template('download_process.html', message='ok it is done')
@@ -385,7 +392,6 @@ def config():
                 dir_list = os.listdir(data_dir)
 
     if request.method == 'POST':
-        print(request.form.get('api_key'))
         if request.form.get('api_key'):
             session['api_key'] = request.form.get('api_key')
     return render_template('config.html',  dir_list=dir_list)
@@ -393,7 +399,6 @@ def config():
 
 @app.route('/reset', methods = ['POST'])
 def reset():
-    pp.pprint(session)
     if session['api_key']:
         session['api_key'] = None
     return render_template('config.html')
@@ -404,4 +409,3 @@ if __name__ == '__main__':
         os.makedirs(data_dir)
     app.secret_key = os.urandom(24)
     app.run(debug=True)
-    session['api_key'] = ''

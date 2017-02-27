@@ -1,116 +1,182 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="container">
-    {% if result %}
-      <div class="col-md-7">
-        <pre>{{ string }}</pre>
-      </div>
 
-      <div class="col-md-5">
-
-        <h3>Video info - not item</h3>
-        <ul>
-          <li>{{ result['etag']|safe }}</li>
-          <li>{{ result['pageInfo']|safe }}</li>
-          <li>{{ result['kind']|safe }}</li>
-        </ul>
-
-        <h3>Item info</h3>
-        {% for  dict_item in result['items'] %}
-          <ul>
-            {% for subkey, subvalue in dict_item.items() %}
-              <li>{{ subkey }}</li>
-                {% if subkey == 'snippet'%}
-                  <ul><li><strong>publishedAt</strong> : {{ subvalue['publishedAt'] }}</li></ul>
-                  <ul><li><strong>tags</strong> : {{ subvalue['tags'] }}</li></ul>
-                  <ul><li><strong>description</strong> : {{ subvalue['description'] }}</li></ul>
-                  <ul><li><strong>channelTitle</strong> : {{ subvalue['channelTitle'] }}</li></ul>
-                  <ul><li><strong>categoryId</strong> : {{ subvalue['categoryId'] }}</li></ul>
-                  <ul><li><strong>title</strong> : {{ subvalue['title'] }}</li></ul>
-
-                {% else  %}
-                  <ul><li>{{ subvalue }}</li></ul>
-                {% endif %}
-          {% endfor %}
-          </ul>
-        {% endfor %}
-
-
-        <h4>Comments</h4>
-        <h4>Captions</h4>
-
-      </div>
-
-  {% elif search_results is defined %}
-    <div class="row">
-      <ul class="pagination">
-        {% if result is defined %}
-        {% elif counter > 0 %}
-          <li>
-            <a href="?prevPageToken={{ prev }}"> Prev </a>
-          </li>
+  <div class="row">
+    <div class="col-md-9">
+      {% if result %}
+        {% if result['items'][0]['snippet'] %}
+          <h3> {{ result['items'][0]['snippet']['title'] }} </h3>
         {% endif %}
-        <li class="active">
-          <a  href="#">{{ counter }}</a>
-        </li>
-        <li>
-          <a href="?nextPageToken={{ search_results['nextPageToken'] }}">Next</a>
-        </li>
-        <li>
-          <a href="process_results"> Go to end & download </a>
-        </li>
-      </ul>
-    </div>
-
-    <div class="row">
-      <div class="col-md-7">
-        <pre>{{ string }}</pre>
       </div>
 
-
-      <div class="col-md-5">
-
-        <h3>first level - not items</h3>
-        <ul>
-          <li>{{ search_results['nextPageToken']|safe }}</li>
-          <li>{{ search_results['regionCode']|safe }}</li>
-          <li>{{ search_results['pageInfo']|safe }}</li>
-          <li>{{ search_results['etag']|safe }}</li>
-          <li>{{ search_results['kind']|safe }}</li>
-        </ul>
-
-        <h3>items</h3>
-        {% for  dict_item in search_results['items'] %}
-          <ul>
-          {% for key, value in dict_item.items() %}
-
-            {% if key == 'id'%}
-              <li> {{ key|upper }} : {{ value['videoId']|safe }}</li>
-            {% endif %}
-
-            {% if key == 'snippet'%}
-              <li> TITLE : {{ value['title']|safe }}</li>
-              <li> DESCRIPTION : {{ value['description']|safe }}</li>
-              <li> CHANNEL_TITLE : {{ value['channelTitle']|safe }}</li>
-              <li> CHANNEL_ID : {{ value['channelId']|safe }}</li>
-              <li> PUBLISHED_AT : {{ value['publishedAt']|safe }}</li>
-              <p>
-                <a href="https://www.youtube.com/watch?v={{ dict_item['id']['videoId']|safe }}">
-                  <img src="{{ value['thumbnails']['default']['url']|safe }}">
-                </a>
-              </p>
-            {% endif %}
-          {% endfor %}
-          </ul>
-        {% endfor %}
-
-      </div>
-    </div>
-
-
-
+      <div class="col-md-3">
+        {% if result['items'][0]['snippet'] %}
+        <h4> {{ result['items'][0]['snippet']['publishedAt'] }}</h4>
+        {% endif %}
       {% endif %}
 
+      <button id="json" class="btn btn-primary">JSON</button>
+      <!-- <button id="csv" class="btn btn-primary">CSV</button> -->
+
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="row">
+
+    {% if result %}
+    <div class="col-md-7">
+        <pre id="code">{{ string }}</pre>
+    </div>
+
+    <div class="col-md-5">
+      {% if result['items'][0]['player'] %}
+        {{ result['items'][0]['player']['embedHtml']|safe }}
+      {% elif result['items'][0]['snippet'] %}
+        <img src="{{ result['items'][0]['snippet']['thumbnails']['medium']['url']|safe }}">
+      {% endif %}
+
+      <hr/>
+
+      <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+              <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                Item
+              </a>
+            </h4>
+          </div>
+          <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+              {% for dict_item in result['items'] %}
+                <ul>
+                  {% for key, value in dict_item.items() %}
+                    <li><strong>{{ key }} :</strong></li>
+
+                    {% if value is mapping %}
+                      {% for subkey, subvalue in value.items()  %}
+                        <ul>
+                          <li><strong>{{ subkey }}</strong> : {{ subvalue }}</li>
+                        </ul>
+                      {% endfor %}
+                    {% else %}
+                      {{ value }}
+                    {% endif %}
+
+                  {% endfor %}
+              </ul>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingTwo">
+            <h4 class="panel-title">
+              <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                Meta info
+              </a>
+            </h4>
+          </div>
+          <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+            <div class="panel-body">
+              <ul>
+                  <li><strong>etag</strong> : {{ result['etag']|safe }}</li>
+                  <li><strong>pageInfo</strong> : {{ result['pageInfo']|safe }}</li>
+                  <li><strong>kind</strong> : {{ result['kind']|safe }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingThree">
+            <h4 class="panel-title">
+              <a class="collapsed" role="button" data-toggle="collapse"  href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Comments
+              </a>
+            </h4>
+          </div>
+          <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+            <div class="panel-body">
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+
+    {# SEARCH #}
+
+
+
+
+
+
+
+
+    {% elif search_results is defined %}
+      <div class="row">
+        <ul class="pagination">
+          {% if result is defined %}
+          {% elif counter > 0 %}
+            <!-- <li><a href="?prevPageToken={{ prev }}"> Prev </a></li> -->
+          {% endif %}
+            <li class="active"><a href="#">{{ counter }}</a></li>
+            <li><a href="?nextPageToken={{ search_results['nextPageToken'] }}">Next</a></li>
+            <li><a href="process_results"> Go to end & download </a></li>
+        </ul>
+      </div>
+
+      <div class="row">
+        <div class="col-md-7">
+            <pre>{{ string }}</pre>
+        </div>
+
+        <div class="col-md-5">
+          <h4>first level - not items</h4>
+          <ul>
+            <li>{{ search_results['nextPageToken']|safe }}</li>
+            <li>{{ search_results['regionCode']|safe }}</li>
+            <li>{{ search_results['pageInfo']|safe }}</li>
+            <li>{{ search_results['etag']|safe }}</li>
+            <li>{{ search_results['kind']|safe }}</li>
+          </ul>
+
+          <h4>items</h4> {% for dict_item in search_results['items'] %}
+          <ul>
+            {% for key, value in dict_item.items() %} {% if key == 'id'%}
+            <li> {{ key|upper }} : {{ value['videoId']|safe }}</li>
+            {% endif %} {% if key == 'snippet'%}
+            <li> TITLE : {{ value['title']|safe }}</li>
+            <li> DESCRIPTION : {{ value['description']|safe }}</li>
+            <li> CHANNEL_TITLE : {{ value['channelTitle']|safe }}</li>
+            <li> CHANNEL_ID : {{ value['channelId']|safe }}</li>
+            <li> PUBLISHED_AT : {{ value['publishedAt']|safe }}</li>
+            <p>
+                <a href="https://www.youtube.com/watch?v={{ dict_item['id']['videoId']|safe }}">
+                    <img src="{{ value['thumbnails']['default']['url']|safe }}">
+                </a>
+            </p>
+              {% endif %} {% endfor %}
+          </ul>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+
+
+
+  </div>
 </div>
 {% endblock %}
