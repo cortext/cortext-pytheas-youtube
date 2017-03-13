@@ -6,7 +6,7 @@
     <div class="col-md-9">
       {% if result %}
         {% if result['items'][0]['snippet'] %}
-          <h3> {{ result['items'][0]['snippet']['title'] }} </h3>
+          <h3 id="title_data"> {{ result['items'][0]['snippet']['title'] }} </h3>
         {% endif %}
       </div>
 

@@ -1,0 +1,107 @@
+{% extends "base.html" %} {% block content %}
+<div class="container">
+
+    <!-- Video  -->
+
+    <div class="row vertical-align">
+        <div class="col-md-8">
+            <h2>Video-info</h2> {% if message %} {{ message }} {% endif %}
+
+
+            <form action="/video_info" id="video" method="POST">
+                <div class="form-group">
+                    <h4>Id video (or paste url)</h4>
+                    <input type="text" name='unique_id_video' class="form-control" placeholder="4Jc3zt1GEAs">
+
+                    <h4>Part</h4>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+          <button type="submit" form="video" class="btn btn-default center-block">Submit</button>
+        </div>
+    </div>
+
+    <hr/>
+    <!-- Channel  -->
+
+    <div class="row vertical-align">
+        <div class="col-md-8">
+            <h2>Channel-info</h2> {% if message %} {{ message }} {% endif %}
+
+
+            <form action="/channel_info" id="channel" method="POST">
+                <div class="form-group">
+                    <h4>Id Channel (or paste url)</h4>
+                    <input type="text" name='unique_id_channel' class="form-control" placeholder="UCxpgAMAOmPX_aCIs-yKBPwg">
+
+                    <h4>Part</h4>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+                    <br/>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                    <br/>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                    <br/>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="invideoPromotion" checked>invideoPromotion</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="brandingSettings" checked>brandingSettings</label>
+                    <br>
+                    <label class="checkbox-inline text-muted"><input name='part' type="checkbox" value="auditDetails" disabled>auditDetails</label>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+          <button type="submit" form="channel" class="btn btn-default center-block">Submit</button>
+        </div>
+    </div>
+
+    <hr/>
+    <!-- Playlist  -->
+
+    <div class="row vertical-align">
+        <div class="col-md-8">
+            <h2>Playlist-info</h2> {% if message %} {{ message }} {% endif %}
+
+
+            <form action="/playlist_info" id="playlist" method="POST">
+                <div class="form-group">
+                    <h4>Id Playlist (or paste url)</h4>
+                    <input type="text" name='unique_id_playlist' class="form-control" placeholder="PLTCMYaAONGHVtUG-oZnoa3VJMCRvpkq7k">
+
+                    <h4>Part</h4>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+                    <br/>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                    <br/>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
+
+                    <hr/>
+
+
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+          <button type="submit" form="playlist" class="btn btn-default center-block">Submit</button>
+        </div>
+    </div>
+</div>
+
+{%- endblock %}

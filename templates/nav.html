@@ -6,20 +6,9 @@
       </div>
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
-
-          <li {%- if (request.path == "/video_info" or request.path == "/channel_info" or request.path == "/playlist_info") %}
-           class="dropdown active"
-          {% endif %} class="dropdown" >
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Browse by <span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a href="/video_info">Video</a></li>
-              <li><a href="/channel_info">Channel</a></li>
-              <li><a href="/playlist_info">Playlist</a></li>
-            </ul>
-          </li>
-
+          <li {%- if request.path == "/browse" %} class="active"{% endif %}><a href="/browse">Browse</a></li>
           <li {%- if request.path == "/search" %} class="active"{% endif %}><a href="/search">Search </a></li>
-          <li {%- if request.path == "/aggregate_results" %} class="active"{% endif %}><a href="/aggregate_results">Aggregate</a></li>
+          <li {%- if request.path == "/aggregate" %} class="active"{% endif %}><a href="/aggregate">Aggregate</a></li>
         </ul>
 
         <ul class="nav navbar-nav navbar-right">

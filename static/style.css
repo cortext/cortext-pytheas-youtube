@@ -1,0 +1,9 @@
+iframe {
+  width: 490px;
+}
+
+.vertical-align{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
