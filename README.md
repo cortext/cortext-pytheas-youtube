@@ -16,13 +16,10 @@
 Copy/paste instructions on linux with python3 installed :
 
     git clone https://github.com/cortext/youtube-explorer.git
-
-    virutalenv -p /usr/bin/python3 env
-
-    source bin/activate/env
-
-    pip -r install requirements.txt
-
+    cd youtube-explorer
+    virtualenv -p /usr/bin/python3 env
+    source env/bin/activate
+    pip install -r requirements.txt
     python main.py
 
 ##### Work as webapp :
