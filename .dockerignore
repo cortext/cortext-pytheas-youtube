@@ -1,0 +1,5 @@
+.ipynb_checkpoints/
+/env/*
+/data/*
+/conf/conf-dev.json
+test.ipynb
