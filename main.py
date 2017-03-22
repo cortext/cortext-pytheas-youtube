@@ -527,4 +527,4 @@ if __name__ == '__main__':
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     app.secret_key = os.urandom(24)
-    app.run(debug=True)
+    app.run(debug=True,host='0.0.0.0')
