@@ -5,6 +5,8 @@ services:
     build: .
     ports:
      - "5000:5000"
+    depends_on:
+     - mongo
     volumes:
      - '.:/opt/pytheas'
      - './data:/opt/pytheas/data'
@@ -20,3 +22,5 @@ services:
     image: "mongoclient/mongoclient"
     ports:
      - "3000:3000"
+    depends_on:
+      - mongo
