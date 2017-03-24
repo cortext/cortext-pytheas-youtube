@@ -1,0 +1,22 @@
+version: '2'
+services:
+  web:
+    container_name: cortext_pytheas_web
+    build: .
+    ports:
+     - "5000:5000"
+    volumes:
+     - '.:/opt/pytheas'
+     - './data:/opt/pytheas/data'
+  mongo:
+    container_name: cortext_pytheas_mongoserver
+    image: "mongo:3.4"
+    ports: 
+     - "27017:27017"
+    volumes: 
+     - './data/mongo:/data/db'
+  mongoclient:
+    container_name: cortext_pytheas_mongoclient
+    image: "mongoclient/mongoclient"
+    ports:
+     - "3000:3000"
