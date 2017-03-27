@@ -1,11 +1,19 @@
-# main.py
+## main.py
 import os
 import shutil
 import json
 import requests
 import pprint as pp
-
 from uuid import uuid4
+
+# Main class
+from youtube import YouTube
+from youtube import FileData
+from youtube import Mongo
+from youtube import Comments
+from code_country import language_code
+
+# flask
 from flask import Flask
 from flask import jsonify
 from flask import render_template
@@ -13,14 +21,13 @@ from flask import request
 from flask import session
 from flask import send_file
 
+# ext lib
 from flask_bootstrap import Bootstrap
 from flask_pymongo import PyMongo
 from bson import json_util
 from bson.objectid import ObjectId
 from furl import furl
-
-from youtube import YouTube
-from youtube import IO
+from pprint import pprint
 
 
 def create_app():
@@ -33,10 +40,18 @@ def create_app():
     Bootstrap(app)
     return app
 
-
 app = create_app()
-mongo = PyMongo(app)
+mongo_curs = PyMongo(app)
 data_dir = 'data/'
+
+
+@app.before_request
+def set_client_session():
+    with open('conf/conf-dev.json') as data_file:
+        data = json.load(data_file)
+        pprint(data)
+    session['api_key'] = data['session']['api_key']
+    print(session['api_key'])
 
 
 @app.route('/')
@@ -44,8 +59,8 @@ def home():
     return render_template('home.html')
 
 ##########################################################################
-
-
+# Csv (plus need to add json)
+##########################################################################
 @app.route('/getCSV')  # this is a job for GET, not POST
 def getCSV(data):
 
@@ -55,65 +70,58 @@ def getCSV(data):
                      as_attachment=True)
 
 ##########################################################################
-
-
+# REST
+##########################################################################
 @app.route('/queries/', methods=['GET'])
 def queries_list():
-    from bson import json_util
-    result = mongo.db.query.find({})
+    result = mongo_curs.db.query.find({})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
-
 
 @app.route('/queries/<query_id>', methods=['GET'])
 def query_search(query_id):
-    from bson import json_util
-    result = mongo.db.query.find_one_or_404({'query_id': query_id})
+    result = mongo_curs.db.query.find_one_or_404({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
-
 
 @app.route('/queries/<query_id>/videos/', methods=['GET'])
 def videos_list_by_query(query_id):
-    result = mongo.db.videos.find({'query_id': query_id})
+    result = mongo_curs.db.videos.find({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
-
 
 @app.route('/videos/<video_id>', methods=['GET'])
 def video_search(video_id):
-    from bson.json_util import dumps
-    result = mongo.db.videos.find({'id.videoId': video_id})
+    result = mongo_curs.db.videos.find({'id.videoId': video_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
-
 
 @app.route('/videos/<video_id>/comments/', methods=['GET'])
 def comments_list_by_video(video_id):
-    result = mongo.db.comments.find({'videoId': video_id})
+    result = mongo_curs.db.comments.find({'videoId': video_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
-
 
 @app.route('/comments/<comment_id>', methods=['GET'])
 def comment_search(comment_id):
-    result = mongo.db.comments.find_one_or_404({'_id': ObjectId(comment_id)})
+    result = mongo_curs.db.comments.find_one_or_404({'_id': ObjectId(comment_id)})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
 
+
 ##########################################################################
-
-
+# Browse
+##########################################################################
 @app.route('/browse', methods=['GET'])
 def browse():
+    pprint(session)
     return render_template('browse.html')
-
 
 @app.route('/video_info', methods=['POST'])
 def video_info():
@@ -137,7 +145,6 @@ def video_info():
         else:
             return render_template('browse.html', message='api key not set')
     return render_template('browse.html')
-
 
 @app.route('/channel_info', methods=['POST'])
 def channel_info():
@@ -165,7 +172,6 @@ def channel_info():
             return render_template('browse.html', message='api key not set')
     return render_template('browse.html')
 
-
 @app.route('/playlist_info', methods=['POST'])
 def playlist_info():
     if request.method == 'POST':
@@ -187,11 +193,11 @@ def playlist_info():
     return render_template('browse.html')
 
 ##########################################################################
-
-
+# Search
+##########################################################################
 @app.route('/search', methods=['POST', 'GET'])
 def search():
-    session['api_key'] = 'AIzaSyCff6PMNeR49MAZyJps64QpIgbw49WIiys'
+    pprint(session)
     if request.method == 'POST':
         session['counter'] = 0
         if 'api_key' in session:
@@ -273,10 +279,9 @@ def search():
         search_results_string = json.dumps(
             search_results, sort_keys=True, indent=2, separators=(',', ': '))
         return render_template('results.html', search_results=search_results, string=search_results_string, counter=session['counter'], prev=pageToken)
-    return render_template('search.html', language_code=YouTube.language_code)
+    return render_template('search.html', language_code=language_code)
 
 ##########################################################################
-
 
 @app.route('/process_results')
 def process_results():
@@ -284,7 +289,7 @@ def process_results():
     path_query = session['request']['query'] + '_' + \
         session['request']['language'] + '_' + \
         session['request']['ranking'] + '/'
-    IO().create_dir(path_query)
+    FileData.create_dir(path_query)
 
     # build request based on session
     session['counter'] = 0
@@ -299,6 +304,8 @@ def process_results():
     )
     # save file & meta
     name_file = str(session['counter']) + '.json'
+    from pprint import pprint
+    pprint(search_results)
     meta_inf = {
         'regionCode': search_results['regionCode'],
         'pageInfo': search_results['pageInfo'],
@@ -307,16 +314,16 @@ def process_results():
     }
     meta_info_file = path_query + 'meta_info.txt'
     search_results_file = path_query + name_file
-    IO().save_json(meta_info_file, meta_inf)
-    IO().save_json(search_results_file, search_results['items'])
+    FileData.save_json(meta_info_file, meta_inf)
+    FileData.save_json(search_results_file, search_results['items'])
 
     # mongo Insert
-    ytb_db = mongo.db
     # avoid duplicates
-    # ytb_db.query.createIndex( { 'unique_id': 1 }, unique=True )
+    # mongo_curs.db.query.createIndex( { 'unique_id': 1 }, unique=True )
+
     # insert query
     uid = uuid4()
-    ytb_db.query.insert_one(
+    mongo_curs.db.query.insert_one(
         {
             'query_id': str(uid),
             'text': session['request']['query'],
@@ -329,7 +336,7 @@ def process_results():
     # insert videos
     for each in search_results['items']:
         each.update({'query_id': str(uid)})
-        ytb_db.videos.insert_one(
+        mongo_curs.db.videos.insert_one(
             each
         )
     ## Loop and save
@@ -349,17 +356,17 @@ def process_results():
             return render_template('download_process.html', message='ok it is done')
         # save items
         search_results_file = path_query + name_file
-        IO().save_json(search_results_file, search_results['items'])
+        FileData.save_json(search_results_file, search_results['items'])
 
         # insert video-info
         for each in search_results['items']:
             each.update({'query_id': str(uid)})
-            ytb_db.videos.insert_one(each)
+            mongo_curs.db.videos.insert_one(each)
     return render_template('download_process.html', message='ok it is done')
 
 ##########################################################################
-
-
+# Aggregate
+##########################################################################
 @app.route('/aggregate', methods=['POST', 'GET'])
 def aggregate():
     if os.path.exists(data_dir):
@@ -381,7 +388,7 @@ def aggregate():
                 api = YouTube(api_key=api_key)
 
                 # Get list of video from list of vid (search)
-                items = IO.list_file(path_dir)
+                items = FileData.list_file(path_dir)
                 items_videoId = items['items_videoId']
                 items_playlist = items['items_playlist']
                 # items_channel = items['items_channel']
@@ -392,10 +399,9 @@ def aggregate():
                 ############################
                 if 'comments' in options_api:
                     path_comments = dir_to_check + '/comments/'
-                    IO().create_dir(path_comments)
-                    i = 0
-                    # prepare mongopy Cursor
-                    ytb_db = mongo.db
+                    FileData.create_dir(path_comments)
+                    count_total_commentThreads = 0
+
                     # for each video loop to comments
                     for id_video in items_videoId:
                         commentThreads_result = api.get_search(
@@ -403,28 +409,30 @@ def aggregate():
                             videoId=id_video,
                             part='id, replies, snippet'
                         )
-                        # Check if error (eg unactivated comments)
+                        ## Check if error (eg unactivated comments)
                         if 'error' in commentThreads_result:
                             print(
                                 commentThreads_result['error']['errors'][0]['reason'])
                             continue
-                        # get OneByOne commentThreads & save json
+                        ## get OneByOne commentThreads & save json
                         for each in commentThreads_result['items']:
-                            # insert videos into mongoDB
-                            if 'replies' in each:
-                                each['snippet'].update(
-                                    {'replies': each['replies']})
-                            each['snippet'].update({'query_name': query_name})
-                            ytb_db.comments.insert_one(
-                                each['snippet']
-                            )
-                            # save file
+                            count_total_commentThreads += 1
+
+                            ### insert videos into mongoDB
+                            Mongo.insert_mongo(query_name, each, mongo_curs)
+
+                            ### clean json_comment // save file // one_by one
+                            # Comments.clean_and_save(each)
+
+                            ### save file
                             each_sanitized = json.loads(
-                                json_util.dumps(each['snippet']))
+                                json_util.dumps(each['snippet'])
+                            )
                             comments_file = path_comments + \
-                                str(i) + '_commentThread.json'
-                            IO().save_json(comments_file, each_sanitized)
-                            i += 1
+                                str(count_total_commentThreads) + '_commentThread.json'
+                            FileData.save_json(comments_file, each_sanitized)
+                        print(count_total_commentThreads)
+
                         ## Loop and save
                         while 'nextPageToken' in commentThreads_result:
                             commentThreads_result = api.get_search(
@@ -433,30 +441,32 @@ def aggregate():
                                 part='id, replies, snippet',
                                 pageToken=commentThreads_result['nextPageToken']
                             )
-                            # Check if error (eg unactivated comments)
+                            ### Check if error (eg unactivated comments)
                             if 'error' in commentThreads_result:
                                 print(
                                     commentThreads_result['error']['errors'][0]['reason'])
                                 continue
                             for each in commentThreads_result['items']:
-                                if 'replies' in each:
-                                    each['snippet'].update(
-                                        {'replies': each['replies']})
-                                ytb_db.comments.insert_one(
-                                    each['snippet']
-                                )
-                                # save file
+                                count_total_commentThreads += 1
+                                ### clean json_comment // save file // one_by one
+                                # Comments.clean_and_save(each)
+
+                                ### save file
                                 each_sanitized = json.loads(
-                                    json_util.dumps(each['snippet']))
+                                    json_util.dumps(each['snippet'])
+                                )
                                 comments_file = path_comments + \
-                                    str(i) + '_commentThread.json'
-                                IO().save_json(comments_file, each_sanitized)
-                                i += 1
-                        print(i)
+                                    str(count_total_commentThreads) + '_commentThread.json'
+                                FileData.save_json(comments_file, each_sanitized)
+
+                                ### insert videos into mongoDB
+                                Mongo.insert_mongo(query_name, each, mongo_curs)
+
+                            print(count_total_commentThreads)
                 ############################
                 if 'captions' in options_api:
                     path_captions = dir_to_check + '/captions/'
-                    IO().create_dir(path_captions)
+                    FileData.create_dir(path_captions)
                     # for each video loop to captions
                     for id_video in items_videoId:
                         captions_result = api.get_search(
@@ -497,8 +507,8 @@ def aggregate():
     return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
 
 ##########################################################################
-
-
+# Config
+##########################################################################
 @app.route('/config', methods=['POST', 'GET'])
 def config():
     if os.path.exists(data_dir):
@@ -511,18 +521,21 @@ def config():
     if request.method == 'POST':
         if request.form.get('api_key'):
             session['api_key'] = request.form.get('api_key')
+    pprint(session)
     return render_template('config.html',  dir_list=dir_list)
 
 
 @app.route('/reset', methods=['POST'])
 def reset():
     if session['api_key']:
-        session['api_key'] = None
+        # session['api_key'] = None
+        session.clear()
     return render_template('config.html')
 
 
 ##########################################################################
-
+# Start
+##########################################################################
 if __name__ == '__main__':
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
