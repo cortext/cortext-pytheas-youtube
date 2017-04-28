@@ -45,13 +45,6 @@ mongo_curs = PyMongo(app)
 data_dir = 'data/'
 
 
-@app.before_request
-def set_client_session():
-    with open('conf/conf-dev.json') as data_file:
-        data = json.load(data_file)
-    session['api_key'] = data['session']['api_key']
-
-
 @app.route('/')
 def home():
     return render_template('home.html')
