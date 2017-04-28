@@ -8,16 +8,19 @@
         <ul class="nav navbar-nav">
           <li {%- if request.path == "/browse" %} class="active"{% endif %}><a href="/browse">Browse</a></li>
           <li {%- if request.path == "/search" %} class="active"{% endif %}><a href="/search">Search </a></li>
+          <li {%- if request.path == "/channel" %} class="active"{% endif %}><a href="/channel">Channel </a></li>
           <li {%- if request.path == "/aggregate" %} class="active"{% endif %}><a href="/aggregate">Aggregate</a></li>
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
-          <li {%- if (request.path == "/config") %} class="dropdown active" {% endif %}>
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings <span class="caret"></span></a>
-            <ul class="dropdown-menu">
+          <li {%- if request.path == "/manage" %} class="active"{% endif %}><a href="/manage">Manage data</a></li>
+          <li {%- if request.path == "/config" %} class="active"{% endif %}><a href="/config">Config</a></li>
+          <!-- <li {%- if (request.path == "/config") %} class="active" {% endif %}>
+            <a href="/config">Config </a>
+            <!-- <ul class="dropdown-menu">
               <li><a href="/config">Api key config</a></li>
               <li><a href="/config">Manage dir</a></li>
-            </ul>
+            </ul> --> -->
           </li>
 
         </ul>

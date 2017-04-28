@@ -1,0 +1,83 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container">
+
+    <div class='row'>
+        <div class="col-md-12">
+            <h3>Manage data</h3>
+        </div>
+    </div>
+    <hr>
+
+    <div class='row'>
+        <h4>Data in db </h4>
+        <div class="col-md-12">
+            <h5>Stats</h5>
+            {% for key, val in stats.items() if not key == 'list_queries' %}
+              <p>{{key|e}} : {{val}}</p>
+            {% endfor %}
+
+            <br>
+
+            <h5>List queries :</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>query</th>
+                        <th>ranking</th>
+                        <th>part</th>
+                        <th>language</th>
+                        <th>countedVideos</th>
+                        <th>countedComments</th>
+                        <th>Download videos</th>
+                        <th>Download comments</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
+                    <tr>
+                        <td>{{query['text']}}</td>
+                        <td>{{query['ranking']}}</td>
+                        <td>{{query['part']}}</td>
+                        <td class="text-center">{{query['language']}}</td>
+                        <td class="text-center">{{query['countVideos']}}</td>
+                        <td class="text-center">{{query['countComments']}}</td>
+                        <td class="text-center"><a href="/download/videos/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
+                        <td class="text-center"><a href="/download/comments/{{ query['query_id'] }}">
+                          <i class="fa fa-download" aria-hidden="true"></i>
+                        </a></td>
+                        <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
+
+                    </tr>
+                  {% endfor %} {% endif %} {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class='row'>
+        <h4>Data in Dir (temporary tool for debug)</h4>
+        <div class="col-md-12">
+            <form action="/config" method="POST">
+                {% for dir in dir_list %}
+                <div class="radio">
+                    <ul style="list-style-type: none;">
+                        <li>
+                            <button type="submit" name="del" value="{{ dir }}" class="btn btn-default btn-sm">
+                <span class="glyphicon glyphicon-remove"></span>
+              </button> {{ dir }}
+                        </li>
+                    </ul>
+                </div>
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+
+
+
+</div>
+{% endblock %}

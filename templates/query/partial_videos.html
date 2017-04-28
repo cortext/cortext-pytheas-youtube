@@ -1,0 +1,31 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="container">
+    <div class="col-md-8 col-md-offset-2">
+
+        <h2>Partial video</h2>
+
+         {% if message %} {{ message }} {% endif %}
+
+        <hr>
+
+        <form action="/search" method="POST">
+            <div class="form-group">
+                <h4>Url</h4>
+
+                <input type="textarea" name="query" class="form-control" placeholder="Search">
+                <hr/>
+
+                <h4>Part</h4>
+                <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+                <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet">snippet</label>
+                <hr/>
+
+
+                <button type="submit" class="btn btn-default">Submit</button>
+
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

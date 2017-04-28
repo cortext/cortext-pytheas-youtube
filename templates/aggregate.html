@@ -5,13 +5,15 @@
     <div class="row">
       <div class="col-md-12 text-center">
         <h2>Aggregate results</h2>
+        <p><a href="https://developers.google.com/youtube/v3/docs/comments/list">youtube docs search (1)</a></p>
+        <p><a href="https://developers.google.com/youtube/v3/docs/commentThreads/list">youtube docs search (2)</a></p>
       </div>
     </div>
 
     <div class="row">
       <div class="col-md-10">
         {{ message }}
-        <h3>Choose list </h3>
+        <h3>Choose dataset in your current list </h3>
 
         <form action="/aggregate" method="POST">
           {% for dir in dir_list  %}
@@ -25,7 +27,7 @@
 
           <br>
 
-          <h4>Choose part (videos only)</h4>
+          <h4>Choose part</h4>
           <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
           <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
           <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
