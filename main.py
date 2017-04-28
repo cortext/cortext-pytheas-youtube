@@ -35,6 +35,7 @@ def create_app():
     app.config.update(
         TEMPLATES_AUTO_RELOAD=True
     )
+    app.config['MONGO_HOST'] = 'mongo'
     app.config['MONGO_DBNAME'] = 'youtube'
     app._static_folder = 'static/'
     Bootstrap(app)
