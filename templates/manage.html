@@ -23,12 +23,14 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>query</th>
+                        <th>Query</th>
                         <th>ranking</th>
-                        <th>part</th>
+                        <th>part(query)</th>
                         <th>language</th>
-                        <th>countedVideos</th>
-                        <th>countedComments</th>
+                        <th>videos</th>
+                        <th>comments</th>
+                        <th>date start </th>
+                        <th>date end </th>
                         <th>Download videos</th>
                         <th>Download comments</th>
                         <th>Delete</th>
@@ -37,13 +39,25 @@
                 <tbody>
                   {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
                     <tr>
-                        <td>{{query['text']}}</td>
+                        <td>{{query['query']}}</td>
                         <td>{{query['ranking']}}</td>
                         <td>{{query['part']}}</td>
                         <td class="text-center">{{query['language']}}</td>
                         <td class="text-center">{{query['countVideos']}}</td>
                         <td class="text-center">{{query['countComments']}}</td>
-                        <td class="text-center"><a href="/download/videos/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
+                        {% if query['date_start'] is defined %}
+                          <td>{{query['date_start'][0:10]}}</td>
+                        {% else %}
+                          <td></td>
+                        {% endif %}
+                        {% if query['date_end'] is defined %}
+                          <td>{{query['date_end'][0:10]}}</td>
+                        {% else %}
+                          <td></td>
+                        {% endif %}
+                        <td class="text-center"><a href="/download/queries/{{ query['query_id'] }}/videos">
+                          <i class="fa fa-download" aria-hidden="true"></i>
+                        </a></td>
                         <td class="text-center"><a href="/download/comments/{{ query['query_id'] }}">
                           <i class="fa fa-download" aria-hidden="true"></i>
                         </a></td>
@@ -59,7 +73,7 @@
     <hr>
 
     <div class='row'>
-        <h4>Data in Dir (temporary tool for debug)</h4>
+        <h4>Data in Dir data/ (temporary tool for debug & saving captions)</h4>
         <div class="col-md-12">
             <form action="/config" method="POST">
                 {% for dir in dir_list %}

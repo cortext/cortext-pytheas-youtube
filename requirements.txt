@@ -1,7 +1,6 @@
-Flask
-Flask-Bootstrap
-Flask-PyMongo
-pymongo
-requests
-pprint
-furl
+furl==0.5.7
+requests==2.13.0
+Flask_PyMongo==0.4.1
+Flask_Bootstrap==3.3.7.1
+Flask==0.12
+python_dateutil==2.6.0
