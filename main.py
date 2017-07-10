@@ -60,22 +60,18 @@ except BaseException as error:
     print('An exception occurred: {}'.format(error))
 
 
-# @app.before_first_request
-# def before_first_request():
-#     print('hello')
 
-
-# @app.before_request
-# def before_request():
-#     try:
-#         if 'access_token' not in session and request.endpoint != 'login':
-#             if 'auth' in request.endpoint:
-#                 return auth()
-#             elif 'grant' in request.endpoint:
-#                 return grant()            
-#             return redirect(url_for('login')) 
-#     except BaseException as e:
-#         print(e)
+@app.before_request
+def before_request():
+    try:
+        if 'access_token' not in session and request.endpoint != 'login':
+            if 'auth' in request.endpoint:
+                return auth()
+            elif 'grant' in request.endpoint:
+                return grant()            
+            return redirect(url_for('login')) 
+    except BaseException as e:
+        print(e)
 
 
 @app.errorhandler(404)
@@ -792,8 +788,6 @@ def delete(query_id):
 ##########################################################################
 # Reset session
 ##########################################################################
-
-
 @app.route('/reset', methods=['GET'])
 def reset():
     # if session['api_key']:
@@ -846,27 +840,6 @@ def auth():
     current_user = User(mongo_curs)
     current_user.replace_user_cortext(r_access)
 
-    # 1.
-    # POST https://auth-risis.cortext.net/auth/grant
-    #   BODY
-    #         code: 19d882b42d8e0a3bc3e440b6f6e66d2dd4018d07,
-    #         client_id: cortext-dashboard,
-    #         client_secret: mys3cr3t,
-    #         redirect_uri: http://risis.cortext.net,
-    #         grant_type: 'authorization_code'
-    
-    # 2. access_token = response
-    # - stock access_token en session
-
-    # 3.
-    # http GET https://auth-risis.cortext.net/auth/access?access_token=a9d0e7883d0db26547039025e9558bce2833a890
-    # response = cortext-user ou error (si error : redirect page error user)
-
-    # 4. update/create user en local
-    # login user (session)
-    
-    # 5. return redirect (home)
-
     return redirect(url_for('home'))
   
 
@@ -887,16 +860,6 @@ def create_user():
 
     
     return current_user.view()
-
-
-
-# @app.route('/test/users')
-# def get_user():
-#     user = User.get()
-
-#     if not user:
-#         abort(400)
-#     return json.dumps({'username': user.username}, indent=4)
 
 
 
