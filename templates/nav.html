@@ -15,14 +15,7 @@
         <ul class="nav navbar-nav navbar-right">
           <li {%- if request.path == "/manage" %} class="active"{% endif %}><a href="/manage">Manage data</a></li>
           <li {%- if request.path == "/config" %} class="active"{% endif %}><a href="/config">Config</a></li>
-          <!-- <li {%- if (request.path == "/config") %} class="active" {% endif %}>
-            <a href="/config">Config </a>
-            <!-- <ul class="dropdown-menu">
-              <li><a href="/config">Api key config</a></li>
-              <li><a href="/config">Manage dir</a></li>
-            </ul> --> -->
-          </li>
-
+          <li><a href="/reset"><i class="fa fa-times" aria-hidden="true"></i></a></li>
         </ul>
       </div>
     </div>

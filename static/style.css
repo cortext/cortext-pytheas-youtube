@@ -6,4 +6,10 @@ iframe {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  /*color:#FFF;*/
+}
+
+
+label {
+	/*color:#000;*/
 }

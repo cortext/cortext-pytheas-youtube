@@ -1,26 +1,31 @@
-# main.py
+# py dependancies
 import os
 import shutil
 import json
 import requests
-import datetime
 from uuid import uuid4
-
-# Main class
-from youtube import YouTube
-from youtube import FileData
-from youtube import Mongo
-from code_country import language_code
+# need to recheck here later...
+import datetime
+import datetime as dt
+import dateutil.parser as time
 
 # flask
 from flask import Flask
 from flask import jsonify
 from flask import render_template
 from flask import request
+from flask import Response
 from flask import session
 from flask import send_file
 from flask import redirect
 from flask import url_for
+
+# Main class
+from youtube import User
+from youtube import YouTube
+from youtube import FileData
+from youtube import Mongo
+from code_country import language_code
 
 # ext lib
 from flask_bootstrap import Bootstrap
@@ -29,26 +34,24 @@ from bson import json_util
 from bson.objectid import ObjectId
 from furl import furl
 
+# debug tool
 from pprint import pprint
-
-import datetime as dt
-import dateutil.parser as time
 
 
 def create_app():
     app = Flask(__name__)
+    app._static_folder = 'static/'
+    app.config['MONGO_HOST'] = 'localhost'
+    app.config['MONGO_DBNAME'] = 'youtube'
+    # app.config['MONGO_HOST'] = 'mongo'
+
+    Bootstrap(app)
     app.config.update(
         TEMPLATES_AUTO_RELOAD=True
     )
-    # Tmp fix for local work
-    # app.config['MONGO_HOST'] = 'mongo'
-    app.config['MONGO_HOST'] = 'localhost'
-    app.config['MONGO_DBNAME'] = 'youtube'
-    app._static_folder = 'static/'
-    Bootstrap(app)
     return app
 
-
+# go to package app via create_app() before app.run
 try:
     app = create_app()
     mongo_curs = PyMongo(app)
@@ -57,22 +60,27 @@ except BaseException as error:
     print('An exception occurred: {}'.format(error))
 
 
-@app.before_request
-def do_something_whenever_a_request_comes_in():
-    try:
-        with open("conf/conf_dev.json") as json_file:
-            json_data = json.load(json_file)
-            if 'api_key' in json_data:
-                if not json_data['api_key']:
-                    print('unsuccessful API_KEY is empty',
-                          json_data['api_key'])
-                    # return render_template('config.html')
-                else:
-                    print('succes API_KEY is set', json_data)
-                    session['api_key'] = json_data['api_key']
-    except BaseException as error:
-        print('error from: ', error)
+# @app.before_first_request
+# def before_first_request():
+#     print('hello')
 
+
+# @app.before_request
+# def before_request():
+#     try:
+#         if 'access_token' not in session and request.endpoint != 'login':
+#             if 'auth' in request.endpoint:
+#                 return auth()
+#             elif 'grant' in request.endpoint:
+#                 return grant()            
+#             return redirect(url_for('login')) 
+#     except BaseException as e:
+#         print(e)
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('error.html', error=error)
 
 @app.route('/')
 def home():
@@ -81,11 +89,8 @@ def home():
 ##########################################################################
 # Csv (plus need to add json)
 ##########################################################################
-
-
 @app.route('/getCSV')  # this is a job for GET, not POST
 def getCSV(data):
-
     return send_file('outputs/Adjacency.csv',
                      mimetype='text/csv',
                      attachment_filename='Adjacency.csv',
@@ -94,8 +99,6 @@ def getCSV(data):
 ##########################################################################
 # REST
 ##########################################################################
-
-
 @app.route('/queries/', methods=['GET'])
 def queries_list():
     result = mongo_curs.db.query.find({})
@@ -227,8 +230,6 @@ def playlist_info():
 ##########################################################################
 # Search
 ##########################################################################
-
-
 @app.route('/search', methods=['POST', 'GET'])
 def search():
     if request.method == 'POST':
@@ -393,21 +394,19 @@ def search():
 def channel():
     if request.method == 'POST':
         session['counter'] = 0
-        if 'api_key' in session:
-            session['request'] = {
-                'part': ', '.join(request.form.getlist('part')),
-                'id': request.form.get('id'),
-                'forUsername': ', '.join(request.form.getlist('forUsername')),
-                'categoryId': request.form.get('categoryId'),
-                'maxResults': request.form.get('maxResults')
-            }
-            channel_results = YouTube.get_channel(
-                session['api_key'], session['request'])
-            channel_results_string = json.dumps(
-                channel_results, sort_keys=True, indent=4, separators=(',', ': '))
-            return render_template('results.html', search_results=channel_results, string=channel_results_string, counter=session['counter'])
-        else:
-            return render_template('search.html', message='api key not set')
+        session['request'] = {
+            'part': ', '.join(request.form.getlist('part')),
+            'id': request.form.get('id'),
+            'forUsername': ', '.join(request.form.getlist('forUsername')),
+            'categoryId': request.form.get('categoryId'),
+            'maxResults': request.form.get('maxResults')
+        }
+        channel_results = YouTube.get_channel(
+            session['api_key'], session['request'])
+        channel_results_string = json.dumps(
+            channel_results, sort_keys=True, indent=4, separators=(',', ': '))
+        return render_template('results.html', search_results=channel_results, string=channel_results_string, counter=session['counter'])
+
     # Go to next page
     elif request.method == 'GET' and request.args.get('nextPageToken'):
         session['counter'] += 1
@@ -673,6 +672,9 @@ def process_results():
 ##########################################################################
 @app.route('/config', methods=['POST', 'GET'])
 def config():
+
+    json_formated = json.dumps(session['profil'], indent=2)
+
     if os.path.exists(data_dir):
         dir_list = os.listdir(data_dir)
         if request.method == 'POST':
@@ -684,7 +686,7 @@ def config():
         if request.form.get('api_key'):
             session['api_key'] = request.form.get('api_key')
 
-    return render_template('config.html',  dir_list=dir_list)
+    return render_template('config.html',  dir_list=dir_list, session_data=json_formated)
 
 ##########################################################################
 # Manage
@@ -792,46 +794,110 @@ def delete(query_id):
 ##########################################################################
 
 
-@app.route('/reset', methods=['POST'])
+@app.route('/reset', methods=['GET'])
 def reset():
-    if session['api_key']:
-        session.clear()
-    return render_template('config.html')
+    # if session['api_key']:
+    session.clear()
+    return redirect(url_for('login'))
 
 
 ##########################################################################
 # OAuth
 ##########################################################################
-# from flask_oauth import OAuth
-# oauth = OAuth()
-# cortext_oauth = oauth.remote_app('cortext',
-#     base_url='',
-#     request_token_url='',
-#     access_token_url='',
-#     authorize_url='',
-#     consumer_key='',
-#     consumer_secret=''
-# )
+@app.route('/login')
+def login():   
+    return render_template('login.html')
+
+@app.route('/grant', methods=['GET'])
+def grant():
+    grant_url = "https://auth.cortext.net/auth/authorize" + \
+                "?response_type=code" + \
+                "&state=" + str(uuid4().hex) + \
+                "&client_id=pytheas" + \
+                "&redirect_uri=http://localhost:8080/auth"
+
+    headers = {
+        'Location': grant_url
+    }
+
+    return Response(grant_url, status=302, headers=headers)
+
+@app.route('/auth', methods=['GET'])
+def auth():
+    code = str(request.args['code']) 
+    state = str(request.args['state']) 
+
+    payload = {
+      'code': code,
+      'state': state,
+      'client_id': 'pytheas',
+      'client_secret': 'mys3cr3t',
+      'redirect_uri': 'http://localhost:8080/auth',
+      'grant_type': 'authorization_code'
+    }
+
+    r_grant = requests.post('https://auth.cortext.net/auth/grant', data=payload)
+    data = r_grant.json()
+    r_access = requests.get('https://auth.cortext.net/auth/access?access_token=' + str(data['access_token']))
+    
+    session['access_token'] = data['access_token']
+    session['profil'] = r_access.json()
+
+    current_user = User(mongo_curs)
+    current_user.replace_user_cortext(r_access)
+
+    # 1.
+    # POST https://auth-risis.cortext.net/auth/grant
+    #   BODY
+    #         code: 19d882b42d8e0a3bc3e440b6f6e66d2dd4018d07,
+    #         client_id: cortext-dashboard,
+    #         client_secret: mys3cr3t,
+    #         redirect_uri: http://risis.cortext.net,
+    #         grant_type: 'authorization_code'
+    
+    # 2. access_token = response
+    # - stock access_token en session
+
+    # 3.
+    # http GET https://auth-risis.cortext.net/auth/access?access_token=a9d0e7883d0db26547039025e9558bce2833a890
+    # response = cortext-user ou error (si error : redirect page error user)
+
+    # 4. update/create user en local
+    # login user (session)
+    
+    # 5. return redirect (home)
+
+    return redirect(url_for('home'))
+  
 
 
-# import oauth2 as oauth
-#
-# consumer = oauth.Consumer(
-#     key="your-twitter-consumer-key",
-#     secret="your-twitter-consumer-secret")
-#
-# request_token_url = "https://api.twitter.com/oauth/request_token"
-#
-# client = oauth.Client(consumer)
+@app.route('/test/user/create')
+def create_user():
+    current_user = User(mongo_curs)
+    id_unique =  str(uuid4().hex)
+
+    current_user.id_pytheas = id_unique
+    current_user.username = 'phil'
+    current_user.create()
 
 
-# from requests_oauthlib import OAuth1Session
-# twitter = OAuth1Session('client_key',
-#                         client_secret='client_secret',
-#                         resource_owner_key='resource_owner_key',
-#                         resource_owner_secret='resource_owner_secret')
-# url = 'https://api.twitter.com/1/account/settings.json'
-# r = twitter.get(url)
+    new_user = User(mongo_curs, id_unique)
+    
+    print(new_user.view())
+
+    
+    return current_user.view()
+
+
+
+# @app.route('/test/users')
+# def get_user():
+#     user = User.get()
+
+#     if not user:
+#         abort(400)
+#     return json.dumps({'username': user.username}, indent=4)
+
 
 
 ##########################################################################
@@ -841,4 +907,4 @@ if __name__ == '__main__':
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     app.secret_key = os.urandom(24)
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    app.run(debug=True, host='0.0.0.0', port=8080, threaded=True)

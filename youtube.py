@@ -57,34 +57,6 @@ class YouTube:
         )
         return search_results
 
-    # old
-    # def get_day_by_day(self, session):
-    #     api_key = self.api_key
-    #     # r_before = time.parse(session['publishedBefore']).isoformat()
-    #     # r_after = time.parse(session['publishedAfter'])
-    #     if 'nextPageToken' in session:
-    #         date_results = self.get_query(
-    #             'search',
-    #             q=session['q'],
-    #             part=session['part'],
-    #             language=session['language'],
-    #             maxResults=session['maxResults'],
-    #             publishedAfter=session['publishedAfter'],
-    #             publishedBefore=session['publishedBefore'],
-    #             nextPageToken=session['nextPageToken']
-    #         )
-    #     else:
-    #         date_results = self.get_query(
-    #             'search',
-    #             q=session['q'],
-    #             part=session['part'],
-    #             language=session['language'],
-    #             maxResults=session['maxResults'],
-    #             publishedAfter=session['publishedAfter'],
-    #             publishedBefore=session['publishedBefore']
-    #         )
-    #     return date_results
-
     def get_channel(api_key, session):
         if 'pageToken' in session:
             channel_results = YouTube(api_key).get_query(
@@ -119,7 +91,6 @@ class Mongo:
     def __init__(self, mongo_curs):
         data_db = self.data_db
 
-
     # old but use it like that :
     # Mongo.insert_mongo(query_id, each, mongo_curs)
     def insert_mongo(query_id, each, mongo_curs):
@@ -139,7 +110,70 @@ class Mongo:
 
 
 ##########################################################################
-# I/O File/dir access (PROBABLY OBSOLETE NOW)
+# User
+##########################################################################
+class User():
+    cortext_fields = ['id','username','access_token','email']
+
+    def __init__(self, mongo_curs, id=None):
+        self.db = mongo_curs.db
+        if id:
+            self.id_pytheas = id
+            self.get()
+
+    def get(self):
+        try:
+            current_user = self.db.users.find_one_or_404({ 'id_pytheas': self.id_pytheas})
+            self.username = current_user['username']
+            print('get user : ', current_user['username'])
+        except BaseException as e:
+            print('user not found : ', e)
+        return
+
+    def replace_user_cortext(self, dataUser):
+        dataUser = dataUser.json()
+        self.username = dataUser['username']
+        self.id_cortext = dataUser['id']
+        try:
+            current_user = self.db.users.find_one_or_404({ 'id_cortext': self.id_cortext})
+            if(current_user):
+                self.udpate()
+                #[...] for each cortext fields
+            else:
+                self.create()
+            print('get cortext user : ', current_user['username'])
+        except BaseException as e:
+            print('user not found : ', e)
+        return
+
+    def view(self):
+        return str(self.username + ' : ' + self.id_pytheas)
+
+    def create(self):
+        self.id_pytheas = str(uuid4().hex)
+        self.db.users.insert_one(
+            {
+                'id_pytheas' : self.id_pytheas,
+                'username' : self.username,
+                'id_cortext' : self.id_cortext,
+                #[...] for each corxtext fields
+            }
+        )
+
+        return
+
+
+    def update():
+        return
+
+    def delete():
+        return
+
+
+
+
+##########################################################################
+# I/O File/dir access (PROBABLY OBSOLETE NOW EXCEPT CAPTIONS)
 ##########################################################################
 class FileData:
 
