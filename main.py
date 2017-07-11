@@ -41,9 +41,9 @@ from pprint import pprint
 def create_app():
     app = Flask(__name__)
     app._static_folder = 'static/'
-    app.config['MONGO_HOST'] = 'localhost'
+    # app.config['MONGO_HOST'] = 'localhost'
     app.config['MONGO_DBNAME'] = 'youtube'
-    # app.config['MONGO_HOST'] = 'mongo'
+    app.config['MONGO_HOST'] = 'mongo'
 
     Bootstrap(app)
     app.config.update(
@@ -60,33 +60,6 @@ except BaseException as error:
     print('An exception occurred: {}'.format(error))
 
 
-# 1.
-# POST https://auth-risis.cortext.net/auth/grant
-#   BODY
-#         code: 19d882b42d8e0a3bc3e440b6f6e66d2dd4018d07,
-#         client_id: cortext-dashboard,
-#         client_secret: mys3cr3t,
-#         redirect_uri: http://risis.cortext.net,
-#         grant_type: 'authorization_code'
-
-# 2. access_token = response
-# - stock access_token en session
-
-# 3.
-# http GET https://auth-risis.cortext.net/auth/access?access_token=a9d0e7883d0db26547039025e9558bce2833a890
-# response = cortext-user ou error (si error : redirect page error user)
-
-# 4. update/create user en local
-# login user (session)
-
-# 5. return redirect (home)
-# @app.route('/test/users')
-# def get_user():
-#     user = User.get()
-
-#     if not user:
-#         abort(400)
-#     return json.dumps({'username': user.username}, indent=4)
 
 
 
@@ -869,25 +842,8 @@ def auth():
     current_user = User(mongo_curs)
     current_user.create_or_replace_user_cortext(r_access)
 
-    # current_user.id_pytheas = str(uuid4().hex)
-    # current_user.username = session['profil']['username']
-    # current_user.update(session['profil'])
-    # current_user.create()
-
     return redirect(url_for('home'))
   
-
-
-# @app.route('/test/user/create')
-# def create_user():
-#     current_user = User(mongo_curs)
-#     current_user.id_pytheas = str(uuid4().hex)
-#     current_user.username = session['profil']['username']
-#     current_user.create()
-
-#     return current_user.view()
-
-
 
 ##########################################################################
 # Start
