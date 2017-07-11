@@ -4,6 +4,7 @@ import os
 import datetime as dt
 import dateutil.parser as time
 from pprint import pprint
+from uuid import uuid4
 
 data_dir = 'data/'
 
@@ -130,22 +131,6 @@ class User():
             print('user not found : ', e)
         return
 
-    def replace_user_cortext(self, dataUser):
-        dataUser = dataUser.json()
-        self.username = dataUser['username']
-        self.id_cortext = dataUser['id']
-        try:
-            current_user = self.db.users.find_one_or_404({ 'id_cortext': self.id_cortext})
-            if(current_user):
-                self.udpate()
-                #[...] for each cortext fields
-            else:
-                self.create()
-            print('get cortext user : ', current_user['username'])
-        except BaseException as e:
-            print('user not found : ', e)
-        return
-
     def view(self):
         return str(self.username + ' : ' + self.id_pytheas)
 
@@ -159,12 +144,34 @@ class User():
                 #[...] for each corxtext fields
             }
         )
-
         return
 
-
-    def update():
+    def create_or_replace_user_cortext(self, dataUser):
+        dataUser = dataUser.json()
+        pprint(dataUser)
+        self.username = dataUser['username']
+        self.id_cortext = dataUser['id']
+        
+        try:
+            current_user = self.db.users.find_one_or_404({ 'id_cortext': self.id_cortext})
+            print('get cortext user : ', current_user['username'])
+            if (current_user):
+                # self.udpate(dataUser)
+                self.db.users.update_one(
+                  { 'id_cortext' : self.id_cortext },
+                  { '$set': { 'username': dataUser['username']} }
+                )
+        except BaseException as e:
+            print('user not found or error : ', e)
+            self.create()
         return
+
+    def update(self, dataUser):
+        user_update = self.db.users.update_one(
+          { 'id_pytheas' : self.id_pytheas },
+          { '$set': { 'username': dataUser['username']} }
+        )
+        return user_update
 
     def delete():
         return
