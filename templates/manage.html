@@ -24,6 +24,7 @@
                 <thead>
                     <tr>
                         <th>Query</th>
+                        <th>ChannelId</th>
                         <th>ranking</th>
                         <th>part(query)</th>
                         <th>language</th>
@@ -40,6 +41,7 @@
                   {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
                     <tr>
                         <td>{{query['query']}}</td>
+                        <td>{{query['channel_id']}}</td>
                         <td>{{query['ranking']}}</td>
                         <td>{{query['part']}}</td>
                         <td class="text-center">{{query['language']}}</td>

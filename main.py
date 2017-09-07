@@ -19,7 +19,7 @@ from flask import session
 from flask import send_file
 from flask import redirect
 from flask import url_for
-
+ 
 # Main class
 from youtube import User
 from youtube import YouTube
@@ -41,9 +41,9 @@ from pprint import pprint
 def create_app():
     app = Flask(__name__)
     app._static_folder = 'static/'
-    # app.config['MONGO_HOST'] = 'localhost'
+    app.config['MONGO_HOST'] = 'localhost'
     app.config['MONGO_DBNAME'] = 'youtube'
-    app.config['MONGO_HOST'] = 'mongo'
+    # app.config['MONGO_HOST'] = 'mongo'
 
     Bootstrap(app)
     app.config.update(
@@ -394,11 +394,12 @@ def channel():
         session['counter'] = 0
         session['request'] = {
             'part': ', '.join(request.form.getlist('part')),
-            'id': request.form.get('id'),
-            'forUsername': ', '.join(request.form.getlist('forUsername')),
-            'categoryId': request.form.get('categoryId'),
+            'channelId': request.form.get('id'),
+            # 'forUsername': ', '.join(request.form.getlist('forUsername')),
+            # 'categoryId': request.form.get('categoryId'),
             'maxResults': request.form.get('maxResults')
         }
+
         channel_results = YouTube.get_channel(
             session['api_key'], session['request'])
         channel_results_string = json.dumps(
@@ -413,7 +414,7 @@ def channel():
         channel_results = YouTube.get_channel(
             session['api_key'], session['request'])
         results_string = json.dumps(
-            search_results, sort_keys=True, indent=2, separators=(',', ': ')
+            channel_results, sort_keys=True, indent=2, separators=(',', ': ')
         )
         return render_template('results.html', search_results=channel_results, string=results_string, counter=session['counter'])
     return render_template('query/channel.html', language_code=language_code)
@@ -431,20 +432,16 @@ def aggregate():
         db_list = mongo_curs.db.query.find({})
         db_listed = []
         for doc in db_list:
-            concat_name = '_'.join([
-                doc['query'],
-                doc['language'],
-                doc['ranking']])
-            db_listed.append(concat_name)
-        print(doc['query_id'])
-
+            if 'query' in doc:
+                concat_name = '_'.join([
+                    doc['query'],
+                    doc['language'],
+                    doc['ranking']])
+                db_listed.append(concat_name)
+            elif 'channel_id' in doc:
+                db_listed.append(doc['channel_id'])
+        
         if request.method == 'POST':
-
-            if request.form and request.form.get('del'):
-                shutil.rmtree(data_dir + request.form.get('del'))
-                dir_list = os.listdir(data_dir)
-                return render_template('aggregate.html', dir_list=dir_list)
-
             if request.form and request.form.get('optionsRadios'):
                 dir_to_check = request.form.get('optionsRadios')
 
@@ -465,6 +462,8 @@ def aggregate():
                         ]
                     }
                 )
+
+                pprint(results)
 
                 list_vid = []
                 for result in results:
@@ -587,81 +586,104 @@ def aggregate():
 ##########################################################################
 @app.route('/process_results')
 def process_results():
-    # FOR MOMENT ONLY USED FOR A SEARCH WITHOU DATE
-
-    # prepare dir & files
-    print(session)
-    path_query = session['request']['q'] + '_' + \
-        session['request']['language'] + '_' + \
-        session['request']['ranking'] + '/'
-    FileData.create_dir(path_query)
-
-    # build request based on session
-    session['counter'] = 0
-    api = YouTube(api_key=session['api_key'])
-    search_results = api.get_query(
-        'search',
-        q=session['request']['q'],
-        part=session['request']['part'],
-        language=session['request']['language'],
-        maxResults=session['request']['maxResults'],
-        ranking=session['request']['ranking']
-    )
-    # save file & meta
-    name_file = str(session['counter']) + '.json'
-
-    meta_inf = {
-        'regionCode': search_results['regionCode'],
-        'pageInfo': search_results['pageInfo'],
-        'etag': search_results['etag'],
-        'kind': search_results['kind']
-    }
-    meta_info_file = path_query + 'meta_info.txt'
-    search_results_file = path_query + name_file
-    FileData.save_json(meta_info_file, meta_inf)
-    FileData.save_json(search_results_file, search_results['items'])
-
-    # insert query
     uid = uuid4()
-    mongo_curs.db.query.insert_one(
-        {
-            'query_id': str(uid),
-            'query': session['request']['q'],
-            'part': session['request']['part'],
-            'language': session['request']['language'],
-            'maxResults': session['request']['maxResults'],
-            'ranking': session['request']['ranking'],
-        }
-    )
-    # insert videos
-    for each in search_results['items']:
-        each.update({'query_id': str(uid)})
-        mongo_curs.db.videos.insert_one(
-            each
-        )
-    ## Loop and save
-    while 'nextPageToken' in search_results:
-        session['counter'] += 1
-        name_file = str(session['counter']) + '.json'
+
+    if 'q' in session['request'] :
+        # build request based on session
+        session['counter'] = 0
+        api = YouTube(api_key=session['api_key'])
         search_results = api.get_query(
             'search',
             q=session['request']['q'],
             part=session['request']['part'],
             language=session['request']['language'],
             maxResults=session['request']['maxResults'],
-            ranking=session['request']['ranking'],
-            pageToken=search_results['nextPageToken']
+            ranking=session['request']['ranking']
         )
-        if not search_results['items']:
-            return render_template('download_process.html', message='ok it is done')
-        # save items
-        search_results_file = path_query + name_file
-        FileData.save_json(search_results_file, search_results['items'])
 
-        # insert video-info
+        # insert query
+        mongo_curs.db.query.insert_one(
+            {
+                'query_id': str(uid),
+                'query': session['request']['q'],
+                'part': session['request']['part'],
+                'language': session['request']['language'],
+                'maxResults': session['request']['maxResults'],
+                'ranking': session['request']['ranking'],
+            }
+        )
+        # insert videos
         for each in search_results['items']:
             each.update({'query_id': str(uid)})
-            mongo_curs.db.videos.insert_one(each)
+            mongo_curs.db.videos.insert_one(
+                each
+            )
+        ## Loop and save
+        while 'nextPageToken' in search_results:
+            session['counter'] += 1
+            name_file = str(session['counter']) + '.json'
+            search_results = api.get_query(
+                'search',
+                q=session['request']['q'],
+                part=session['request']['part'],
+                language=session['request']['language'],
+                maxResults=session['request']['maxResults'],
+                ranking=session['request']['ranking'],
+                pageToken=search_results['nextPageToken']
+            )
+            if not search_results['items']:
+                return render_template('download_process.html', message='ok it is done')
+
+            # insert video-info
+            for each in search_results['items']:
+                each.update({'query_id': str(uid)})
+                mongo_curs.db.videos.insert_one(each)
+
+
+    elif 'channelId' in session['request']:
+        # build request based on session
+        session['counter'] = 0
+        api = YouTube(api_key=session['api_key'])
+        channel_results = api.get_query(
+            'search',
+            channelId=session['request']['channelId'],
+            part=session['request']['part'],
+            maxResults=session['request']['maxResults']
+        )
+        # insert query
+        mongo_curs.db.query.insert_one(
+            {
+                'query_id': str(uid),
+                'channel_id': session['request']['channelId'],
+                'part': session['request']['part'],
+                'maxResults': session['request']['maxResults'],
+            }
+        )
+        # insert videos
+        for each in channel_results['items']:
+            each.update({'query_id': str(uid)})
+            mongo_curs.db.videos.insert_one(
+                each
+            )
+        ## Loop and save
+        while 'nextPageToken' in channel_results:
+            session['counter'] += 1
+            name_file = str(session['counter']) + '.json'
+            channel_results = api.get_query(
+                'search',
+                channelId=session['request']['channelId'],
+                part=session['request']['part'],
+                maxResults=session['request']['maxResults'],
+                pageToken=channel_results['nextPageToken']
+            )
+            if not channel_results['items']:
+                return render_template('download_process.html', message='ok it is done')
+
+            # insert video-info
+            for each in channel_results['items']:
+                each.update({'query_id': str(uid)})
+                mongo_curs.db.videos.insert_one(each)
+
     return render_template('download_process.html', message='ok it is done')
 
 
@@ -671,26 +693,41 @@ def process_results():
 @app.route('/config', methods=['POST', 'GET'])
 def config():
 
-    json_formated = json.dumps(session['profil'], indent=2)
+    pprint(session)
 
-    if os.path.exists(data_dir):
-        dir_list = os.listdir(data_dir)
-        if request.method == 'POST':
-            if request.form and request.form.get('del'):
-                shutil.rmtree(data_dir + request.form.get('del'))
-                dir_list = os.listdir(data_dir)
+    profil = session['profil']
+    json_filtered = {
+        'name' : profil['name'],
+        'institution' : profil['institution'],
+        'activitydomain' : profil['activitydomain'],
+        'country' : profil['country'],
+        'researchdomain' : profil['researchdomain'],
+        'website' : profil['website'],
+        'birthdate' : profil['birthdate'],
+        'username' : profil['username'],
+        'email' : profil['email'],
+        'last_connexion' : profil['last_connexion'],
+        'description' : profil['description']
+    }
+
+    json_formated = json.dumps(json_filtered, indent=2) 
+
+    if not 'api_key' in session:
+       api_key_validate = 'You need an API KEY from youtube'
+    else:
+       api_key_validate = session['api_key']
 
     if request.method == 'POST':
         if request.form.get('api_key'):
             session['api_key'] = request.form.get('api_key')
+            return redirect(url_for('home'))
 
-    return render_template('config.html',  dir_list=dir_list, session_data=json_formated)
+    return render_template('config.html', session_data=json_formated, api_key_validate=api_key_validate)
+
 
 ##########################################################################
 # Manage
 ##########################################################################
-
-
 @app.route('/manage', methods=['POST', 'GET'])
 def manage():
     if os.path.exists(data_dir):
@@ -737,13 +774,22 @@ def manage():
 @app.route('/download/queries/<query_id>/videos', methods=['GET'])
 def download_videos(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})
+    
     result = mongo_curs.db.videos.find({'query_id': query_id})
+    
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': ')
     )
-    query_name = '_'.join(
-        [query['query'], query['language'], query['ranking']])
+    print(query)
+    
+    if 'query' in query:
+        query_name = '_'.join(
+            [query['query'], query['language'], query['ranking']])
+    elif 'channel_id' in query:
+        query_name = query['channel_id']
+
     print(query_name)
+    
     response = jsonify(json.loads(json_res))
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
         str(query_name) + '_videos.json'
@@ -755,8 +801,13 @@ def download_comments(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})
     from_query = json.dumps(query, default=json_util.default)
     from_query = json.loads(from_query)
-    query_name = '_'.join(
-        [from_query['query'], from_query['language'], from_query['ranking']])
+
+
+    if 'query' in query:
+        query_name = '_'.join(
+            [query['query'], query['language'], query['ranking']])
+    elif 'channel_id' in query:
+        query_name = query['channel_id']
 
     # result = mongo_curs.db.comments.find({'query_name': query_name})
     result = mongo_curs.db.comments.find({'query_id': query_id})
@@ -778,8 +829,13 @@ def delete(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})
     from_query = json.dumps(query, default=json_util.default)
     from_query = json.loads(from_query)
-    query_name = '_'.join(
-        [from_query['query'], from_query['language'], from_query['ranking']])
+    
+    if 'query' in query:
+        query_name = '_'.join(
+            [query['query'], query['language'], query['ranking']])
+    elif 'channel_id' in query:
+        query_name = query['channel_id']
+
     mongo_curs.db.comments.remove({'query_name': query_name})
     # del videos
     mongo_curs.db.videos.remove({'query_id': query_id})
@@ -842,8 +898,50 @@ def auth():
     current_user = User(mongo_curs)
     current_user.create_or_replace_user_cortext(r_access)
 
-    return redirect(url_for('home'))
-  
+    return redirect(url_for('config'))
+
+
+
+# 1.
+# POST https://auth-risis.cortext.net/auth/grant
+#   BODY
+#         code: 19d882b42d8e0a3bc3e440b6f6e66d2dd4018d07,
+#         client_id: cortext-dashboard,
+#         client_secret: mys3cr3t,
+#         redirect_uri: http://risis.cortext.net,
+#         grant_type: 'authorization_code'
+
+# 2. access_token = response
+# - stock access_token en session
+
+# 3.
+# http GET https://auth-risis.cortext.net/auth/access?access_token=a9d0e7883d0db26547039025e9558bce2833a890
+# response = cortext-user ou error (si error : redirect page error user)
+
+# 4. update/create user en local
+# login user (session)
+
+# 5. return redirect (home)
+# @app.route('/test/users')
+# def get_user():
+#     user = User.get()
+
+#     if not user:
+#         abort(400)
+#     return json.dumps({'username': user.username}, indent=4)
+
+
+
+# @app.route('/test/user/create')
+# def create_user():
+#     current_user = User(mongo_curs)
+#     current_user.id_pytheas = str(uuid4().hex)
+#     current_user.username = session['profil']['username']
+#     current_user.create()
+
+#     return current_user.view()
+
+
 
 ##########################################################################
 # Start

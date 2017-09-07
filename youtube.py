@@ -44,7 +44,8 @@ class YouTube:
         kwargs = json.dumps(kwargs)
         kwargs = json.loads(kwargs)
         # print(endpoint)
-        print(kwargs)
+        print('KWARGS = ')
+        pprint(kwargs)
         return self.try_request(kwargs, endpoint)
 
     def get_search(api_key, session):
@@ -59,26 +60,38 @@ class YouTube:
         return search_results
 
     def get_channel(api_key, session):
-        if 'pageToken' in session:
-            channel_results = YouTube(api_key).get_query(
-                'search',
-                part=session['part'],
-                channelId=session['id'],
-                maxResults=session['maxResults'],
-                pageToken=pageToken
-            )
-        else:
-            channel_results = YouTube(api_key).get_query(
-                'search',
-                part=session['part'],
-                channelId=session['id'],
-                maxResults=session['maxResults']
-            )
+        print(session)
+        channel_results = YouTube(api_key).get_query(
+            'search',
+            channelId=session['channelId'],
+            part=session['part'],
+            maxResults=session['maxResults']
+        )
         return channel_results
+
+    # def get_channel(api_key, session):
+    #     if 'pageToken' in session:
+    #         channel_results = YouTube(api_key).get_query(
+    #             'search',
+    #             part=session['part'],
+    #             channelId=session['id'],
+    #             maxResults=session['maxResults'],
+    #             pageToken=pageToken
+    #         )
+    #     else:
+    #         channel_results = YouTube(api_key).get_query(
+    #             'search',
+    #             part=session['part'],
+    #             channelId=session['id'],
+    #             maxResults=session['maxResults']
+    #         )
+    #     return channel_results
 
     @staticmethod
     def response(response):
-        # pprint(response)
+        print('RES = ')
+        pprint(response)
+        # pprint(response.json())
         return response.json()
 
 

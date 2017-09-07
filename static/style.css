@@ -13,3 +13,15 @@ iframe {
 label {
 	/*color:#000;*/
 }
+
+
+
+.navbar-default {
+
+    background: #E62117;
+    border-color: #e52d27;
+    border-top-color: #e52d27;
+    border-right-color: #e52d27;
+    border-bottom-color: #e52d27;
+    border-left-color: #e52d27;
+}
