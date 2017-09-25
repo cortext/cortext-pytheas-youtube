@@ -34,7 +34,6 @@ class YouTube:
 
     # prepare request with same obligatory param
     def get_query(self, endpoint, **kwargs):
-        # print('========')
         if self.access_token:
             kwargs['access_token'] = self.access_token
         else:
@@ -43,9 +42,6 @@ class YouTube:
             kwargs['part'] = self.part
         kwargs = json.dumps(kwargs)
         kwargs = json.loads(kwargs)
-        # print(endpoint)
-        print('KWARGS = ')
-        pprint(kwargs)
         return self.try_request(kwargs, endpoint)
 
     def get_search(api_key, session):
@@ -69,24 +65,6 @@ class YouTube:
         )
         return channel_results
 
-    # def get_channel(api_key, session):
-    #     if 'pageToken' in session:
-    #         channel_results = YouTube(api_key).get_query(
-    #             'search',
-    #             part=session['part'],
-    #             channelId=session['id'],
-    #             maxResults=session['maxResults'],
-    #             pageToken=pageToken
-    #         )
-    #     else:
-    #         channel_results = YouTube(api_key).get_query(
-    #             'search',
-    #             part=session['part'],
-    #             channelId=session['id'],
-    #             maxResults=session['maxResults']
-    #         )
-    #     return channel_results
-
     @staticmethod
     def response(response):
         print('RES = ')
@@ -96,30 +74,6 @@ class YouTube:
 
 
 
-##########################################################################
-# Mongo
-##########################################################################
-class Mongo:
-    data_db = "youtube"
-
-    def __init__(self, mongo_curs):
-        data_db = self.data_db
-
-    # old but use it like that :
-    # Mongo.insert_mongo(query_id, each, mongo_curs)
-    def insert_mongo(query_id, each, mongo_curs):
-        if 'replies' in each:
-            each['snippet'].update(
-                {'replies': each['replies']}
-            )
-        each['snippet'].update({'query_id': query_id})
-        mongo_curs.db.comments.insert_one(
-            each['snippet']
-        )
-
-    # old
-    def list_mongo(query_name, mongo_curs):
-        print(query_name)
 
 
 
@@ -187,6 +141,67 @@ class User():
         return user_update
 
     def delete():
+        return
+
+
+
+##########################################################################
+# Comment
+##########################################################################
+class Comment():
+    comment_parent_fields = ['id','query_id','videoId','isPublic','totalReplyCount','canReply','snippet','is_parent']
+    comment_response_fields = ['id','query_id','videoId','snippet']
+
+    def __init__(self, mongo_curs, id=None):
+        self.db = mongo_curs.db
+
+    def view(self):
+        # return str(self.username + ' : ' + self.id_pytheas)
+        return 'view'
+
+    def create(self, commentThread):
+        self.id = commentThread['id']
+        self.query_id = commentThread['query_id']
+        self.videoId = commentThread['videoId']
+        self.snippet = commentThread['snippet']
+
+        if 'replies' in commentThread:
+            print(commentThread['replies'])
+
+        # self.isPublic = commentThread['isPublic']
+        # self.totalReplyCount = commentThread['totalReplyCount']
+        # self.canReply = commentThread['canReply']
+        # self.is_parent = commentThread['is_parent']
+        
+        # if self.is_parent is true:
+        #     self.db.comments.insert_one(
+        #         {
+        #             'id' : self.id,
+        #             'query_id' : self.query_id,
+        #             'videoId' : self.videoId,
+        #             'is_parent': self.is_parent,
+        #             'isPublic': self.isPublic,
+        #             'totalReplyCount': self.totalReplyCount,
+        #             'canReply': self.canReply,
+        #             'snippet':self.snippet,
+        #         }
+        #     )
+        # elif self.is_parent is false:
+        #     self.db.comments.insert_one(
+        #         {
+        #             'id' : self.id,
+        #             'query_id' : self.query_id,
+        #             'videoId' : self.videoId,
+        #             'snippet': self.snippet
+        #         }
+        #     )
+        
+        return
+
+    def update(self, commentThread):
+        return 
+
+    def delete(self, commentThread):
         return
 
 

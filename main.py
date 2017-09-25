@@ -8,8 +8,7 @@ from uuid import uuid4
 import datetime
 import datetime as dt
 import dateutil.parser as time
-
-# flask
+# Flask
 from flask import Flask
 from flask import jsonify
 from flask import render_template
@@ -19,53 +18,57 @@ from flask import session
 from flask import send_file
 from flask import redirect
 from flask import url_for
- 
+# Ext lib
+from flask_bootstrap import Bootstrap
+from flask_pymongo import PyMongo
+from bson import json_util
+from bson.objectid import ObjectId
+from furl import furl
 # Main class
 from youtube import User
 from youtube import YouTube
 from youtube import FileData
 from youtube import Mongo
 from code_country import language_code
-
-# ext lib
-from flask_bootstrap import Bootstrap
-from flask_pymongo import PyMongo
-from bson import json_util
-from bson.objectid import ObjectId
-from furl import furl
-
-# debug tool
+# Debug tool
 from pprint import pprint
 
 
 def create_app():
-    app = Flask(__name__)
-    app._static_folder = 'static/'
-    app.config['MONGO_HOST'] = 'localhost'
-    app.config['MONGO_DBNAME'] = 'youtube'
-    # app.config['MONGO_HOST'] = 'mongo'
+    with open('conf/conf.json') as conf_file:
+        conf_data = json.load(conf_file)
 
-    Bootstrap(app)
-    app.config.update(
-        TEMPLATES_AUTO_RELOAD=True
-    )
-    return app
+        app = Flask(__name__)
+        app._static_folder = conf_data['static_folder']
+        app.config['DATA_DIR'] = conf_data['DATA_DIR']
+        app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
+        app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
+        # app.config['CELERY_BROKER_URL'] = conf_data['CELERY_BROKER_URL']
+        # app.config['CELERY_RESULT_BACKEND'] = conf_data['CELERY_RESULT_BACKEND']
+        app.config['api_key'] = conf_data['api_key']
 
-# go to package app via create_app() before app.run
+
+        Bootstrap(app)
+        app.config.update(
+            TEMPLATES_AUTO_RELOAD=True
+        )
+
+        return app
+
 try:
     app = create_app()
     mongo_curs = PyMongo(app)
-    data_dir = 'data/'
+    #  
+    data_dir = app.config['DATA_DIR']
+
 except BaseException as error:
     print('An exception occurred: {}'.format(error))
-
-
-
 
 
 @app.before_request
 def before_request():
     try:
+        session['api_key'] = app.config['api_key']
         if 'access_token' not in session and request.endpoint != 'login':
             if 'auth' in request.endpoint:
                 return auth()
@@ -74,6 +77,7 @@ def before_request():
             return redirect(url_for('login'))
     except BaseException as e:
         print(e)
+
 
 
 @app.errorhandler(404)
@@ -263,6 +267,7 @@ def search():
                 mongo_curs.db.query.insert_one(
                     {
                         'query_id': str(uid),
+                        'author_id':session['profil']['id'],
                         'query': session['request']['q'],
                         'part': session['request']['part'],
                         'language': session['request']['language'],
@@ -498,6 +503,14 @@ def aggregate():
                                     {'replies': each['replies']}
                                 )
                             each['snippet'].update({'query_id': query_id})
+                            
+
+
+
+
+
+
+
                             mongo_curs.db.comments.insert_one(
                                 each['snippet']
                             )
@@ -604,6 +617,7 @@ def process_results():
         # insert query
         mongo_curs.db.query.insert_one(
             {
+                'author_id':session['profil']['id'],
                 'query_id': str(uid),
                 'query': session['request']['q'],
                 'part': session['request']['part'],
@@ -652,7 +666,8 @@ def process_results():
         )
         # insert query
         mongo_curs.db.query.insert_one(
-            {
+            {   
+                'author_id':session['profil']['id'],
                 'query_id': str(uid),
                 'channel_id': session['request']['channelId'],
                 'part': session['request']['part'],
@@ -736,21 +751,16 @@ def manage():
         stats = {
             'query_totalCount': mongo_curs.db.query.find({}).count(),
             'videos': mongo_curs.db.videos.find({}).count(),
-            'comments': mongo_curs.db.comments.find({}).count(),
+            'comments': mongo_curs.db.comments.find({}).count(),            
             'list_queries': []
         }
 
-        result = mongo_curs.db.query.find({})
+        result = mongo_curs.db.query.find(
+            {'author_id': session['profil']['id']})
         for doc in result:
             # add basic stat for admin
             countVideos = mongo_curs.db.videos.find(
                 {'query_id': doc['query_id']})
-
-            # need to refact for comments table...
-            # concat_name = '_'.join(
-            #     [doc['query'], doc['language'], doc['ranking']])
-            # countComments = mongo_curs.db.comments.find(
-            #     {'query_name': concat_name})
 
             countComments = mongo_curs.db.comments.find(
                 {'query_id': doc['query_id']})
@@ -902,52 +912,13 @@ def auth():
 
 
 
-# 1.
-# POST https://auth-risis.cortext.net/auth/grant
-#   BODY
-#         code: 19d882b42d8e0a3bc3e440b6f6e66d2dd4018d07,
-#         client_id: cortext-dashboard,
-#         client_secret: mys3cr3t,
-#         redirect_uri: http://risis.cortext.net,
-#         grant_type: 'authorization_code'
-
-# 2. access_token = response
-# - stock access_token en session
-
-# 3.
-# http GET https://auth-risis.cortext.net/auth/access?access_token=a9d0e7883d0db26547039025e9558bce2833a890
-# response = cortext-user ou error (si error : redirect page error user)
-
-# 4. update/create user en local
-# login user (session)
-
-# 5. return redirect (home)
-# @app.route('/test/users')
-# def get_user():
-#     user = User.get()
-
-#     if not user:
-#         abort(400)
-#     return json.dumps({'username': user.username}, indent=4)
-
-
-
-# @app.route('/test/user/create')
-# def create_user():
-#     current_user = User(mongo_curs)
-#     current_user.id_pytheas = str(uuid4().hex)
-#     current_user.username = session['profil']['username']
-#     current_user.create()
-
-#     return current_user.view()
-
 
 
 ##########################################################################
 # Start
 ##########################################################################
 if __name__ == '__main__':
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
+    # if not os.path.exists(data_dir):
+    #     os.makedirs(data_dir)
     app.secret_key = os.urandom(24)
     app.run(debug=True, host='0.0.0.0', port=8080, threaded=True)
