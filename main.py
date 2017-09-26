@@ -489,7 +489,7 @@ def aggregate():
                     {
                         "$and": [
                             {"id.videoId": {"$exists": True}},
-                            {"query_id": doc['query_id']}
+                            {"query_id": query_id}
                         ]
                     }
                 )
