@@ -438,6 +438,7 @@ def aggregate():
             {'author_id': session['profil']['id']}
         )
         db_listed = []
+        concat_list = []
         for doc in db_list:
             if 'query' in doc:
                 concat_name = '_'.join([
@@ -446,12 +447,13 @@ def aggregate():
                     doc['ranking']
                 ])
                 db_listed.append(concat_name)
+                concat_list.append(concat_name)
             elif 'channel_id' in doc:
                 db_listed.append(doc['channel_id'])
 
         stats = {    
             'list_queries': [],
-            'concat_name': concat_name,
+            'concat_name': concat_list,
         }
         result = mongo_curs.db.query.find(
             {'author_id': session['profil']['id']
