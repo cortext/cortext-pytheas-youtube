@@ -25,17 +25,17 @@ from bson import json_util
 from bson.objectid import ObjectId
 from furl import furl
 # Main class
-from youtube import User
 from youtube import YouTube
+from youtube import User
+from youtube import Comment
 from youtube import FileData
-from youtube import Mongo
 from code_country import language_code
 # Debug tool
 from pprint import pprint
 
 
 def create_app():
-    with open('conf/conf.json') as conf_file:
+    with open('conf/conf_dev.json') as conf_file:
         conf_data = json.load(conf_file)
 
         app = Flask(__name__)
@@ -434,27 +434,51 @@ def aggregate():
         # dir_list was used to list dir when json was only downlaod as file
         # be care to refact here
         dir_list = os.listdir(data_dir)
-        db_list = mongo_curs.db.query.find({})
+        db_list = mongo_curs.db.query.find(
+            {'author_id': session['profil']['id']}
+        )
         db_listed = []
         for doc in db_list:
             if 'query' in doc:
                 concat_name = '_'.join([
                     doc['query'],
                     doc['language'],
-                    doc['ranking']])
+                    doc['ranking']
+                ])
                 db_listed.append(concat_name)
             elif 'channel_id' in doc:
                 db_listed.append(doc['channel_id'])
+
+        stats = {    
+            'list_queries': [],
+            'concat_name': concat_name,
+        }
+        result = mongo_curs.db.query.find(
+            {'author_id': session['profil']['id']
+        })
+        for doc in result:
+            # add basic stat for admin
+            countVideos = mongo_curs.db.videos.find(
+                {'query_id': doc['query_id']
+            })
+            countComments = mongo_curs.db.comments.find(
+                {'query_id': doc['query_id']
+            })
+            doc['countVideos'] = countVideos.count()
+            doc['countComments'] = countComments.count()
+            stats['list_queries'].append(doc)
+
+        
         
         if request.method == 'POST':
             if request.form and request.form.get('optionsRadios'):
-                dir_to_check = request.form.get('optionsRadios')
+                ## NEED TO REFACT HERE FOR CAPTIONS DATA...
+                # dir_to_check = request.form.get('optionsRadios')
+                # path_dir = data_dir + dir_to_check
+                # query_id = path_dir.replace('data/', '')
 
+                query_id = request.form.get('optionsRadios')
                 options_api = request.form.getlist('api_part')
-                path_dir = data_dir + dir_to_check
-                query_id = path_dir.replace('data/', '')
-                query_id = doc['query_id']
-
                 part = ', '.join(request.form.getlist('part'))
                 api_key = session['api_key']
                 api = YouTube(api_key=api_key)
@@ -468,55 +492,21 @@ def aggregate():
                     }
                 )
 
-                pprint(results)
-
                 list_vid = []
                 for result in results:
                     list_vid.append(result['id']['videoId'])
 
-                print('total of VIDEOSET is : ', len(list_vid))
-
                 ############################
                 if 'comments' in options_api:
-                    count_total_commentThreads = 0
-
                     # for each video loop to comments
+                    current_comment_thread = Comment(mongo_curs, query_id)
+
                     for id_video in list_vid:
                         commentThreads_result = api.get_query(
                             'commentThreads',
                             videoId=id_video,
                             part='id, replies, snippet')
-
-                        # Check if error (eg unactivated comments)
-                        if 'error' in commentThreads_result:
-                            print(
-                                commentThreads_result['error']['errors'][0]['reason'])
-                            continue
-
-                        # get OneByOne commentThreads
-                        for each in commentThreads_result['items']:
-                            count_total_commentThreads += 1
-
-                            # insert videos into mongoDB
-                            if 'replies' in each:
-                                each['snippet'].update(
-                                    {'replies': each['replies']}
-                                )
-                            each['snippet'].update({'query_id': query_id})
-                            
-
-
-
-
-
-
-
-                            mongo_curs.db.comments.insert_one(
-                                each['snippet']
-                            )
-
-                        print('actual nb comments is :',
-                              count_total_commentThreads)
+                        current_comment_thread.create_comment_entry_for_each(commentThreads_result)
 
                         ## Loop and save
                         while 'nextPageToken' in commentThreads_result:
@@ -525,30 +515,7 @@ def aggregate():
                                 videoId=id_video,
                                 part='id, replies, snippet',
                                 pageToken=commentThreads_result['nextPageToken'])
-
-                            # Check if error (eg unactivated comments)
-                            if 'error' in commentThreads_result:
-                                print(
-                                    commentThreads_result['error']['errors'][0]['reason'])
-                                continue
-
-                            # get OneByOne commentThreads
-                            for each in commentThreads_result['items']:
-                                count_total_commentThreads += 1
-
-                                # insert videos into mongoDB
-                                if 'replies' in each:
-                                    each['snippet'].update(
-                                        {'replies': each['replies']}
-                                    )
-                                each['snippet'].update({'query_id': query_id})
-                                mongo_curs.db.comments.insert_one(
-                                    each['snippet']
-                                )
-                            print('actual nb comments is :',
-                                  count_total_commentThreads)
-
-                    print('total of COMMENTS is :', count_total_commentThreads)
+                            current_comment_thread.create_comment_entry_for_each(commentThreads_result)
 
                 ############################
                 if 'captions' in options_api:
@@ -589,7 +556,7 @@ def aggregate():
 
                 return render_template('download_process.html', message='ok it is done')
 
-        return render_template('aggregate.html', dir_list=db_listed)
+        return render_template('aggregate.html', dir_list=db_listed, stats=stats)
 
     return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
 
@@ -756,15 +723,16 @@ def manage():
         }
 
         result = mongo_curs.db.query.find(
-            {'author_id': session['profil']['id']})
+            {'author_id': session['profil']['id']
+        })
         for doc in result:
             # add basic stat for admin
             countVideos = mongo_curs.db.videos.find(
-                {'query_id': doc['query_id']})
-
+                {'query_id': doc['query_id']
+            })
             countComments = mongo_curs.db.comments.find(
-                {'query_id': doc['query_id']})
-
+                {'query_id': doc['query_id']
+            })
             doc['countVideos'] = countVideos.count()
             doc['countComments'] = countComments.count()
             stats['list_queries'].append(doc)
@@ -784,21 +752,14 @@ def manage():
 @app.route('/download/queries/<query_id>/videos', methods=['GET'])
 def download_videos(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})
-    
     result = mongo_curs.db.videos.find({'query_id': query_id})
-    
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': ')
-    )
-    print(query)
+    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))    
     
     if 'query' in query:
         query_name = '_'.join(
             [query['query'], query['language'], query['ranking']])
     elif 'channel_id' in query:
         query_name = query['channel_id']
-
-    print(query_name)
     
     response = jsonify(json.loads(json_res))
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
@@ -811,19 +772,16 @@ def download_comments(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})
     from_query = json.dumps(query, default=json_util.default)
     from_query = json.loads(from_query)
-
-
+    
     if 'query' in query:
         query_name = '_'.join(
             [query['query'], query['language'], query['ranking']])
     elif 'channel_id' in query:
         query_name = query['channel_id']
-
-    # result = mongo_curs.db.comments.find({'query_name': query_name})
+    
     result = mongo_curs.db.comments.find({'query_id': query_id})
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': ')
-    )
+    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
+
     response = jsonify(json.loads(json_res))
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
         str(query_name) + '_comments.json'
@@ -835,7 +793,6 @@ def download_comments(query_id):
 ##########################################################################
 @app.route('/delete/<query_id>', methods=['GET'])
 def delete(query_id):
-    # del comments
     query = mongo_curs.db.query.find_one({'query_id': query_id})
     from_query = json.dumps(query, default=json_util.default)
     from_query = json.loads(from_query)
@@ -847,9 +804,7 @@ def delete(query_id):
         query_name = query['channel_id']
 
     mongo_curs.db.comments.remove({'query_name': query_name})
-    # del videos
     mongo_curs.db.videos.remove({'query_id': query_id})
-    # del query
     mongo_curs.db.query.remove({'query_id': query_id})
     return redirect(url_for('manage'))
 
@@ -858,7 +813,6 @@ def delete(query_id):
 ##########################################################################
 @app.route('/reset', methods=['GET'])
 def reset():
-    # if session['api_key']:
     session.clear()
     return redirect(url_for('login'))
 

@@ -9,7 +9,7 @@ from uuid import uuid4
 data_dir = 'data/'
 
 ##########################################################################
-# Youtube Data Api
+# Youtube Data Api request
 ##########################################################################
 class YouTube:
     api_key = None
@@ -56,7 +56,6 @@ class YouTube:
         return search_results
 
     def get_channel(api_key, session):
-        print(session)
         channel_results = YouTube(api_key).get_query(
             'search',
             channelId=session['channelId'],
@@ -67,8 +66,8 @@ class YouTube:
 
     @staticmethod
     def response(response):
-        print('RES = ')
-        pprint(response)
+        # print('RES = ')
+        # pprint(response)
         # pprint(response.json())
         return response.json()
 
@@ -115,7 +114,6 @@ class User():
 
     def create_or_replace_user_cortext(self, dataUser):
         dataUser = dataUser.json()
-        pprint(dataUser)
         self.username = dataUser['username']
         self.id_cortext = dataUser['id']
         
@@ -149,62 +147,49 @@ class User():
 # Comment
 ##########################################################################
 class Comment():
-    comment_parent_fields = ['id','query_id','videoId','isPublic','totalReplyCount','canReply','snippet','is_parent']
-    comment_response_fields = ['id','query_id','videoId','snippet']
-
-    def __init__(self, mongo_curs, id=None):
+    def __init__(self, mongo_curs, query_id):
         self.db = mongo_curs.db
+        self.query_id = query_id
+        print(query_id)
 
-    def view(self):
-        # return str(self.username + ' : ' + self.id_pytheas)
-        return 'view'
+    def create_comment_entry_for_each(self, commentThread):        
+        if not 'error' in commentThread:
+            for each in commentThread['items']:
+                try:
+                    snippet = each['snippet']['topLevelComment']['snippet']
+                    snippet['authorChannelId'] = snippet['authorChannelId']['value']
+                    self.db.comments.insert_one({
+                        'id' : each['id'],
+                        'query_id' : self.query_id,
+                        'isPublic': each['snippet']['isPublic'],
+                        'canReply': each['snippet']['canReply'],
+                        'totalReplyCount': each['snippet']['totalReplyCount'],
+                        'videoId' : each['snippet']['videoId'],
+                        'snippet': snippet,
+                        'is_top_level_comment': 'true',
+                    })
+                    
+                    if 'replies' in each:
+                        for child in each['replies']['comments']:
+                            snippet = child['snippet']
+                            snippet['authorChannelId'] = snippet['authorChannelId']['value']
+                            self.db.comments.insert_one({
+                                'id' : child['id'],
+                                'query_id' : self.query_id,
+                                'videoId' : child['snippet']['videoId'],
+                                'snippet': snippet,
+                                'is_top_level_comment': 'false'
+                            })
+                
+                except BaseException as e:
+                    print('error here : ' + e)
+                    pass
 
-    def create(self, commentThread):
-        self.id = commentThread['id']
-        self.query_id = commentThread['query_id']
-        self.videoId = commentThread['videoId']
-        self.snippet = commentThread['snippet']
+        else:
+            print(commentThread['error'])
+            return str('reason of error is : ' + commentThread['error']['errors'][0]['reason'])
 
-        if 'replies' in commentThread:
-            print(commentThread['replies'])
-
-        # self.isPublic = commentThread['isPublic']
-        # self.totalReplyCount = commentThread['totalReplyCount']
-        # self.canReply = commentThread['canReply']
-        # self.is_parent = commentThread['is_parent']
-        
-        # if self.is_parent is true:
-        #     self.db.comments.insert_one(
-        #         {
-        #             'id' : self.id,
-        #             'query_id' : self.query_id,
-        #             'videoId' : self.videoId,
-        #             'is_parent': self.is_parent,
-        #             'isPublic': self.isPublic,
-        #             'totalReplyCount': self.totalReplyCount,
-        #             'canReply': self.canReply,
-        #             'snippet':self.snippet,
-        #         }
-        #     )
-        # elif self.is_parent is false:
-        #     self.db.comments.insert_one(
-        #         {
-        #             'id' : self.id,
-        #             'query_id' : self.query_id,
-        #             'videoId' : self.videoId,
-        #             'snippet': self.snippet
-        #         }
-        #     )
-        
         return
-
-    def update(self, commentThread):
-        return 
-
-    def delete(self, commentThread):
-        return
-
-
 
 
 ##########################################################################
