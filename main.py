@@ -65,6 +65,26 @@ except BaseException as error:
     print('An exception occurred: {}'.format(error))
 
 
+
+#Unclassed for moment
+def cleaning_each(each):
+    # if 'snippet' in each:
+    #     if 'videoId' in each['id']:
+    #         each['snippet'].update({'videoId': each['id']['videoId']})
+    #     elif 'playlistId' in each['id']:
+    #         each['snippet'].update({'playlistId' : each['id']['playlistId']})
+    #     elif 'channelId' in each['id']:
+    #         each['snippet'].update({'channelId' : each['id']['channelId']})
+    if 'videoId' in each['id']:
+        each.update({'videoId': each['id']['videoId']})
+    elif 'playlistId' in each['id']:
+        each.update({'playlistId': each['id']['playlistId']})
+    elif 'channelId' in each['id']:
+        each.update({'channelId': each['id']['channelId']})
+    return each
+
+
+
 @app.before_request
 def before_request():
     try:
@@ -314,9 +334,8 @@ def search():
                     # insert videos
                     for each in date_results['items']:
                         each.update({'query_id': str(uid)})
-                        mongo_curs.db.videos.insert_one(
-                            each
-                        )
+                        each = cleaning_each(each)
+                        mongo_curs.db.videos.insert_one(each)
 
                     # Loop and save while results
                     if not 'nextPageToken' in date_results:
@@ -339,6 +358,15 @@ def search():
                                 return
                             for each in date_results['items']:
                                 each.update({'query_id': str(uid)})
+                                if 'snippet' in each:
+                                    if 'videoId' in each['id']:
+                                        each['snippet'].update({'videoId': each['id']['videoId']})
+                                    elif 'playlistId' in each['id']:
+                                        each['snippet'].update({'playlistId' : each['id']['playlistId']})
+                                elif 'videoId' in each['id']:
+                                    each.update({'videoId': each['id']['videoId']})
+                                elif 'playlistId' in each['id']:
+                                    each.update({'playlistId': each['id']['playlistId']})
                                 mongo_curs.db.videos.insert_one(each)
 
                     # finally increment next after day
@@ -598,9 +626,17 @@ def process_results():
         # insert videos
         for each in search_results['items']:
             each.update({'query_id': str(uid)})
-            mongo_curs.db.videos.insert_one(
-                each
-            )
+            if 'snippet' in each:
+                if 'videoId' in each['id']:
+                    each['snippet'].update({'videoId': each['id']['videoId']})
+                elif 'playlistId' in each['id']:
+                    each['snippet'].update({'playlistId' : each['id']['playlistId']})
+            elif 'videoId' in each['id']:
+                each.update({'videoId': each['id']['videoId']})
+            elif 'playlistId' in each['id']:
+                each.update({'playlistId': each['id']['playlistId']})
+            mongo_curs.db.videos.insert_one(each)
+
         ## Loop and save
         while 'nextPageToken' in search_results:
             session['counter'] += 1
@@ -620,6 +656,7 @@ def process_results():
             # insert video-info
             for each in search_results['items']:
                 each.update({'query_id': str(uid)})
+                each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
 
@@ -646,9 +683,16 @@ def process_results():
         # insert videos
         for each in channel_results['items']:
             each.update({'query_id': str(uid)})
-            mongo_curs.db.videos.insert_one(
-                each
-            )
+            if 'snippet' in each:
+                if 'videoId' in each['id']:
+                    each['snippet'].update({'videoId': each['id']['videoId']})
+                elif 'playlistId' in each['id']:
+                    each['snippet'].update({'playlistId' : each['id']['playlistId']})
+            elif 'videoId' in each['id']:
+                each.update({'videoId': each['id']['videoId']})
+            elif 'playlistId' in each['id']:
+                each.update({'playlistId': each['id']['playlistId']})
+            mongo_curs.db.videos.insert_one(each)
         ## Loop and save
         while 'nextPageToken' in channel_results:
             session['counter'] += 1
@@ -666,6 +710,7 @@ def process_results():
             # insert video-info
             for each in channel_results['items']:
                 each.update({'query_id': str(uid)})
+                each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
     return render_template('download_process.html', message='ok it is done')
