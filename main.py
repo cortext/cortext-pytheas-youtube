@@ -33,48 +33,8 @@ from code_country import language_code
 # Debug tool
 from pprint import pprint
 
-
-def create_app():
-    with open('conf/conf_dev.json') as conf_file:
-        conf_data = json.load(conf_file)
-
-        app = Flask(__name__)
-        app._static_folder = conf_data['static_folder']
-        app.config['DATA_DIR'] = conf_data['DATA_DIR']
-        app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
-        app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
-        # app.config['CELERY_BROKER_URL'] = conf_data['CELERY_BROKER_URL']
-        # app.config['CELERY_RESULT_BACKEND'] = conf_data['CELERY_RESULT_BACKEND']
-        app.config['api_key'] = conf_data['api_key']
-
-
-        Bootstrap(app)
-        app.config.update(
-            TEMPLATES_AUTO_RELOAD=True
-        )
-
-        return app
-
-try:
-    app = create_app()
-    mongo_curs = PyMongo(app)
-    #  
-    data_dir = app.config['DATA_DIR']
-
-except BaseException as error:
-    print('An exception occurred: {}'.format(error))
-
-
-
 #Unclassed for moment
 def cleaning_each(each):
-    # if 'snippet' in each:
-    #     if 'videoId' in each['id']:
-    #         each['snippet'].update({'videoId': each['id']['videoId']})
-    #     elif 'playlistId' in each['id']:
-    #         each['snippet'].update({'playlistId' : each['id']['playlistId']})
-    #     elif 'channelId' in each['id']:
-    #         each['snippet'].update({'channelId' : each['id']['channelId']})
     if 'videoId' in each['id']:
         each.update({'videoId': each['id']['videoId']})
     elif 'playlistId' in each['id']:
@@ -83,7 +43,28 @@ def cleaning_each(each):
         each.update({'channelId': each['id']['channelId']})
     return each
 
+def create_app():
+    with open('conf/conf.json') as conf_file:
+        conf_data = json.load(conf_file)
+        app = Flask(__name__)
+        app._static_folder = conf_data['static_folder']
+        app.config['DATA_DIR'] = conf_data['DATA_DIR']
+        app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
+        app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
+        # app.config['CELERY_BROKER_URL'] = conf_data['CELERY_BROKER_URL']
+        # app.config['CELERY_RESULT_BACKEND'] = conf_data['CELERY_RESULT_BACKEND']
+        app.config['api_key'] = conf_data['api_key']
+        Bootstrap(app)
+        app.config.update(TEMPLATES_AUTO_RELOAD=True)
+        return app
 
+try:
+    app = create_app()
+    mongo_curs = PyMongo(app)
+    data_dir = app.config['DATA_DIR']
+
+except BaseException as error:
+    print('An exception occurred: {}'.format(error))
 
 @app.before_request
 def before_request():
@@ -97,7 +78,6 @@ def before_request():
             return redirect(url_for('login'))
     except BaseException as e:
         print(e)
-
 
 
 @app.errorhandler(404)
@@ -452,7 +432,6 @@ def channel():
         return render_template('results.html', search_results=channel_results, string=results_string, counter=session['counter'])
     return render_template('query/channel.html', language_code=language_code)
 
-
 ##########################################################################
 # Aggregate
 ##########################################################################
@@ -503,16 +482,11 @@ def aggregate():
         if request.method == 'POST':
             if request.form and request.form.get('optionsRadios'):
                 ## NEED TO REFACT HERE FOR CAPTIONS DATA...
-                # dir_to_check = request.form.get('optionsRadios')
-                # path_dir = data_dir + dir_to_check
-                # query_id = path_dir.replace('data/', '')
-
                 query_id = request.form.get('optionsRadios')
                 options_api = request.form.getlist('api_part')
                 part = ', '.join(request.form.getlist('part'))
                 api_key = session['api_key']
                 api = YouTube(api_key=api_key)
-
                 results = mongo_curs.db.videos.find(
                     {
                         "$and": [
@@ -910,10 +884,6 @@ def auth():
     current_user.create_or_replace_user_cortext(r_access)
 
     return redirect(url_for('config'))
-
-
-
-
 
 ##########################################################################
 # Start
