@@ -155,35 +155,42 @@ class Comment():
     def create_comment_entry_for_each(self, commentThread):        
         if not 'error' in commentThread:
             for each in commentThread['items']:
-                try:
-                    snippet = each['snippet']['topLevelComment']['snippet']
+                # try:
+                snippet = each['snippet']['topLevelComment']['snippet']
+                if 'authorChannelId' in snippet:
                     snippet['authorChannelId'] = snippet['authorChannelId']['value']
-                    self.db.comments.insert_one({
-                        'id' : each['id'],
-                        'query_id' : self.query_id,
-                        'isPublic': each['snippet']['isPublic'],
-                        'canReply': each['snippet']['canReply'],
-                        'totalReplyCount': each['snippet']['totalReplyCount'],
-                        'videoId' : each['snippet']['videoId'],
-                        'snippet': snippet,
-                        'is_top_level_comment': 'true',
-                    })
-                    
-                    if 'replies' in each:
-                        for child in each['replies']['comments']:
-                            snippet = child['snippet']
-                            snippet['authorChannelId'] = snippet['authorChannelId']['value']
-                            self.db.comments.insert_one({
-                                'id' : child['id'],
-                                'query_id' : self.query_id,
-                                'videoId' : child['snippet']['videoId'],
-                                'snippet': snippet,
-                                'is_top_level_comment': 'false'
-                            })
+                else:
+                    snippet['authorChannelId'] = ''
                 
-                except BaseException as e:
-                    print('error here : ' + e)
-                    pass
+                self.db.comments.insert_one({
+                    'id' : each['id'],
+                    'query_id' : self.query_id,
+                    'isPublic': each['snippet']['isPublic'],
+                    'canReply': each['snippet']['canReply'],
+                    'totalReplyCount': each['snippet']['totalReplyCount'],
+                    'videoId' : each['snippet']['videoId'],
+                    'snippet': snippet,
+                    'is_top_level_comment': 'true',
+                })
+                
+                if 'replies' in each:
+                    for child in each['replies']['comments']:
+                        snippet = child['snippet']
+                        if 'authorChannelId' in snippet:
+                            snippet['authorChannelId'] = snippet['authorChannelId']['value']
+                        else:
+                            snippet['authorChannelId'] = ''
+                        self.db.comments.insert_one({
+                            'id' : child['id'],
+                            'query_id' : self.query_id,
+                            'videoId' : child['snippet']['videoId'],
+                            'snippet': snippet,
+                            'is_top_level_comment': 'false'
+                        })
+                
+                # except Exception as e:
+                #     print('error here : ' + e)
+                #     pass
 
         else:
             print(commentThread['error'])

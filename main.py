@@ -44,7 +44,7 @@ def cleaning_each(each):
     return each
 
 def create_app():
-    with open('conf/conf.json') as conf_file:
+    with open('conf/conf_dev.json') as conf_file:
         conf_data = json.load(conf_file)
         app = Flask(__name__)
         app._static_folder = conf_data['static_folder']
