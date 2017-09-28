@@ -187,7 +187,6 @@ class Comment():
                             'snippet': snippet,
                             'is_top_level_comment': 'false'
                         })
-                
                 # except Exception as e:
                 #     print('error here : ' + e)
                 #     pass

@@ -44,7 +44,7 @@ def cleaning_each(each):
     return each
 
 def create_app():
-    with open('conf/conf_dev.json') as conf_file:
+    with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         app = Flask(__name__)
         app._static_folder = conf_data['static_folder']
@@ -892,4 +892,4 @@ if __name__ == '__main__':
     # if not os.path.exists(data_dir):
     #     os.makedirs(data_dir)
     app.secret_key = os.urandom(24)
-    app.run(debug=True, host='0.0.0.0', port=8080, threaded=True)
+    app.run(host='0.0.0.0', port=8080, threaded=True)
