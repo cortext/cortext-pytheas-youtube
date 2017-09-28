@@ -864,12 +864,15 @@ def auth():
     code = str(request.args['code']) 
     state = str(request.args['state']) 
 
+    with open('conf/conf.json') as conf_file:
+        conf_data = json.load(conf_file)
+        redirect_uri_conf = conf_data['redirect_uri']
     payload = {
       'code': code,
       'state': state,
       'client_id': 'pytheas',
       'client_secret': 'mys3cr3t',
-      'redirect_uri': 'http://localhost:8080/auth',
+      'redirect_uri': redirect_uri_conf,
       'grant_type': 'authorization_code'
     }
 
