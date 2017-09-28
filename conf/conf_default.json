@@ -5,4 +5,5 @@
   "MONGO_DBNAME":"youtube",
   "DATA_DIR":"data/",
   "redirect_uri": "",
+  "grant_host_url":""
 }
