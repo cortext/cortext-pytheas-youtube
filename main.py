@@ -847,11 +847,16 @@ def login():
 
 @app.route('/grant', methods=['GET'])
 def grant():
-    grant_url = "https://auth.cortext.net/auth/authorize" + \
+    with open('conf/conf.json') as conf_file:
+        conf_data = json.load(conf_file)
+        grant_host_url = conf_data['grant_host_url']
+        redirect_uri_conf = conf_data['redirect_uri']
+
+    grant_url = grant_host_url + "/auth/authorize" + \
                 "?response_type=code" + \
                 "&state=" + str(uuid4().hex) + \
                 "&client_id=pytheas" + \
-                "&redirect_uri=http://localhost:8080/auth"
+                "&redirect_uri=" + redirect_uri_conf
 
     headers = {
         'Location': grant_url
@@ -867,6 +872,8 @@ def auth():
     with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         redirect_uri_conf = conf_data['redirect_uri']
+        grant_host_url = conf_data['grant_host_url']
+
     payload = {
       'code': code,
       'state': state,
@@ -876,9 +883,9 @@ def auth():
       'grant_type': 'authorization_code'
     }
 
-    r_grant = requests.post('https://auth.cortext.net/auth/grant', data=payload)
+    r_grant = requests.post(grant_host_url + '/auth/grant', data=payload)
     data = r_grant.json()
-    r_access = requests.get('https://auth.cortext.net/auth/access?access_token=' + str(data['access_token']))
+    r_access = requests.get(grant_host_url + '/auth/access?access_token=' + str(data['access_token']))
     
     session['access_token'] = data['access_token']
     session['profil'] = r_access.json()
