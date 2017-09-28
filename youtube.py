@@ -160,7 +160,7 @@ class Comment():
                 if 'authorChannelId' in snippet:
                     snippet['authorChannelId'] = snippet['authorChannelId']['value']
                 else:
-                    snippet['authorChannelId'] = ''
+                    snippet['authorChannelId'] = 'cortext_pytheas_unknown_author#' + each['id']
                 
                 self.db.comments.insert_one({
                     'id' : each['id'],
@@ -179,7 +179,7 @@ class Comment():
                         if 'authorChannelId' in snippet:
                             snippet['authorChannelId'] = snippet['authorChannelId']['value']
                         else:
-                            snippet['authorChannelId'] = ''
+                            snippet['authorChannelId'] = 'cortext_pytheas_unknown_author#' + each['id']
                         self.db.comments.insert_one({
                             'id' : child['id'],
                             'query_id' : self.query_id,
