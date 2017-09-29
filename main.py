@@ -56,6 +56,7 @@ def create_app():
         app.config['api_key'] = conf_data['api_key']
         Bootstrap(app)
         app.config.update(TEMPLATES_AUTO_RELOAD=True)
+        app.config['debug_level'] = conf_data['debug_level']
         return app
 
 try:
@@ -902,4 +903,4 @@ if __name__ == '__main__':
     # if not os.path.exists(data_dir):
     #     os.makedirs(data_dir)
     app.secret_key = os.urandom(24)
-    app.run(host='0.0.0.0', port=8080, threaded=True)
+    app.run(debug=app.config['debug_level'], host='0.0.0.0', port=8080, threaded=True)
