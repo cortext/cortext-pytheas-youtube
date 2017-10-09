@@ -445,23 +445,8 @@ def aggregate():
         db_list = mongo_curs.db.query.find(
             {'author_id': session['profil']['id']}
         )
-        db_listed = []
-        concat_list = []
-        for doc in db_list:
-            if 'query' in doc:
-                concat_name = '_'.join([
-                    doc['query'],
-                    doc['language'],
-                    doc['ranking']
-                ])
-                db_listed.append(concat_name)
-                concat_list.append(concat_name)
-            elif 'channel_id' in doc:
-                db_listed.append(doc['channel_id'])
-
         stats = {    
             'list_queries': [],
-            'concat_name': concat_list,
         }
         result = mongo_curs.db.query.find(
             {'author_id': session['profil']['id']
@@ -561,7 +546,7 @@ def aggregate():
 
                 return render_template('download_process.html', message='ok it is done')
 
-        return render_template('aggregate.html', dir_list=db_listed, stats=stats)
+        return render_template('aggregate.html', stats=stats)
 
     return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
 
