@@ -77,14 +77,6 @@ except BaseException as error:
     print('An exception occurred : {}'.format(error))
 
 
-
-
-
-
-
-
-
-
 @celery.task
 def my_background_task(delta_days, r_after):
     for n in range(delta_days):
@@ -489,8 +481,6 @@ def search():
                 r_after = time.parse(session['request']['publishedAfter'])
                 delta = r_before - r_after
                 delta_days = delta.days + 1
-
-                my_background_task.delay(10, 20)
 
                 # # Then iterate for each days
                 # for n in range(delta.days + 1):
