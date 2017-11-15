@@ -75,29 +75,5 @@
             </table>
         </div>
     </div>
-
-    <hr>
-
-    <div class='row'>
-        <h4>Data in Dir data/ (temporary tool for debug & saving captions)</h4>
-        <div class="col-md-12">
-            <form action="/config" method="POST">
-                {% for dir in dir_list %}
-                <div class="radio">
-                    <ul style="list-style-type: none;">
-                        <li>
-                            <button type="submit" name="del" value="{{ dir }}" class="btn btn-default btn-sm">
-                <span class="glyphicon glyphicon-remove"></span>
-              </button> {{ dir }}
-                        </li>
-                    </ul>
-                </div>
-                {% endfor %}
-            </form>
-        </div>
-    </div>
-
-
-
 </div>
 {% endblock %}
