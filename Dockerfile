@@ -7,6 +7,7 @@ RUN apt-get update
 RUN apt-get install nano -y
 
 
+
 # copy scripts
 RUN mkdir /opt/pytheas
 COPY . /opt/pytheas
@@ -14,6 +15,8 @@ COPY . /opt/pytheas
 WORKDIR /opt/pytheas
 
 RUN pip install -r requirements.txt
+
+
 
 EXPOSE 5000
 

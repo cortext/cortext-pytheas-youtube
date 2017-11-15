@@ -1,6 +1,8 @@
 # YoutubeExplorer
 
-**Disclaimer** : _understand this is WIP.
+**Disclaimer** : _understand this is WIP_
+
+
 
 ## Intended goal
 - Explore youtube from a "data point of view"
@@ -10,31 +12,24 @@
 - Python
 - Flask/Jinja
 - Mongodb
+- Docker
 
 ### Install
-
-Copy/paste instructions on linux with python3 installed :
-
-    git clone https://github.com/cortext/youtube-explorer.git
-    cd youtube-explorer
-    virtualenv -p /usr/bin/python3 env
-    source env/bin/activate
-    pip install -r requirements.txt
-    python main.py
+Launch it as docker service (with docker-compose)
 
 ##### Work as webapp :
 1. Obtain an api key from Google and activate the **YoutubeDataAPI** from [console.developers.google.com](https://console.developers.google.com/apis/api/youtube)
-2. Explore video info individualy and look for what you might be interested
-3. Unzoom and request a query as a list of vidéo
-4. Export and aggregate information
+2. Explore video/channel/playlist individualy and look for what you might be interested
+3. Download them
+4. Export and aggregate information (eg. comments)
 
 #### Limitations
 - Youtube results (api & browser) can only provide ~500 results
-- Automatic captions cannot be retrieved via API.
-- Response from comments included as 'replies' if existing
-- for moment response aer simultaneusly saved as file and MongoDb
+- Automatic captions cannot be retrieved via API (need to trick with xml request).
+- Comments gets only one sub-level
 
 #### Good to know
+- Search is list of video
 - Playlist is list from video
 - Author/Channel are different
 
@@ -49,7 +44,8 @@ Copy/paste instructions on linux with python3 installed :
 
 
 #### Next to do
-- Adding day/day querying methods
-- Enhanced db methods (notably access, insert, erase, manage more manageable)
+- Queuded requested videos
+- multiThreaded // parallele
+- clearly separate front/back
+- change framework ?
 - Integrate api openSpec
-- Improve, optimize and reduce code

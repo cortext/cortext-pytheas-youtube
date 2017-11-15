@@ -129,6 +129,7 @@ class User():
         except BaseException as e:
             print('user not found or error : ', e)
             self.create()
+            return 'user not found or error : '+ str(e)
         return
 
     def update(self, dataUser):

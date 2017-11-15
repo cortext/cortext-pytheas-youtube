@@ -9,8 +9,10 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
             <li {%- if request.path == "/browse" %} class="active"{% endif %}><a href="/browse">Browse</a></li>
-            <li {%- if request.path == "/search" %} class="active"{% endif %}><a href="/search">Search </a></li>
+            <li {%- if request.path == "/video" %} class="active"{% endif %} class="disabled"><a href="/video">Video </a></li>
+            <li {%- if request.path == "/playlist" %} class="active"{% endif %} class="disabled"><a href="/playlist">Playlist </a></li>
             <li {%- if request.path == "/channel" %} class="active"{% endif %}><a href="/channel">Channel </a></li>
+            <li {%- if request.path == "/search" %} class="active"{% endif %}><a href="/search">Search </a></li>
             <li {%- if request.path == "/aggregate" %} class="active"{% endif %}><a href="/aggregate">Aggregate</a></li>
           </ul>
 
