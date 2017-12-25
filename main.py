@@ -419,63 +419,63 @@ def search():
                 delta_days = delta.days + 1
 
                 # # Then iterate for each days
-                # for n in range(delta.days + 1):
-                #     # increment one day later to get a one-day period
-                #     r_after_next = r_after + dt.timedelta(days=1)
-                #     session['request']['publishedAfter'] = r_after.isoformat()
-                #     session['request']['publishedBefore'] = r_after_next.isoformat()
+                for n in range(delta.days + 1):
+                    # increment one day later to get a one-day period
+                    r_after_next = r_after + dt.timedelta(days=1)
+                    session['request']['publishedAfter'] = r_after.isoformat()
+                    session['request']['publishedBefore'] = r_after_next.isoformat()
 
-                #     # Querying
-                #     date_results = api.get_query(
-                #         'search',
-                #         q=session['request']['q'],
-                #         part=session['request']['part'],
-                #         language=session['request']['language'],
-                #         maxResults=session['request']['maxResults'],
-                #         publishedAfter=session['request']['publishedAfter'],
-                #         publishedBefore=session['request']['publishedBefore'],
-                #         key=session['api_key'])
+                    # Querying
+                    date_results = api.get_query(
+                        'search',
+                        q=session['request']['q'],
+                        part=session['request']['part'],
+                        language=session['request']['language'],
+                        maxResults=session['request']['maxResults'],
+                        publishedAfter=session['request']['publishedAfter'],
+                        publishedBefore=session['request']['publishedBefore'],
+                        key=session['api_key'])
 
-                #     # insert videos
-                #     for each in date_results['items']:
-                #         each.update({'query_id': str(uid)})
-                #         each = cleaning_each(each)
-                #         mongo_curs.db.videos.insert_one(each)
+                    # insert videos
+                    for each in date_results['items']:
+                        each.update({'query_id': str(uid)})
+                        each = cleaning_each(each)
+                        mongo_curs.db.videos.insert_one(each)
 
-                #     # Loop and save while results
-                #     if not 'nextPageToken' in date_results:
-                #         while 'nextPageToken' in date_results:
-                #             session['request']['nextPageToken'] = date_results['nextPageToken']
+                    # Loop and save while results
+                    if not 'nextPageToken' in date_results:
+                        while 'nextPageToken' in date_results:
+                            session['request']['nextPageToken'] = date_results['nextPageToken']
 
-                #             date_results = api.get_query(
-                #                 'search',
-                #                 q=session['request']['q'],
-                #                 part=session['request']['part'],
-                #                 language=session['request']['language'],
-                #                 maxResults=session['request']['maxResults'],
-                #                 publishedAfter=session['request']['publishedAfter'],
-                #                 publishedBefore=session['request']['publishedBefore'],
-                #                 key=session['api_key'],
-                #                 nextPageToken=session['request']['nextPageToken'])
+                            date_results = api.get_query(
+                                'search',
+                                q=session['request']['q'],
+                                part=session['request']['part'],
+                                language=session['request']['language'],
+                                maxResults=session['request']['maxResults'],
+                                publishedAfter=session['request']['publishedAfter'],
+                                publishedBefore=session['request']['publishedBefore'],
+                                key=session['api_key'],
+                                nextPageToken=session['request']['nextPageToken'])
 
-                #             # insert video-info except if last result
-                #             if not date_results['items']:
-                #                 return
-                #             for each in date_results['items']:
-                #                 each.update({'query_id': str(uid)})
-                #                 if 'snippet' in each:
-                #                     if 'videoId' in each['id']:
-                #                         each['snippet'].update({'videoId': each['id']['videoId']})
-                #                     elif 'playlistId' in each['id']:
-                #                         each['snippet'].update({'playlistId' : each['id']['playlistId']})
-                #                 elif 'videoId' in each['id']:
-                #                     each.update({'videoId': each['id']['videoId']})
-                #                 elif 'playlistId' in each['id']:
-                #                     each.update({'playlistId': each['id']['playlistId']})
-                #                 mongo_curs.db.videos.insert_one(each)
+                            # insert video-info except if last result
+                            if not date_results['items']:
+                                return
+                            for each in date_results['items']:
+                                each.update({'query_id': str(uid)})
+                                if 'snippet' in each:
+                                    if 'videoId' in each['id']:
+                                        each['snippet'].update({'videoId': each['id']['videoId']})
+                                    elif 'playlistId' in each['id']:
+                                        each['snippet'].update({'playlistId' : each['id']['playlistId']})
+                                elif 'videoId' in each['id']:
+                                    each.update({'videoId': each['id']['videoId']})
+                                elif 'playlistId' in each['id']:
+                                    each.update({'playlistId': each['id']['playlistId']})
+                                mongo_curs.db.videos.insert_one(each)
 
-                #     # finally increment next after day
-                #     r_after += dt.timedelta(days=1)
+                    # finally increment next after day
+                    r_after += dt.timedelta(days=1)
 
                 return redirect(url_for('manage'))
 
