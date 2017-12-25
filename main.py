@@ -34,9 +34,6 @@ from code_country import language_code
 from celery import Celery
 
 
-
-
-
 #Unclassed for moment
 def cleaning_each(each):
     if 'videoId' in each['id']:
@@ -53,6 +50,7 @@ def create_app():
         app = Flask(__name__)
         app._static_folder = conf_data['static_folder']
         app.config['DATA_DIR'] = conf_data['DATA_DIR']
+        app.config['PORT'] = conf_data['PORT']
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
@@ -77,73 +75,65 @@ except BaseException as error:
     print('An exception occurred : {}'.format(error))
 
 
-@celery.task
-def my_background_task(delta_days, r_after):
-    for n in range(delta_days):
-        r_after_next = r_after + dt.timedelta(days=1)
-        session['request']['publishedAfter'] = r_after.isoformat()
-        session['request']['publishedBefore'] = r_after_next.isoformat()
+# @celery.task
+# def my_background_task(delta_days, r_after):
+#     for n in range(delta_days):
+#         r_after_next = r_after + dt.timedelta(days=1)
+#         session['request']['publishedAfter'] = r_after.isoformat()
+#         session['request']['publishedBefore'] = r_after_next.isoformat()
 
-        # Querying
-        date_results = api.get_query(
-            'search',
-            q=session['request']['q'],
-            part=session['request']['part'],
-            language=session['request']['language'],
-            maxResults=session['request']['maxResults'],
-            publishedAfter=session['request']['publishedAfter'],
-            publishedBefore=session['request']['publishedBefore'],
-            key=session['api_key'])
+#         # Querying
+#         date_results = api.get_query(
+#             'search',
+#             q=session['request']['q'],
+#             part=session['request']['part'],
+#             language=session['request']['language'],
+#             maxResults=session['request']['maxResults'],
+#             publishedAfter=session['request']['publishedAfter'],
+#             publishedBefore=session['request']['publishedBefore'],
+#             key=session['api_key'])
 
-        # insert videos
-        for each in date_results['items']:
-            each.update({'query_id': str(uid)})
-            each = cleaning_each(each)
-            mongo_curs.db.videos.insert_one(each)
+#         # insert videos
+#         for each in date_results['items']:
+#             each.update({'query_id': str(uid)})
+#             each = cleaning_each(each)
+#             mongo_curs.db.videos.insert_one(each)
 
-        # Loop and save while results
-        if not 'nextPageToken' in date_results:
-            while 'nextPageToken' in date_results:
-                session['request']['nextPageToken'] = date_results['nextPageToken']
+#         # Loop and save while results
+#         if not 'nextPageToken' in date_results:
+#             while 'nextPageToken' in date_results:
+#                 session['request']['nextPageToken'] = date_results['nextPageToken']
 
-                date_results = api.get_query(
-                    'search',
-                    q=session['request']['q'],
-                    part=session['request']['part'],
-                    language=session['request']['language'],
-                    maxResults=session['request']['maxResults'],
-                    publishedAfter=session['request']['publishedAfter'],
-                    publishedBefore=session['request']['publishedBefore'],
-                    key=session['api_key'],
-                    nextPageToken=session['request']['nextPageToken'])
+#                 date_results = api.get_query(
+#                     'search',
+#                     q=session['request']['q'],
+#                     part=session['request']['part'],
+#                     language=session['request']['language'],
+#                     maxResults=session['request']['maxResults'],
+#                     publishedAfter=session['request']['publishedAfter'],
+#                     publishedBefore=session['request']['publishedBefore'],
+#                     key=session['api_key'],
+#                     nextPageToken=session['request']['nextPageToken'])
 
-                # insert video-info except if last result
-                if not date_results['items']:
-                    return
-                for each in date_results['items']:
-                    each.update({'query_id': str(uid)})
-                    if 'snippet' in each:
-                        if 'videoId' in each['id']:
-                            each['snippet'].update({'videoId': each['id']['videoId']})
-                        elif 'playlistId' in each['id']:
-                            each['snippet'].update({'playlistId' : each['id']['playlistId']})
-                    elif 'videoId' in each['id']:
-                        each.update({'videoId': each['id']['videoId']})
-                    elif 'playlistId' in each['id']:
-                        each.update({'playlistId': each['id']['playlistId']})
-                    mongo_curs.db.videos.insert_one(each)
+#                 # insert video-info except if last result
+#                 if not date_results['items']:
+#                     return
+#                 for each in date_results['items']:
+#                     each.update({'query_id': str(uid)})
+#                     if 'snippet' in each:
+#                         if 'videoId' in each['id']:
+#                             each['snippet'].update({'videoId': each['id']['videoId']})
+#                         elif 'playlistId' in each['id']:
+#                             each['snippet'].update({'playlistId' : each['id']['playlistId']})
+#                     elif 'videoId' in each['id']:
+#                         each.update({'videoId': each['id']['videoId']})
+#                     elif 'playlistId' in each['id']:
+#                         each.update({'playlistId': each['id']['playlistId']})
+#                     mongo_curs.db.videos.insert_one(each)
 
-        # finally increment next after day
-        r_after += dt.timedelta(days=1)
-    return 
-
-
-
-
-
-
-
-
+#         # finally increment next after day
+#         r_after += dt.timedelta(days=1)
+#     return 
 
 @app.before_request
 def before_request():
@@ -158,14 +148,14 @@ def before_request():
     except BaseException as e:
         print(e)
 
-
 @app.errorhandler(404)
 def page_not_found(error):
-    return render_template('error.html', error=error)
+    return render_template('structures/error.html', error=error)
 
 @app.route('/')
 def home():
     return render_template('home.html')
+
 
 ##########################################################################
 # Csv (plus need to add json)
@@ -177,65 +167,13 @@ def getCSV(data):
                      attachment_filename='Adjacency.csv',
                      as_attachment=True)
 
-##########################################################################
-# REST
-##########################################################################
-@app.route('/queries/', methods=['GET'])
-def queries_list():
-    result = mongo_curs.db.query.find({})
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': '))
-    return jsonify(json.loads(json_res))
-
-
-@app.route('/queries/<query_id>', methods=['GET'])
-def query_search(query_id):
-    result = mongo_curs.db.query.find_one_or_404({'query_id': query_id})
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': '))
-    return jsonify(json.loads(json_res))
-
-
-@app.route('/queries/<query_id>/videos/', methods=['GET'])
-def videos_list_by_query(query_id):
-    result = mongo_curs.db.videos.find({'query_id': query_id})
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': '))
-    return jsonify(json.loads(json_res))
-
-
-@app.route('/videos/<video_id>', methods=['GET'])
-def video_search(video_id):
-    result = mongo_curs.db.videos.find({'id.videoId': video_id})
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': '))
-    return jsonify(json.loads(json_res))
-
-
-@app.route('/videos/<video_id>/comments/', methods=['GET'])
-def comments_list_by_video(video_id):
-    result = mongo_curs.db.comments.find({'videoId': video_id})
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': '))
-    return jsonify(json.loads(json_res))
-
-
-@app.route('/comments/<comment_id>', methods=['GET'])
-def comment_search(comment_id):
-    result = mongo_curs.db.comments.find_one_or_404(
-        {'_id': ObjectId(comment_id)})
-    json_res = json_util.dumps(
-        result, sort_keys=True, indent=2, separators=(',', ': '))
-    return jsonify(json.loads(json_res))
-
 
 ##########################################################################
-# Browse
+# Explore  
 ##########################################################################
-@app.route('/browse', methods=['GET'])
+@app.route('/explore', methods=['GET'])
 def browse():
-    return render_template('browse.html')
-
+    return render_template('explore.html')
 
 @app.route('/video_info', methods=['POST'])
 def video_info():
@@ -250,16 +188,15 @@ def video_info():
                     id_video = id_video.replace(
                         'http://www.youtube.com/watch?v=', '')
             part = ', '.join(request.form.getlist('part'))
-            api_key = session['api_key']
-            api = YouTube(api_key=api_key)
+            api = YouTube(api_key=session['api_key'])
             video_result = api.get_query('videos', id=id_video, part=part)
+            print(video_result)
             video_result_string = json.dumps(
                 video_result, sort_keys=True, indent=2, separators=(',', ': '))
-            return render_template('results.html', result=video_result, string=video_result_string)
+            return render_template('actions/view_results.html', result=video_result, string=video_result_string)
         else:
-            return render_template('browse.html', message='api key not set')
-    return render_template('browse.html')
-
+            return render_template('explore.html', message='api key not set')
+    return render_template('explore.html')
 
 @app.route('/channel_info', methods=['POST'])
 def channel_info():
@@ -274,19 +211,17 @@ def channel_info():
                     id_channel = id_channel.replace(
                         'http://www.youtube.com/channel/', '')
             elif 'youtube.com/user/' in id_channel:
-                return render_template('browse/channel_info.html', message='YoutubeAPI cannot retrieve user (different from channel)...')
+                return render_template('explore/channel_info.html', message='YoutubeAPI cannot retrieve user (different from channel)...')
             part = ', '.join(request.form.getlist('part'))
-            api_key = session['api_key']
-            api = YouTube(api_key=api_key)
+            api = YouTube(api_key=session['api_key'])
             channel_result = api.get_query(
                 'channels', id=id_channel, part=part)
             channel_result_string = json.dumps(
                 channel_result, sort_keys=True, indent=2, separators=(',', ': '))
-            return render_template('results.html', result=channel_result, string=channel_result_string)
+            return render_template('actions/view_results.html', result=channel_result, string=channel_result_string)
         else:
-            return render_template('browse.html', message='api key not set')
-    return render_template('browse.html')
-
+            return render_template('explore.html', message='api key not set')
+    return render_template('explore.html')
 
 @app.route('/playlist_info', methods=['POST'])
 def playlist_info():
@@ -297,22 +232,26 @@ def playlist_info():
                 f = furl(id_playlist)
                 id_playlist = f.args['list']
             part = ', '.join(request.form.getlist('part'))
-            api_key = session['api_key']
-            api = YouTube(api_key=api_key)
+            api = YouTube(api_key=session['api_key'])
             playlist_info = api.get_query(
                 'playlists', id=id_playlist, part=part)
             playlist_info_string = json.dumps(
                 playlist_info, sort_keys=True, indent=2, separators=(',', ': '))
-            return render_template('results.html', result=playlist_info, string=playlist_info_string)
+            return render_template('actions/view_results.html', result=playlist_info, string=playlist_info_string)
         else:
-            return render_template('browse.html', message='api key not set')
-    return render_template('browse.html')
-
+            return render_template('explore.html', message='api key not set')
+    return render_template('explore.html')
 
 
 ##########################################################################
-# Video
+# Download
 ##########################################################################
+@app.route('/explore', methods=['GET'])
+def explore():
+    return render_template('explore.html')
+
+
+
 @app.route('/video', methods=['POST', 'GET'])
 def video():
     if request.method == 'POST':
@@ -339,10 +278,9 @@ def video():
         #     session['api_key'], session['request'])
         # video_results_string = json.dumps(
         #     video_result, sort_keys=True, indent=4, separators=(',', ': '))
-        # return render_template('results.html', video_result=video_result, string=video_results_string)
+        # return render_template('actions/view_results.html', video_result=video_result, string=video_results_string)
 
-    return render_template('query/video.html')
-
+    return render_template('download/video.html')
 
 
 ##########################################################################
@@ -363,7 +301,7 @@ def playlist():
     #         session['api_key'], session['request'])
     #     channel_results_string = json.dumps(
     #         channel_results, sort_keys=True, indent=4, separators=(',', ': '))
-    #     return render_template('results.html', search_results=channel_results, string=channel_results_string, counter=session['counter'])
+    #     return render_template('actions/view_results.html', search_results=channel_results, string=channel_results_string, counter=session['counter'])
 
     # # Go to next page
     # elif request.method == 'GET' and request.args.get('nextPageToken'):
@@ -375,9 +313,8 @@ def playlist():
     #     results_string = json.dumps(
     #         channel_results, sort_keys=True, indent=2, separators=(',', ': ')
     #     )
-    #     return render_template('results.html', search_results=channel_results, string=results_string, counter=session['counter'])
-    return render_template('query/playlist.html')
-
+    #     return render_template('actions/view_results.html', search_results=channel_results, string=results_string, counter=session['counter'])
+    return render_template('download/playlist.html')
 
 
 ##########################################################################
@@ -400,7 +337,7 @@ def channel():
             session['api_key'], session['request'])
         channel_results_string = json.dumps(
             channel_results, sort_keys=True, indent=4, separators=(',', ': '))
-        return render_template('results.html', search_results=channel_results, string=channel_results_string, counter=session['counter'])
+        return render_template('actions/view_results.html', search_results=channel_results, string=channel_results_string, counter=session['counter'])
 
     # Go to next page
     elif request.method == 'GET' and request.args.get('nextPageToken'):
@@ -412,9 +349,8 @@ def channel():
         results_string = json.dumps(
             channel_results, sort_keys=True, indent=2, separators=(',', ': ')
         )
-        return render_template('results.html', search_results=channel_results, string=results_string, counter=session['counter'])
-    return render_template('query/channel.html', language_code=language_code)
-
+        return render_template('actions/view_results.html', search_results=channel_results, string=results_string, counter=session['counter'])
+    return render_template('download/channel.html', language_code=language_code)
 
 
 ##########################################################################
@@ -556,10 +492,10 @@ def search():
                 previous_token = search_results['nextPageToken']
                 search_results_string = json.dumps(
                     search_results, sort_keys=True, indent=4, separators=(',', ': '))
-                return render_template('results.html', search_results=search_results, string=search_results_string, counter=session['counter'], prev=previous_token)
+                return render_template('actions/view_results.html', search_results=search_results, string=search_results_string, counter=session['counter'], prev=previous_token)
 
         else:
-            return render_template('query/search.html', message='api key not set')
+            return render_template('download/search.html', message='api key not set')
     # Go to next page
     elif request.method == 'GET' and request.args.get('nextPageToken'):
         session['counter'] += 1
@@ -568,9 +504,8 @@ def search():
             session['api_key'], session['request'])
         search_results_string = json.dumps(
             search_results, sort_keys=True, indent=2, separators=(',', ': '))
-        return render_template('results.html', search_results=search_results, string=search_results_string, counter=session['counter'], prev=pageToken)
-    return render_template('query/search.html', language_code=language_code)
-
+        return render_template('actions/view_results.html', search_results=search_results, string=search_results_string, counter=session['counter'], prev=pageToken)
+    return render_template('download/search.html', language_code=language_code)
 
 
 ##########################################################################
@@ -684,7 +619,7 @@ def aggregate():
                                         with open(data_dir + path_captions + name_file, 'w') as f:
                                             f.write(req_xml.text)
 
-                return render_template('download_process.html', message='ok it is done')
+                return render_template('actions/download_process.html', message='ok it is done')
 
         return render_template('aggregate.html', stats=stats)
 
@@ -751,14 +686,13 @@ def process_results():
                 pageToken=search_results['nextPageToken']
             )
             if not search_results['items']:
-                return render_template('download_process.html', message='ok it is done')
+                return render_template('actions/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in search_results['items']:
                 each.update({'query_id': str(uid)})
                 each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
-
 
     elif 'channelId' in session['request']:
         # build request based on session
@@ -805,7 +739,7 @@ def process_results():
                 pageToken=channel_results['nextPageToken']
             )
             if not channel_results['items']:
-                return render_template('download_process.html', message='ok it is done')
+                return render_template('actions/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in channel_results['items']:
@@ -813,7 +747,7 @@ def process_results():
                 each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
-    return render_template('download_process.html', message='ok it is done')
+    return render_template('actions/download_process.html', message='ok it is done')
 
 
 ##########################################################################
@@ -911,7 +845,6 @@ def download_videos(query_id):
         str(query_name) + '_videos.json'
     return response
 
-
 @app.route('/download/comments/<query_id>', methods=['GET'])
 def download_comments(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})
@@ -953,6 +886,7 @@ def delete(query_id):
     mongo_curs.db.query.remove({'query_id': query_id})
     return redirect(url_for('manage'))
 
+
 ##########################################################################
 # Reset session
 ##########################################################################
@@ -967,7 +901,7 @@ def reset():
 ##########################################################################
 @app.route('/login')
 def login():   
-    return render_template('login.html')
+    return render_template('actions/login.html')
 
 @app.route('/grant', methods=['GET'])
 def grant():
@@ -1025,4 +959,4 @@ def auth():
 ##########################################################################
 if __name__ == '__main__':
     app.secret_key = os.urandom(24)
-    app.run(debug=app.config['debug_level'], host='0.0.0.0', port=8080, threaded=True )
+    app.run(debug=app.config['debug_level'], host='0.0.0.0', port=app.config['PORT'], threaded=True )

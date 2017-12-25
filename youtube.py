@@ -71,11 +71,6 @@ class YouTube:
         # pprint(response.json())
         return response.json()
 
-
-
-
-
-
 ##########################################################################
 # User
 ##########################################################################
@@ -151,7 +146,6 @@ class Comment():
     def __init__(self, mongo_curs, query_id):
         self.db = mongo_curs.db
         self.query_id = query_id
-        print(query_id)
 
     def create_comment_entry_for_each(self, commentThread):        
         if not 'error' in commentThread:
