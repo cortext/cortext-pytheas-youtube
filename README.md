@@ -3,7 +3,6 @@
 **Disclaimer** : _understand this is WIP_
 
 
-
 ## Intended goal
 - Explore youtube from a "data point of view"
 - Download requested data as a comprehensible way
