@@ -1,10 +1,9 @@
-from flask import Blueprint
-rest_module = Blueprint('rest_module', __name__, template_folder='templates')
+from main import app
 
 ##########################################################################
 # REST
 ##########################################################################
-@rest_module.route('/queries/', methods=['GET'])
+@app.route('/queries/', methods=['GET'])
 def queries_list():
     result = mongo_curs.db.query.find({})
     json_res = json_util.dumps(
@@ -12,7 +11,7 @@ def queries_list():
     return jsonify(json.loads(json_res))
 
 
-@rest_module.route('/queries/<query_id>', methods=['GET'])
+@app.route('/queries/<query_id>', methods=['GET'])
 def query_search(query_id):
     result = mongo_curs.db.query.find_one_or_404({'query_id': query_id})
     json_res = json_util.dumps(
@@ -20,7 +19,7 @@ def query_search(query_id):
     return jsonify(json.loads(json_res))
 
 
-@rest_module.route('/queries/<query_id>/videos/', methods=['GET'])
+@app.route('/queries/<query_id>/videos/', methods=['GET'])
 def videos_list_by_query(query_id):
     result = mongo_curs.db.videos.find({'query_id': query_id})
     json_res = json_util.dumps(
@@ -28,7 +27,7 @@ def videos_list_by_query(query_id):
     return jsonify(json.loads(json_res))
 
 
-@rest_module.route('/videos/<video_id>', methods=['GET'])
+@app.route('/videos/<video_id>', methods=['GET'])
 def video_search(video_id):
     result = mongo_curs.db.videos.find({'id.videoId': video_id})
     json_res = json_util.dumps(
@@ -36,7 +35,7 @@ def video_search(video_id):
     return jsonify(json.loads(json_res))
 
 
-@rest_module.route('/videos/<video_id>/comments/', methods=['GET'])
+@app.route('/videos/<video_id>/comments/', methods=['GET'])
 def comments_list_by_video(video_id):
     result = mongo_curs.db.comments.find({'videoId': video_id})
     json_res = json_util.dumps(
@@ -44,7 +43,7 @@ def comments_list_by_video(video_id):
     return jsonify(json.loads(json_res))
 
 
-@rest_module.route('/comments/<comment_id>', methods=['GET'])
+@app.route('/comments/<comment_id>', methods=['GET'])
 def comment_search(comment_id):
     result = mongo_curs.db.comments.find_one_or_404(
         {'_id': ObjectId(comment_id)})

@@ -10,6 +10,7 @@ services:
     volumes:
      - '.:/opt/pytheas'
      - './data:/opt/pytheas/data'
+     - './conf:/opt/pytheas/conf'
   mongo:
     container_name: cortext_pytheas_mongoserver
     image: "mongo:3.4"

@@ -3,18 +3,24 @@
 {% block content %}
 <div class="container">
 	<div class="col-md-8 col-md-offset-2">
-		<h2>Video</h2>
+		<h2>Videos list</h2>
 
 		{% if message %}
 			{{ message }}
 		{% endif %}
 		<hr>
 
-		<form action="/video" method="POST" >
+		<form action="/videos-list" method="POST" >
 			<div class="form-group">
 				<h4>Id video (or paste url)</h4>
-				<input type="text" name='unique_id_video' class="form-control" placeholder="4Jc3zt1GEAs">
+				<textarea rows="6" name='list_videos' class="form-control" placeholder="4Jc3zt1GEAs
+				&#10;4Jc3zt1GEAs 
+				&#x0a; 4Jc3zt1GEAs
+				"></textarea>
 				<hr/>
+
+				<h4>name your query</h4>
+				<input type="text" class="form-control" name="name_query">
 
 				<h4>Part</h4>
 				<label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
