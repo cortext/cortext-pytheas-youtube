@@ -10,7 +10,6 @@ import datetime as dt
 import dateutil.parser as time
 # Flask
 from flask import Flask
-from flask import jsonify
 from flask import render_template
 from flask import request
 from flask import Response
@@ -20,17 +19,18 @@ from flask import redirect
 from flask import url_for
 # Ext lib
 from flask_bootstrap import Bootstrap
-from flask_pymongo import PyMongo
-from bson import json_util
 from bson.objectid import ObjectId
 from furl import furl
+# local modules
+from rest import rest
+from oauth import oauth
+from database import Database
 # Main class
 from youtube import YouTube
 from youtube import User
 from youtube import Comment
 from youtube import FileData
 from code_country import language_code
-
 # from celery import Celery
 
 
@@ -66,16 +66,13 @@ def create_app():
     with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         app = Flask(__name__)
-        app._static_folder = conf_data['static_folder']
+        app.register_blueprint(rest)
+        app.register_blueprint(oauth)
         app.config['DATA_DIR'] = conf_data['DATA_DIR']
         app.config['PORT'] = conf_data['PORT']
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
-        app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-        app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
-        # app.config['CELERY_BROKER_URL'] = conf_data['CELERY_BROKER_URL']
-        # app.config['CELERY_RESULT_BACKEND'] = conf_data['CELERY_RESULT_BACKEND']
         app.config['api_key'] = conf_data['api_key']
         Bootstrap(app)
         app.config.update(TEMPLATES_AUTO_RELOAD=True)
@@ -84,25 +81,24 @@ def create_app():
 
 try:
     app = create_app()
-    mongo_curs = PyMongo(app)
+    mongo_curs = Database().init_mongo(app)
     data_dir = app.config['DATA_DIR']
-    # celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-    # celery.conf.update(app.config)
-    
 except BaseException as error:
     print('An exception occurred : {}'.format(error))
-
 
 @app.before_request
 def before_request():
     try:
-        # session['api_key'] = app.config['api_key']
-        if 'access_token' not in session and request.endpoint != 'login':
-            if 'auth' in request.endpoint:
-                return auth()
-            elif 'grant' in request.endpoint:
-                return grant()            
-            return redirect(url_for('login'))
+        if 'access_token' not in session:
+            if request.endpoint is None:
+                return redirect(url_for('oauth.login'))
+            elif 'oauth.auth' in request.endpoint:
+                return oauth.auth()
+            elif 'oauth.grant' in request.endpoint:
+                return oauth.grant()
+            elif 'oauth.login' not in request.endpoint:
+                return redirect(url_for('oauth.login'))
+
     except BaseException as e:
         print(e)
 
@@ -110,10 +106,10 @@ def before_request():
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
 
+
 @app.route('/')
 def home():
     return render_template('home.html')
-
 
 ##########################################################################
 # Csv (plus need to add json)
@@ -124,7 +120,6 @@ def getCSV(data):
                      mimetype='text/csv',
                      attachment_filename='Adjacency.csv',
                      as_attachment=True)
-
 
 ##########################################################################
 # Explore  
@@ -787,126 +782,13 @@ def manage():
 
 
 ##########################################################################
-# Download videos, comments set
-##########################################################################
-@app.route('/download/queries/<query_id>/videos', methods=['GET'])
-def download_videos(query_id):
-    query = mongo_curs.db.query.find_one({'query_id': query_id})
-    result = mongo_curs.db.videos.find({'query_id': query_id})
-    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))    
-    
-    if 'query' in query:
-        query_name = '_'.join(
-            [query['query'], query['language'], query['ranking']])
-    elif 'channel_id' in query:
-        query_name = query['channel_id']
-    
-    response = jsonify(json.loads(json_res))
-    response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        str(query_name) + '_videos.json'
-    return response
-
-@app.route('/download/comments/<query_id>', methods=['GET'])
-def download_comments(query_id):
-    query = mongo_curs.db.query.find_one({'query_id': query_id})
-    from_query = json.dumps(query, default=json_util.default)
-    from_query = json.loads(from_query)
-    
-    if 'query' in query:
-        query_name = '_'.join(
-            [query['query'], query['language'], query['ranking']])
-    elif 'channel_id' in query:
-        query_name = query['channel_id']
-    
-    result = mongo_curs.db.comments.find({'query_id': query_id})
-    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
-
-    response = jsonify(json.loads(json_res))
-    response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        str(query_name) + '_comments.json'
-    return response
-
-
-##########################################################################
-# Delete dataset
-##########################################################################
-@app.route('/delete/<query_id>', methods=['GET'])
-def delete(query_id):
-    query = mongo_curs.db.query.find_one({'query_id': query_id})
-    from_query = json.dumps(query, default=json_util.default)
-    from_query = json.loads(from_query)
-    
-    mongo_curs.db.comments.remove({'query_name': query_id})
-    mongo_curs.db.videos.remove({'query_id': query_id})
-    mongo_curs.db.query.remove({'query_id': query_id})
-    return redirect(url_for('manage'))
-
-
-##########################################################################
 # Reset session
 ##########################################################################
 @app.route('/reset', methods=['GET'])
 def reset():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('oauth.login'))
 
-
-##########################################################################
-# OAuth
-##########################################################################
-@app.route('/login')
-def login():   
-    return render_template('actions/login.html')
-
-@app.route('/grant', methods=['GET'])
-def grant():
-    with open('conf/conf.json') as conf_file:
-        conf_data = json.load(conf_file)
-        grant_host_url = conf_data['grant_host_url']
-        redirect_uri_conf = conf_data['redirect_uri']
-
-    grant_url = grant_host_url + "/auth/authorize" + \
-                "?response_type=code" + \
-                "&state=" + str(uuid4().hex) + \
-                "&client_id=pytheas" + \
-                "&redirect_uri=" + redirect_uri_conf
-
-    headers = {
-        'Location': grant_url
-    }
-
-    return Response(grant_url, status=302, headers=headers)
-
-@app.route('/auth', methods=['GET'])
-def auth():
-    code = str(request.args['code']) 
-    state = str(request.args['state']) 
-
-    with open('conf/conf.json') as conf_file:
-        conf_data = json.load(conf_file)
-        redirect_uri_conf = conf_data['redirect_uri']
-        grant_host_url = conf_data['grant_host_url']
-
-    payload = {
-      'code': code,
-      'state': state,
-      'client_id': 'pytheas',
-      'client_secret': 'mys3cr3t',
-      'redirect_uri': redirect_uri_conf,
-      'grant_type': 'authorization_code'
-    }
-
-    r_grant = requests.post(grant_host_url + '/auth/grant', data=payload)
-    data = r_grant.json()
-    r_access = requests.get(grant_host_url + '/auth/access?access_token=' + str(data['access_token']))
-    
-    session['access_token'] = data['access_token']
-    session['profil'] = r_access.json()
-
-    current_user = User(mongo_curs)
-    current_user.create_or_replace_user_cortext(r_access)
-
-    return redirect(url_for('config'))
 
 ##########################################################################
 # Start

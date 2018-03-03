@@ -1,45 +1,53 @@
 {% block navbar %}
-  <nav class="navbar navbar-default">
+<nav class="navbar navbar-default">
     <div class="container-fluid">
-      <div class="navbar-header">
-        <ul class="nav navbar-nav">
-          <li class="dropdown">
-            <a class="navbar-brand dropdown-toggle" data-toggle="dropdown" href="#"> {{ title }}
+        <div class="navbar-header">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a class="navbar-brand dropdown-toggle" data-toggle="dropdown" href="#"> {{ title }}
               <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li><a href="https://pytheas.cortext.net/">Youtube </a></li>
-                <li><a href="https://tweets-pytheas.cortext.net/">Tweets </a></li>
-                <li><a href="https://spinn3r-pytheas.cortext.net">Spinn3r </a></li>
-              </ul>
-            </li>
-          </ul>
+                    <ul class="dropdown-menu">
+                        <li><a href="https://pytheas.cortext.net/">Youtube </a></li>
+                        <li><a href="https://tweets-pytheas.cortext.net/">Tweets </a></li>
+                        <li><a href="https://spinn3r-pytheas.cortext.net">Spinn3r </a></li>
+                    </ul>
+                </li>
+            </ul>
         </div>
-      
-      {%- if request.path != "/login" %}
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav">
-          <li {%- if request.path == "/explore" %} class="active"{% endif %}><a href="/explore">Explore</a></li>
-          <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Download list of videos
-              <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li {%- if request.path == "/search" %} class="active"{% endif %}><a href="/search">Search </a></li>
-                <li {%- if request.path == "/channel" %} class="active"{% endif %}><a href="/channel">Channel </a></li>
-                <li {%- if request.path == "/playlist" %} class="active"{% endif %} class="disabled"><a href="/playlist">Playlist </a></li>
-                <li {%- if request.path == "/video" %} class="active"{% endif %} ><a href="/videos-list">Custom video list </a></li>
-              </ul>
-            </li>
-            <li {%- if request.path == "/aggregate" %} class="active"{% endif %}><a href="/aggregate">Aggregate</a></li>
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-            <li {%- if request.path == "/manage" %} class="active"{% endif %}><a href="/manage">Manage data</a></li>
-            <li {%- if request.path == "/config" %} class="active"{% endif %}><a href="/config">Config</a></li>
-            <li><a href="/reset"><i class="fa fa-times" aria-hidden="true"></i></a></li>
-          </ul>
+        {%- if request.path != "/login" %}
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li {%- if request.path=="/explore" %} class="active" {% endif %}><a href="/explore">Explore</a></li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">Download list of videos
+              <span class="caret"></span>
+            </a>
+                    <ul class="dropdown-menu">
+                        <li {%- if request.path=="/search" %} class="active" {% endif %}><a href="/search">Search </a></li>
+                        <li {%- if request.path=="/channel" %} class="active" {% endif %}><a href="/channel">Channel </a></li>
+                        <li {%- if request.path=="/playlist" %} class="active" {% endif %} class="disabled"><a href="/playlist">Playlist </a></li>
+                        <li {%- if request.path=="/video" %} class="active" {% endif %}><a href="/videos-list">Custom video list </a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">Aggregate data
+            <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li {%- if request.path=="/aggregate" %} class="active" {% endif %}><a href="/aggregate">Get comments</a></li>
+                        <li class="disabled"><a href="#">Get metrics </a></li>
+                        <li class="disabled"><a href="#">Get subtitles </a></li>
+                        <li class="disabled"><a href="#">Get authors info </a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li {%- if request.path=="/manage" %} class="active" {% endif %}><a href="/manage">Manage data</a></li>
+                <li {%- if request.path=="/config" %} class="active" {% endif %}><a href="/config">Config</a></li>
+                <li><a href="/reset"><i class="fa fa-times" aria-hidden="true"></i></a></li>
+            </ul>
         </div>
-      </div>
-      {% endif %}
-      
     </div>
-  </nav>
+    {% endif %}
+    </div>
+</nav>
 {% endblock %}
