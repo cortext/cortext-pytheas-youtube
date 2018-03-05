@@ -75,7 +75,6 @@ def create_app():
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
         app.config['api_key'] = conf_data['api_key']
         Bootstrap(app)
-        app.config.update(TEMPLATES_AUTO_RELOAD=True)
         app.config['debug_level'] = conf_data['debug_level']
         return app
 
@@ -472,7 +471,6 @@ def aggregate():
                 return render_template('aggregate.html', message='api key not set', stats=stats)
             elif request.form and request.form.get('optionsRadios'):
                 ## NEED TO REFACT HERE FOR CAPTIONS DATA...
-                print(request.form)
                 query_id = request.form.get('optionsRadios')
                 options_api = request.form.getlist('api_part')
                 part = ', '.join(request.form.getlist('part'))
@@ -491,7 +489,6 @@ def aggregate():
 
                 list_vid = []
                 for result in results:
-                    print(result)
                     list_vid.append(result['id']['videoId'])
 
                 ############################
@@ -800,5 +797,6 @@ def reset():
 # Start
 ##########################################################################
 if __name__ == '__main__':
+    app.jinja_env.auto_reload = True
     app.secret_key = os.urandom(24)
     app.run(debug=app.config['debug_level'], host='0.0.0.0', port=app.config['PORT'], threaded=True )

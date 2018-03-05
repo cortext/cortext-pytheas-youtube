@@ -71,6 +71,8 @@ def auth():
     data = r_grant.json()
     r_access = requests.get(grant_host_url + '/auth/access?access_token=' + str(data['access_token']))
     
+    print(r_access.json())
+
     session['access_token'] = data['access_token']
     session['profil'] = r_access.json()
 

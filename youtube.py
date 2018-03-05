@@ -49,7 +49,7 @@ class YouTube:
             'search',
             q=session['q'],
             part=session['part'],
-            language=session['language'],
+            relevanceLanguage=session['language'],
             maxResults=session['maxResults'],
             ranking=session['ranking']
         )

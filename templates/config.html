@@ -4,34 +4,57 @@
         <div class="row">
             <div class="col-md-12">
                 <h2>Configuration</h2>
+                {{ api_key_validate }}
                 <hr/>
                 {% if message %} {{ message }} {% endif %}
             </div>
         </div>
-        <div class='row'>
+
+        <div class="row">
             <h4>Api.key</h4>
-            <p>{{ api_key_validate }}</p>
-            <form action="/config" method="POST">
-                <div class="col-md-8 ">
-                    <input type="text" name='api_key' class="form-control" placeholder="AIzaSyCff6PMNeR49MAZyJps64QpXxxx77XXxxx">
-                </div>
-                <div class="col-md-2 ">
-                    <button type="submit"  class="btn btn-default">Submit</button>
-                </div>
-            </form>
-            
-            <div class="col-md-2 ">
-                <form action="/reset" method="POST">
-                    <button type="submit"  name='reset_key' class="btn btn-default">Reset</button>
+        </div>
+
+        <div class='row'>
+            <div class="col-md-6">
+                {% if api_key_validate == 'You need an API KEY from youtube'%}
+                    <p>
+                        First of all you will need to <strong>get an API key from Google Console Devellopers</strong>.
+                    </p>
+                    <p>
+                         More specifically from the <strong>youtube Data API v3</strong>. Its totally free. You will just need to activate it and come back with a little key.
+                    </p>
+                    <p>
+                        You can get it here : <a href="https://console.developers.google.com/apis">
+                            https://console.developers.google.com/apis
+                        </a>
+                    </p>
+                {% endif %} 
+            </div>
+            <div class="col-md-6">
+                <form action="/config" method="POST">
+                    <div class="col-md-10">
+                        <input type="text" name='api_key' class="form-control" placeholder="AIzaSyCff6PMNeR49MAZyJps64QpXxxx77XXxxx">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit"  class="btn btn-default">Submit</button>
+                    </div>
                 </form>
             </div>
         </div>
-        <hr>
+
+
         <div class='row'>
             <h4>User info</h4>
-            <div class="col-md-8 ">
-            <pre>{{ session_data }}</pre>
         </div>
+
+        <div class='row'>
+            <div class="col-md-6">
+                Your cortext manager account information.
+            </div>
+
+            <div class="col-md-6">
+                <pre>{{ session_data }}</pre>
+            </div>
     </div>
 </div>
 {% endblock %}
