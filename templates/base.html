@@ -6,35 +6,28 @@
 {% set github_cred = 'https://github.com/cortext/cortext-pytheas-youtube' %}
 
 {% block head %}
-  
-  {% block styles %}
-    {{super()}}
-    <link rel="shortcut icon" href="static/favicon.ico">
-    <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="static/style.css">
-  {%- endblock styles%}
-
-  {% block scripts %}
-    {{ super() }}
-    <script type="text/javascript" src="static/main.js"></script>
-  {% endblock scripts%}
-
+  {{super()}}
+  <link rel="shortcut icon" href="static/favicon.ico">
+  <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr" crossorigin="anonymous">
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" type="text/css" href="static/style.css">
   {{fixes.ie8()}}
 {% endblock %}
 
-{% block body -%}
-
+{% block content %}
   {% block navbar %}
     {% include 'structures/nav.html' %}
   {% endblock navbar %}
 
-  {% block content %}      
-    {{super()}}
-  {% endblock content %}
+  {{super()}}
 
   {% block footer %}
     {% include 'structures/footer.html' %}
   {% endblock footer %}
+{% endblock content %}
 
-{% endblock body %}
+{% block scripts %}
+  {{ super() }}
+  <script type="text/javascript" src="static/main.js"></script>
+{% endblock scripts%}
+  

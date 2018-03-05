@@ -83,22 +83,24 @@ try:
     app = create_app()
     mongo_curs = Database().init_mongo(app)
     data_dir = app.config['DATA_DIR']
+    # fixed parameters until real load_balancing
+    maxResults = 50
 except BaseException as error:
     print('An exception occurred : {}'.format(error))
 
 @app.before_request
 def before_request():
     try:
+        # tricky way to get URL 404 etc. rooting as I want
         if 'access_token' not in session:
             if request.endpoint is None:
                 return redirect(url_for('oauth.login'))
             elif 'oauth.auth' in request.endpoint:
-                return oauth.auth()
+                return 
             elif 'oauth.grant' in request.endpoint:
-                return oauth.grant()
+                return 
             elif 'oauth.login' not in request.endpoint:
                 return redirect(url_for('oauth.login'))
-
     except BaseException as e:
         print(e)
 
@@ -228,7 +230,7 @@ def playlist():
     #         'channelId': request.form.get('id'),
     #         # 'forUsername': ', '.join(request.form.getlist('forUsername')),
     #         # 'categoryId': request.form.get('categoryId'),
-    #         'maxResults': request.form.get('maxResults')
+    #         'maxResults': maxResults
     #     }
 
     #     channel_results = YouTube.get_channel(
@@ -261,7 +263,7 @@ def channel():
             'channelId': id_channel,
             # 'forUsername': ', '.join(request.form.getlist('forUsername')),
             # 'categoryId': request.form.get('categoryId'),
-            'maxResults': request.form.get('maxResults')
+            'maxResults': maxResults
         }
 
         channel_results = YouTube.get_channel(
@@ -306,7 +308,7 @@ def search():
                     'q': request.form.get('query'),
                     'part': ', '.join(request.form.getlist('part')),
                     'language': request.form.get('language'),
-                    'maxResults': request.form.get('maxResults'),
+                    'maxResults': maxResults,
                     'ranking': request.form.get('ranking'),
                     'publishedAfter': st_point,
                     'publishedBefore': ed_point
@@ -321,7 +323,7 @@ def search():
                         'query': session['request']['q'],
                         'part': session['request']['part'],
                         'language': session['request']['language'],
-                        'maxResults': session['request']['maxResults'],
+                        'maxResults': maxResults,
                         'ranking': session['request']['ranking'],
                         'date_start': session['request']['publishedAfter'],
                         'date_end': session['request']['publishedBefore']
@@ -334,7 +336,7 @@ def search():
                     q=session['request']['q'],
                     part=session['request']['part'],
                     language=session['request']['language'],
-                    maxResults=session['request']['maxResults'],
+                    maxResults=maxResults,
                     publishedAfter=session['request']['publishedAfter'],
                     publishedBefore=session['request']['publishedBefore'],
                     key=session['api_key'])
@@ -357,7 +359,7 @@ def search():
                         q=session['request']['q'],
                         part=session['request']['part'],
                         language=session['request']['language'],
-                        maxResults=session['request']['maxResults'],
+                        maxResults=maxResults,
                         publishedAfter=session['request']['publishedAfter'],
                         publishedBefore=session['request']['publishedBefore'],
                         key=session['api_key'])
@@ -378,7 +380,7 @@ def search():
                                 q=session['request']['q'],
                                 part=session['request']['part'],
                                 language=session['request']['language'],
-                                maxResults=session['request']['maxResults'],
+                                maxResults=maxResults,
                                 publishedAfter=session['request']['publishedAfter'],
                                 publishedBefore=session['request']['publishedBefore'],
                                 key=session['api_key'],
@@ -410,7 +412,7 @@ def search():
                     'q': request.form.get('query'),
                     'part': ', '.join(request.form.getlist('part')),
                     'language': request.form.get('language'),
-                    'maxResults': request.form.get('maxResults'),
+                    'maxResults': maxResults,
                     'ranking': request.form.get('ranking')
                 }
                 search_results = YouTube.get_search(
@@ -452,6 +454,7 @@ def aggregate():
         result = mongo_curs.db.query.find(
             {'author_id': session['profil']['id']
         })
+
         for doc in result:
             # add basic stat for admin
             countVideos = mongo_curs.db.videos.find(
@@ -463,12 +466,13 @@ def aggregate():
             doc['countVideos'] = countVideos.count()
             doc['countComments'] = countComments.count()
             stats['list_queries'].append(doc)
-
-        
         
         if request.method == 'POST':
-            if request.form and request.form.get('optionsRadios'):
+            if 'api_key' not in session:
+                return render_template('aggregate.html', message='api key not set', stats=stats)
+            elif request.form and request.form.get('optionsRadios'):
                 ## NEED TO REFACT HERE FOR CAPTIONS DATA...
+                print(request.form)
                 query_id = request.form.get('optionsRadios')
                 options_api = request.form.getlist('api_part')
                 part = ', '.join(request.form.getlist('part'))
@@ -483,13 +487,16 @@ def aggregate():
                     }
                 )
 
+
+
                 list_vid = []
                 for result in results:
+                    print(result)
                     list_vid.append(result['id']['videoId'])
 
                 ############################
                 if 'comments' in options_api:
-                    # for each video loop to comments
+                    # init Comment class & for each video loop to each comment
                     current_comment_thread = Comment(mongo_curs, query_id)
 
                     for id_video in list_vid:
@@ -551,7 +558,6 @@ def aggregate():
 
     return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
 
-
 ##########################################################################
 # processing results uesd by /search and /aggregate
 ##########################################################################
@@ -599,7 +605,7 @@ def process_results():
             q=session['request']['q'],
             part=session['request']['part'],
             language=session['request']['language'],
-            maxResults=session['request']['maxResults'],
+            maxResults=maxResults,
             ranking=session['request']['ranking']
         )
 
@@ -611,7 +617,7 @@ def process_results():
                 'query': session['request']['q'],
                 'part': session['request']['part'],
                 'language': session['request']['language'],
-                'maxResults': session['request']['maxResults'],
+                'maxResults': maxResults,
                 'ranking': session['request']['ranking'],
             }
         )
@@ -639,7 +645,7 @@ def process_results():
                 q=session['request']['q'],
                 part=session['request']['part'],
                 language=session['request']['language'],
-                maxResults=session['request']['maxResults'],
+                maxResults=maxResults,
                 ranking=session['request']['ranking'],
                 pageToken=search_results['nextPageToken']
             )
@@ -658,7 +664,7 @@ def process_results():
             'search',
             channelId=session['request']['channelId'],
             part=session['request']['part'],
-            maxResults=session['request']['maxResults']
+            maxResults=maxResults
         )
         # insert query
         mongo_curs.db.query.insert_one(
@@ -667,7 +673,7 @@ def process_results():
                 'query_id': str(uid),
                 'channel_id': session['request']['channelId'],
                 'part': session['request']['part'],
-                'maxResults': session['request']['maxResults'],
+                'maxResults': maxResults,
             }
         )
         # insert videos
@@ -691,7 +697,7 @@ def process_results():
                 'search',
                 channelId=session['request']['channelId'],
                 part=session['request']['part'],
-                maxResults=session['request']['maxResults'],
+                maxResults=maxResults,
                 pageToken=channel_results['nextPageToken']
             )
             if not channel_results['items']:

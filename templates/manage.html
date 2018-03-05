@@ -1,79 +1,75 @@
 {% extends "base.html" %} {% block content %}
-
-<div class="container">
-
-    <div class='row'>
-        <div class="col-md-12">
-            <h3>Manage data</h3>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Manage results</h2>
+                <hr/>
+                <h3>your dataset in database</h3>
+                {% if message %} {{ message }} {% endif %}
+            </div>
+        </div>
+        <div class='row'>
+            <h4>Data in db </h4>
+            <div class="col-md-12">
+                <h5>Stats</h5>
+                {% for key, val in stats.items() if not key == 'list_queries' %}
+                    <p>{{key|e}} : {{val}}</p>
+                {% endfor %}
+                <br>
+                <h5>List queries :</h5>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Query</th>
+                            <th>ChannelId</th>
+                            <th>PlaylistId</th>
+                            <th>VideoId</th>
+                            <th>ranking</th>
+                            <th>part(query)</th>
+                            <th>language</th>
+                            <th>videos</th>
+                            <th>comments</th>
+                            <th>date start </th>
+                            <th>date end </th>
+                            <th>Download videos</th>
+                            <th>Download comments</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
+                            <tr>
+                                <td>{{query['query']}}</td>
+                                <td>{{query['channel_id']}}</td>
+                                <td></td>
+                                <td></td>
+                                <td>{{query['ranking']}}</td>
+                                <td>{{query['part']}}</td>
+                                <td class="text-center">{{query['language']}}</td>
+                                <td class="text-center">{{query['countVideos']}}</td>
+                                <td class="text-center">{{query['countComments']}}</td>
+                                {% if query['date_start'] is defined %}
+                                    <td>{{query['date_start'][0:10]}}</td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                {% if query['date_end'] is defined %}
+                                    <td>{{query['date_end'][0:10]}}</td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                <td class="text-center"><a href="/download/queries/{{ query['query_id'] }}/videos">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a></td>
+                                <td class="text-center"><a href="/download/comments/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a></td>
+                                <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
+                            </tr>
+                        {% endfor %} {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-    <hr>
-
-    <div class='row'>
-        <h4>Data in db </h4>
-        <div class="col-md-12">
-            <h5>Stats</h5>
-            {% for key, val in stats.items() if not key == 'list_queries' %}
-              <p>{{key|e}} : {{val}}</p>
-            {% endfor %}
-
-            <br>
-
-            <h5>List queries :</h5>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Query</th>
-                        <th>ChannelId</th>
-                        <th>PlaylistId</th>
-                        <th>VideoId</th>
-                        <th>ranking</th>
-                        <th>part(query)</th>
-                        <th>language</th>
-                        <th>videos</th>
-                        <th>comments</th>
-                        <th>date start </th>
-                        <th>date end </th>
-                        <th>Download videos</th>
-                        <th>Download comments</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                  {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
-                    <tr>
-                        <td>{{query['query']}}</td>
-                        <td>{{query['channel_id']}}</td>
-                        <td></td>
-                        <td></td>
-                        <td>{{query['ranking']}}</td>
-                        <td>{{query['part']}}</td>
-                        <td class="text-center">{{query['language']}}</td>
-                        <td class="text-center">{{query['countVideos']}}</td>
-                        <td class="text-center">{{query['countComments']}}</td>
-                        {% if query['date_start'] is defined %}
-                          <td>{{query['date_start'][0:10]}}</td>
-                        {% else %}
-                          <td></td>
-                        {% endif %}
-                        {% if query['date_end'] is defined %}
-                          <td>{{query['date_end'][0:10]}}</td>
-                        {% else %}
-                          <td></td>
-                        {% endif %}
-                        <td class="text-center"><a href="/download/queries/{{ query['query_id'] }}/videos">
-                          <i class="fa fa-download" aria-hidden="true"></i>
-                        </a></td>
-                        <td class="text-center"><a href="/download/comments/{{ query['query_id'] }}">
-                          <i class="fa fa-download" aria-hidden="true"></i>
-                        </a></td>
-                        <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
-
-                    </tr>
-                  {% endfor %} {% endif %} {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 {% endblock %}
