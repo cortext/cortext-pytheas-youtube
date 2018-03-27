@@ -82,7 +82,7 @@ try:
     app = create_app()
     mongo_curs = Database().init_mongo(app)
     data_dir = app.config['DATA_DIR']
-    # fixed parameters until real load_balancing
+    # fixed this parameter until real charge management (if necessary)
     maxResults = 50
 except BaseException as error:
     print('An exception occurred : {}'.format(error))
@@ -479,7 +479,12 @@ def aggregate():
                 results = mongo_curs.db.videos.find(
                     {
                         "$and": [
-                            {"id.videoId": {"$exists": True}},
+                            { "$or": 
+                                [
+                                    {"id.videoId": {"$exists": True} },
+                                    {"id": {"$exists": True} }
+                                ]
+                            },
                             {"query_id": query_id}
                         ]
                     }
@@ -489,7 +494,10 @@ def aggregate():
 
                 list_vid = []
                 for result in results:
-                    list_vid.append(result['id']['videoId'])
+                    if 'videoId' in result['id']:
+                        list_vid.append(result['id']['videoId'])
+                    else:
+                        list_vid.append(result['id'])
 
                 ############################
                 if 'comments' in options_api:
