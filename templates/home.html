@@ -31,7 +31,9 @@
                     <form action="/video_info" id="video" method="POST">
                         <div class="form-group">
                             <p class="page-header">Try it !</p>
-                            <input hidden type="text" name='unique_id_video' class="form-control" placeholder="4Jc3zt1GEAs">
+                            <small>Put an url from youtube here</small>
+                            
+                            <input hidden type="text" name='unique_id_video' class="form-control" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
                             <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
                             <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
                             <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
@@ -49,8 +51,7 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="row">
-                    <h3>Very basic rest implemented</h3>
-                    <p>Find id of your queries first then explore :</p>
+                    <h3>Basic rest implemented</h3>
                     <ul>
                         <li><a href="/queries/">/queries/</a></li>
                         <li>/queries/<strong>query_id</strong></li>
