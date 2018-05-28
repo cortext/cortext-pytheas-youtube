@@ -1,4 +1,3 @@
-xmltodict
 Flask==1.0.2
 Flask_PyMongo==0.4.1
 Flask_Bootstrap==3.3.7.1
