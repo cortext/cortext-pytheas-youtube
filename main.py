@@ -29,6 +29,7 @@ from database import Database
 # Main class
 from user import User
 from youtube import YouTube
+from youtube import YouTubeTranscriptApi
 from youtube import Comment
 from youtube import FileData
 from code_country import language_code
@@ -497,9 +498,48 @@ def aggregate():
                 # absolutely need to fix this later
                 for result in results:
                     if 'videoId' in result:
-                        list_vid.append(result['videoId'])
+                        id_video = result['videoId']
                     else:
-                        list_vid.append(result['id'])
+                        id_video = result['id']
+
+                    list_vid.append(id_video)
+                    query_id = result['query_id']
+                    
+                    if 'captions' in options_api:
+                        dir_captions = data_dir + 'captions/' + query_id + '/'
+                        FileData.create_dir('captions/' + query_id)
+                        # https://github.com/jdepoix/youtube-transcript-api
+                        # use an undocumentad part of the api youtube (web client api)
+                        captions_result = api.get_query(
+                            'captions',
+                            videoId=id_video,
+                            part='id, snippet'
+                        )
+                        # Check if error (eg unactivated captions)
+                        if 'error' in captions_result:
+                            print(captions_result['error']
+                                  ['errors'][0]['reason'])
+                            continue
+                        if not captions_result['items']:
+                            print('empty captions')
+                            continue
+                        # get different captions language
+                        for key, val in captions_result.items():
+                            if key == 'items':
+                                for item in val:
+                                    lang_caption = item['snippet']['language']
+                                    track_kind = item['snippet']['trackKind']
+                                    transcript = YouTubeTranscriptApi().get_transcript(id_video)
+                                    json_caption = json.dumps(transcript, ensure_ascii=False)
+                                    if json_caption is not None:
+                                        name_file = dir_captions \
+                                            + id_video + '_' \
+                                            + lang_caption + '_' \
+                                            + track_kind + '.json'
+                                        with open(name_file, 'w') as f:
+                                            f.write(json_caption)
+
+                    
 
                 ############################
                 if 'metrics' in options_api:
@@ -535,42 +575,7 @@ def aggregate():
                                 pageToken=commentThreads_result['nextPageToken'])
                             current_comment_thread.create_comment_entry_for_each(commentThreads_result)
 
-                ############################
-                if 'captions' in options_api:
-                    
-                    FileData.create_dir('captions')
-                    # for each video loop to captions
-                    for id_video in list_vid:
-                        captions_result = api.get_query(
-                            'captions',
-                            videoId=id_video,
-                            part='id, snippet'
-                        )
-                        # Check if error (eg unactivated captions)
-                        if 'error' in captions_result:
-                            print(captions_result['error']
-                                  ['errors'][0]['reason'])
-                            continue
-                        if not captions_result['items']:
-                            print('empty captions')
-                            continue
-                        # get different captions language
-                        for key, val in captions_result.items():
-                            # if not captions_result['items'] and key ==
-                            # 'items':
-                            if key == 'items':
-                                for item in val:
-                                    lang_caption = item['snippet']['language']
-                                    caption_xml = 'https://www.youtube.com/api/timedtext?lang=' \
-                                        + lang_caption \
-                                        + '&v=' + id_video
-                                    print(caption_xml)
-                                    req_xml = requests.get(caption_xml)
-                                    if req_xml.text:
-                                        # saving cap
-                                        name_file = id_video + '_' + lang_caption + '.xml'
-                                        with open(data_dir + path_captions + name_file, 'w') as f:
-                                            f.write(req_xml.text)
+                
 
                 return render_template('actions/download_process.html', message='ok it is done')
 
