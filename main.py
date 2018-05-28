@@ -21,7 +21,6 @@ from flask import url_for
 from flask_bootstrap import Bootstrap
 from bson.objectid import ObjectId
 from furl import furl
-import xmltodict
 # local modules
 from rest import rest
 from oauth import oauth
