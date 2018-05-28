@@ -83,7 +83,7 @@ try:
     app = create_app()
     mongo_curs = Database().init_mongo(app)
     data_dir = app.config['DATA_DIR']
-    # fixed parameters until real load_balancing
+    # fixed this parameter until real charge management (if necessary)
     maxResults = 50
 except BaseException as error:
     print('An exception occurred : {}'.format(error))

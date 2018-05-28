@@ -1,143 +1,188 @@
-{% extends "base.html" %}
-{% block content %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h2>Explore</h2>
-                <hr/>
-                <h3>Data response from youtube</h3>
-                {% if message %} {{ message }} {% endif %}
-            </div>
-        </div>
-        <div class="row ">
-            <div class="col-md-6">
-                <div class="row">
-                    <h4>Copy/cut an URL from youtube and submit</h4>
-                    <p>
-                        Here you can explore what type of data youtube give us access. Choose one of the 3 main ressources from youtube (<strong>video</strong>, <strong>channel</strong> or <strong>playlist</strong>) and click to his associate button.
-                    </p>
-                    <ul>
-                        <li>Main <a href="https://developers.google.com/youtube/v3/docs/videos/list">Video documentation</a></li>
-                        <li>Main <a href="https://developers.google.com/youtube/v3/docs/channels/list">Channel documentation</a></li>
-                        <li>Main <a href="https://developers.google.com/youtube/v3/docs/playlists/list">Playlist documentation</a></li>
-                    </ul>
-                    <p><small>note that list method is used to download videos lists</small></p>
-                </div>
-                <div class="row">
-                    <h4>"Part" parameter</h4>
-                    <p>Also you will have to choose "<strong>Part</strong>" parameter. It is a requirement from youtube to choose which aspects of data we want. To get the entire documentation from youtube its recomanded to visit documentation website
-                    </p>
-                    <ul>
-                        <li>Part <a href="https://developers.google.com/youtube/v3/docs/videos/list#part">Video documentation</a></li>
-                        <li>Part <a href="https://developers.google.com/youtube/v3/docs/channels/list#part">Channel documentation</a></li>
-                        <li>Part <a href="https://developers.google.com/youtube/v3/docs/playlists/list#part">Playlist documentation</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="row text-center">
-                    <p><small>(Click to change mode)</small></p>
-                    <p>
-                        <a class="btn btn-primary" data-toggle="collapse" href="#video" role="button">
-                            Video
-                        </a>
-                        <a class="btn btn-primary" data-toggle="collapse" href="#channel" role="button">
-                            Channel
-                        </a>
-                        <a class="btn btn-primary" data-toggle="collapse" href="#playlist" role="button">
-                            Playlist
-                        </a>
-                    </p>
-                </div>
-                
-                <div class="collapse in" id="video">
-                    <div class="card card-body">
-                        <!-- Video  -->
-                        <div class="row vertical-align">
-                            <div class="col-md-10">
-                                <h4>Video-info</h4>
-                                <form action="/video_info" id="video" method="POST">
-                                    <div class="form-group">
-                                        <h5>Id video (or paste url)</h5>
-                                        <input type="text" name='unique_id_video' class="form-control" placeholder="4Jc3zt1GEAs">
-                                        <h5>Part</h5>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                                    </div>
-                                    <button type="submit" class="btn btn-default center-block">Submit</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="collapse" id="channel">
-                    <div class="card card-body">
-                        <!-- Channel  -->
-                        <div class="row vertical-align">
-                            <div class="col-md-10">
-                                <h4>Channel-info</h4>
-                                <form action="/channel_info" id="channel" method="POST">
-                                    <div class="form-group">
-                                        <h5>Id Channel (or paste url)</h5>
-                                        <input type="text" name='unique_id_channel' class="form-control" placeholder="UCxpgAMAOmPX_aCIs-yKBPwg">
-                                        <h5>Part</h5>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                                        <br/>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                                        <br/>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                                        <br/>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="invideoPromotion" checked>invideoPromotion</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="brandingSettings" checked>brandingSettings</label>
-                                        <br>
-                                        <label class="checkbox-inline text-muted"><input name='part' type="checkbox" value="auditDetails" disabled>auditDetails</label>
-                                    </div>
-                                    <button type="submit" class="btn btn-default center-block">Submit</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="collapse" id="playlist">
-                    <div class="card card-body">
-                        <!-- Playlist  -->
-                        <div class="row vertical-align">
-                            <div class="col-md-10">
-                                <h4>Playlist-info</h4>
-                                <form action="/playlist_info" id="playlist" method="POST">
-                                    <div class="form-group">
-                                        <h5>Id Playlist (or paste url)</h5>
-                                        <input type="text" name='unique_id_playlist' class="form-control" placeholder="PLTCMYaAONGHVtUG-oZnoa3VJMCRvpkq7k">
-                                        <h5>Part</h5>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                                        <br/>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                                        <br/>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                                        <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
-                                    </div>
-                                    <button type="submit" class="btn btn-default center-block">Submit</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                
-                
-            </div>
+{% extends "base.html" %} {% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Explore</h2>
+            <hr/>
+            <h3>Data response from youtube</h3> {% if message %} {{ message }} {% endif %}
         </div>
     </div>
-    {%- endblock %}
+    <div class="row ">
+        <div class="col-md-6">
+            <div class="row">
+                <h4>Copy/cut an URL from youtube and submit</h4>
+                <p>
+                    Here you can explore what type of data youtube give us access. Choose one of the 3 main ressources from youtube (<strong>video</strong>, <strong>channel</strong> or <strong>playlist</strong>) and click to his associate button.
+                </p>
+                <ul>
+                    <li>Main <a href="https://developers.google.com/youtube/v3/docs/videos/list">Video documentation</a></li>
+                    <li>Main <a href="https://developers.google.com/youtube/v3/docs/channels/list">Channel documentation</a></li>
+                    <li>Main <a href="https://developers.google.com/youtube/v3/docs/playlists/list">Playlist documentation</a></li>
+                </ul>
+                <p><small>note that list method is used to download videos lists</small></p>
+            </div>
+            <div class="row">
+                <h4>"Part" parameter</h4>
+                <p>Also you will have to choose "<strong>Part</strong>" parameter. It is a requirement from youtube to choose which aspects of data we want. To get the entire documentation from youtube its recomanded to visit documentation website
+                </p>
+                <ul>
+                    <li>Part <a href="https://developers.google.com/youtube/v3/docs/videos/list#part">Video documentation</a></li>
+                    <li>Part <a href="https://developers.google.com/youtube/v3/docs/channels/list#part">Channel documentation</a></li>
+                    <li>Part <a href="https://developers.google.com/youtube/v3/docs/playlists/list#part">Playlist documentation</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6" id="myGroup">
+            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne">
+                        <h4 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                      Video
+                    </a>
+                  </h4>
+                    </div>
+                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                        <div class="panel-body">
+                            <h4>Video-info</h4>
+                            <form action="/video_info" id="video" method="POST">
+                                <div class="form-group">
+                                    <h5>Id video (or paste url)</h5>
+                                    <input type="text" name='unique_id_video' class="form-control" placeholder="4Jc3zt1GEAs">
+                                    <h5>Part</h5>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="id" checked>id</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="status" checked>status</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="player" checked>player</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                                </div>
+                                <button type="submit" class="btn btn-default center-block">Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingTwo">
+                        <h4 class="panel-title">
+                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      Channel
+                    </a>
+                  </h4>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                        <div class="panel-body">
+                            <h4>Channel-info</h4>
+                            <form action="/channel_info" id="channel" method="POST">
+                                <div class="form-group">
+                                    <h5>Id Channel (or paste url)</h5>
+                                    <input type="text" name='unique_id_channel' class="form-control" placeholder="UCxpgAMAOmPX_aCIs-yKBPwg">
+                                    <h5>Part</h5>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="id" checked>id</label>
+                                    <br/>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="status" checked>status</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                                    <br/>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                                    <br/>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="invideoPromotion" checked>invideoPromotion</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="brandingSettings" checked>brandingSettings</label>
+                                    <br>
+                                    <label class="checkbox-inline text-muted">
+                                        <input name='part' type="checkbox" value="auditDetails" disabled>auditDetails</label>
+                                </div>
+                                <button type="submit" class="btn btn-default center-block">Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingThree">
+                        <h4 class="panel-title">
+                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                      Playlist
+                    </a>
+                  </h4>
+                    </div>
+                    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+                        <div class="panel-body">
+                            <h4>Playlist-info</h4>
+                            <form action="/playlist_info" id="playlist" method="POST">
+                                <div class="form-group">
+                                    <h5>Id Playlist (or paste url)</h5>
+                                    <input type="text" name='unique_id_playlist' class="form-control" placeholder="PLTCMYaAONGHVtUG-oZnoa3VJMCRvpkq7k">
+                                    <h5>Part</h5>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="id" checked>id</label>
+                                    <br/>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="status" checked>status</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                                    <br/>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                                    <label class="checkbox-inline">
+                                        <input name='part' type="checkbox" value="player" checked>player</label>
+                                </div>
+                                <button type="submit" class="btn btn-default center-block">Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="row text-center">
+                <p><small>(Click to change mode)</small></p>
+                <div>
+                    <a class="btn btn-primary" role="button" data-parent="#myGroup" href="#video" aria-expanded="false" data-toggle="collapse" href="#video" role="button" aria-controls="video">
+                            Video
+                        </a>
+                    <a class="btn btn-primary" role="button" data-parent="#myGroup" href="#channel" aria-expanded="false" data-toggle="collapse" href="#channel" role="button" aria-controls="channel">
+                            Channel
+                        </a>
+                    <a class="btn btn-primary" role="button" data-parent="#myGroup" href="#playlist" aria-expanded="false" data-toggle="collapse" href="#playlist" role="button" aria-controls="playlist">
+                            Playlist
+                        </a>
+                </div>
+            </div>
+            <div class="collapse row" id="video">
+                <div class="card card-body">
+                </div>
+            </div>
+            <div class="collapse row" id="channel">
+                <div class="card card-body">
+                </div>
+            </div>
+            <div class="collapse row" id="playlist">
+                <div class="card card-body">
+                    
+                </div>
+            </div> -->
+        </div>
+    </div>
+</div>
+{%- endblock %}
