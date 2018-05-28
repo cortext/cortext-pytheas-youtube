@@ -5,130 +5,149 @@
             <div class="col-md-12">
                 <h2>Aggregate results</h2>
                 <hr/>
-                <h3>add comments to your dataset</h3>
+                <h3>Instructions</h3>
                 {% if message %} {{ message }} {% endif %}
+                <p>
+                    <ol>
+                        <li>Choose which information you want to add (mainly : comments, metrics or captions)</li>
+                        <li>Choose your dataset (a list of videos)</li>
+                        <li>Submit job and wait until its done</li>
+                    </ol>
+                </p>
+
+                <p> <em>please remember parameter named <strong>part</strong> is mostly technical component needed and can be leaved all checked by default</em> </p>
             </div>
         </div>
-        
-        <div class="row">
-            <form action="/aggregate" id="data_table" method="POST">
-                <div class="col-md-6">
-                    <p><a href="https://developers.google.com/youtube/v3/docs/comments/list">youtube docs search (1)</a></p>
-                    <p><a href="https://developers.google.com/youtube/v3/docs/commentThreads/list">youtube docs search (2)</a></p>
+        <form action="/aggregate" id="data_table" method="POST">
+            <div class="row">
+                <h3><strong>What data you want ?</strong></h3>
+                <div class="col-md-3">
+                    <p>
+                        <a class="btn btn-primary" href="https://developers.google.com/youtube/v3/docs/comments/list">youtube docs search (1)</a>
+                    </p>
+                    <p>
+                        <a class="btn btn-primary" href="https://developers.google.com/youtube/v3/docs/commentThreads/list">youtube docs search (2)</a>
+                    </p>
                 </div>
-
                 <div class="col-md-3">
                     <h4>Choose part</h4>
                     <ul>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="id" checked>id</label></li>
+                            <input name='part' type="checkbox" value="id" checked>id</label>
+                        </li>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="snippet" checked>snippet</label></li>
+                            <input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                        </li>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label></li>
+                            <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                        </li>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="status" checked>status</label></li>
+                            <input name='part' type="checkbox" value="status" checked>status</label>
+                        </li>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="statistics" checked>statistics</label></li>
+                            <input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                        </li>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="player" checked>player</label></li>
+                            <input name='part' type="checkbox" value="player" checked>player</label>
+                        </li>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label></li>
+                            <input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                        </li>
                         <li>
                             <label class="checkbox-inline">
-                                <input name='part' type="checkbox" value="localizations" checked>localizations</label></li>
+                            <input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                        </li>
                     </ul>
                 </div>
-
                 <div class="col-md-3">
                     <h4>Get comments infos</h4>
-                    <input name='api_part' type="checkbox" value="comments" checked>
+                    <input name='api_part' type="checkbox" value="comments">
                     
+                    <h4>Get metrics infos</h4>
+                    <input name='api_part' type="checkbox" value="metrics">
+
                     <h4>Get captions infos</h4>
                     <input name='api_part' type="checkbox" value="captions">
                 </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-default">Download</button>
+                </div>
+                
             </div>
-
 
             <div class="row">
                 <div class="col-md-12">
-                    <h3>Choose dataset in your current list </h3>
-                    
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>Query</th>
-                                    <th>ChannelId</th>
-                                    <th>PlaylistId</th>
-                                    <th>VideoId</th>
-                                    <th>ranking</th>
-                                    <th>parts</th>
-                                    <th>language</th>
-                                    <th>videos</th>
-                                    <th>comments</th>
-                                    <th>date start </th>
-                                    <th>date end </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for key, parent_val in stats.items() %}
-                                    {% if key == 'list_queries' %}
-                                        {% for query in parent_val %}
-                                            <tr>
-                                                <td>
-                                                    <div class="radio">
-                                                        <label>
-                                                            <input type="radio" name="optionsRadios" id="optionsRadios1" value="{{ query['query_id'] }}">
-                                                            {{ query['query_id'] }}
-                                                        </label>
-                                                    </div>
-                                                </td>
-                                                <td>{{query['query']}}</td>
-                                                <td>{{query['channel_id']}}</td>
+                    <h3><strong>What data you have ?</strong></h3>
+                    <h3>Dataset</h3>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID </th>
+                                <th>Query</th>
+                                <th>ChannelId</th>
+                                <th>PlaylistId</th>
+                                <th>VideoId</th>
+                                <th>ranking</th>
+                                <th>parts</th>
+                                <th>language</th>
+                                <th>videos</th>
+                                <th>date start </th>
+                                <th>date end </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, parent_val in stats.items() %}
+                                {% if key == 'list_queries' %}
+                                    {% for query in parent_val %}
+                                        <tr>
+                                            <td>
+                                                <div class="radio">
+                                                    <label>
+                                                        <input type="radio" name="optionsRadios" id="optionsRadios1" value="{{ query['query_id'] }}">
+                                                        {{ query['query_id'] }}
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td>{{query['query']}}</td>
+                                            <td>{{query['channel_id']}}</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>{{query['ranking']}}</td>
+                                            <td>{{query['part']}}</td>
+                                            <td class="text-center">{{query['language']}}</td>
+                                            <td class="text-center">{{query['countVideos']}}</td>
+                                            {% if query['date_start'] is defined %}
+                                                <td>{{query['date_start'][0:10]}}</td>
+                                            {% else %}
                                                 <td></td>
+                                            {% endif %}
+                                            {% if query['date_end'] is defined %}
+                                                <td>{{query['date_end'][0:10]}}</td>
+                                            {% else %}
                                                 <td></td>
-                                                <td>{{query['ranking']}}</td>
-                                                <td>{{query['part']}}</td>
-                                                <td class="text-center">{{query['language']}}</td>
-                                                <td class="text-center">{{query['countVideos']}}</td>
-                                                <td class="text-center">{{query['countComments']}}</td>
-                                                {% if query['date_start'] is defined %}
-                                                    <td>{{query['date_start'][0:10]}}</td>
-                                                {% else %}
-                                                    <td></td>
-                                                {% endif %}
-                                                {% if query['date_end'] is defined %}
-                                                    <td>{{query['date_end'][0:10]}}</td>
-                                                {% else %}
-                                                    <td></td>
-                                                {% endif %}
-                                            </tr>
-                                        {% endfor %}
-                                    </tr>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
                                 {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
-                    
-                    {# {% for dir in dir_list  %}
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="optionsRadios" id="optionsRadios1" value="{{ dir }}">
-                                {{ dir }}
-                            </label>
-                        </div>
-                    {% endfor %} #}
-
-                    <button type="submit" form="data_table" value="Submit" class="btn btn-default">Submit</button>
+                </div>
             </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <button type="submit" class="btn btn-default col-md-12">Download</button>
+                </div>
+            </div>
+
         </form>
     </div>
 </div>

@@ -11,15 +11,18 @@ data_dir = 'data/'
 ##########################################################################
 # Youtube Data Api request
 ##########################################################################
-class YouTube:
-    api_key = None
-    access_token = None
-    api_base_url = 'https://www.googleapis.com/youtube/v3/'
-    part = None
+class YouTube():
+    #api_key = None
+    #access_token = None
+    #api_base_url = 'https://www.googleapis.com/youtube/v3/'
+    #part = None
 
-    def __init__(self, api_key, access_token=None, api_url=None):
+    def __init__(self, api_key, access_token=None, part=None,api_url=None):
         self.api_key = api_key
         self.access_token = access_token
+        self.api_base_url = 'https://www.googleapis.com/youtube/v3/'
+        if part:
+            self.part = part
         if api_url:
             self.api_url = api_url
 
@@ -64,6 +67,13 @@ class YouTube:
         )
         return channel_results
 
+    def verify_error(api_key, result_query):
+        if not 'error' in result_query:
+            return result_query
+        else:
+            print('Reason of error is : ' + commentThread['error']['errors'][0]['reason'])
+            return commentThread['error']
+
     @staticmethod
     def response(response):
         # print('RES = ')
@@ -72,39 +82,53 @@ class YouTube:
         return response.json()
 
 ##########################################################################
-# User
+# Query
+# rename in aggregate class (because of list of videos)
 ##########################################################################
-class User():
-    cortext_fields = ['id','username','access_token','email']
 
-    def __init__(self, mongo_curs, id=None):
+
+##########################################################################
+# Video
+# rename in aggregate class (because of list of videos)
+##########################################################################
+class Videos():
+    # to complete
+    video_fields = ['id','videoId','query_id','kind']
+    snippet_fields = ['']
+    stats_fields = ['']
+
+    def __init__(self, mongo_curs, id=None, query_id=None):
         self.db = mongo_curs.db
         if id:
-            self.id_pytheas = id
+            self.id_video = id
+            self.get()
+        if query_id:
+            self.query_id = query_id
             self.get()
 
-    def get(self):
+    def get_one_video(self):
         try:
-            current_user = self.db.users.find_one_or_404({ 'id_pytheas': self.id_pytheas})
-            self.username = current_user['username']
-            print('get user : ', current_user['username'])
+            current_video = self.db.videos.find_one_or_404({ 'id_video': self.id_video})
+            print('get video : ', current_video['id_video'])
         except BaseException as e:
-            print('user not found : ', e)
+            print('video not found : ', e)
         return
 
-    def view(self):
-        return str(self.username + ' : ' + self.id_pytheas)
+    def get_one_query_videos(self):
+        try:
+            current_videos = self.db.videos.find({ 'query_id': self.query_id})
+            print('get one query videos : ', current_user['query_id'])
+        except BaseException as e:
+            print('one query videos not found : ', e)
+        return
+
+    def view_one_video(self):
+        return str(current_video)
+
+    def view_query_videos(self):
+        return str(current_video)    
 
     def create(self):
-        self.id_pytheas = str(uuid4().hex)
-        self.db.users.insert_one(
-            {
-                'id_pytheas' : self.id_pytheas,
-                'username' : self.username,
-                'id_cortext' : self.id_cortext,
-                #[...] for each corxtext fields
-            }
-        )
         return
 
     def create_or_replace_user_cortext(self, dataUser):
@@ -138,16 +162,36 @@ class User():
         return
 
 
-
 ##########################################################################
 # Comment
+# rename in aggregate class (because of list of videos)
 ##########################################################################
 class Comment():
     def __init__(self, mongo_curs, query_id):
+        #super(Executive, self).__init__(*args)
+
         self.db = mongo_curs.db
         self.query_id = query_id
 
-    def create_comment_entry_for_each(self, commentThread):        
+
+    def add_stats_for_each_entry(self, list_video):
+        #Youtube.verify_error(list_video)
+        # part = 'statistics'
+        for each in list_video:
+            print(each)
+            #video_result = api.get_query('videos', id=id_video, part=part)
+            #pprint.print(video_result)
+
+            if 'youtube#video' in result['kind']:
+                print(results['kind'])
+
+                # self.db.videos.update_one(
+                #   { '' : self.id_pytheas },
+                #   { '$set': { 'username': dataUser['username']} }
+                # )
+        return
+
+    def create_comment_entry_for_each(self, commentThread):
         if not 'error' in commentThread:
             for each in commentThread['items']:
                 # try:

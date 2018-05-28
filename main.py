@@ -21,13 +21,14 @@ from flask import url_for
 from flask_bootstrap import Bootstrap
 from bson.objectid import ObjectId
 from furl import furl
+import xmltodict
 # local modules
 from rest import rest
 from oauth import oauth
 from database import Database
 # Main class
+from user import User
 from youtube import YouTube
-from youtube import User
 from youtube import Comment
 from youtube import FileData
 from code_country import language_code
@@ -90,6 +91,9 @@ except BaseException as error:
 @app.before_request
 def before_request():
     try:
+        # entering api_key manually if exist in conf file
+        if app.config['api_key']:
+            session['api_key'] = app.config['api_key']
         # tricky way to get URL 404 etc. rooting as I want
         if 'access_token' not in session:
             if request.endpoint is None:
@@ -102,6 +106,7 @@ def before_request():
                 return redirect(url_for('oauth.login'))
     except BaseException as e:
         print(e)
+
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -435,6 +440,7 @@ def search():
     return render_template('download/search.html', language_code=language_code)
 
 
+
 ##########################################################################
 # Aggregate
 ##########################################################################
@@ -459,11 +465,12 @@ def aggregate():
             countVideos = mongo_curs.db.videos.find(
                 {'query_id': doc['query_id']
             })
-            countComments = mongo_curs.db.comments.find(
-                {'query_id': doc['query_id']
-            })
+            # NOT EFFICIENT
+            # countComments = mongo_curs.db.comments.find(
+            #     {'query_id': doc['query_id']
+            # })
             doc['countVideos'] = countVideos.count()
-            doc['countComments'] = countComments.count()
+            #doc['countComments'] = countComments.count()
             stats['list_queries'].append(doc)
         
         if request.method == 'POST':
@@ -473,29 +480,45 @@ def aggregate():
                 ## NEED TO REFACT HERE FOR CAPTIONS DATA...
                 query_id = request.form.get('optionsRadios')
                 options_api = request.form.getlist('api_part')
+                print(options_api)
                 part = ', '.join(request.form.getlist('part'))
                 api_key = session['api_key']
                 api = YouTube(api_key=api_key)
                 results = mongo_curs.db.videos.find(
                     {
                         "$and": [
-                            {"id.videoId": {"$exists": True}},
+                            {"$or" : [ {"id": {"$type": "string"}}, {"videoId": {"$exists": "True"}} ]} ,
                             {"query_id": query_id}
                         ]
                     }
                 )
 
-
-
                 list_vid = []
+                # absolutely need to fix this later
                 for result in results:
-                    list_vid.append(result['id']['videoId'])
+                    if 'videoId' in result:
+                        list_vid.append(result['videoId'])
+                    else:
+                        list_vid.append(result['id'])
 
                 ############################
+                if 'metrics' in options_api:
+                    ##OLD need to refact depending on routes (eg. /metrics)
+                    # query_obj = {
+                    #     'list_vid': list_vid,
+                    #     'part' : part
+                    # }
+                    # return render_template('metrics', query_obj=results)
+                    current_query = Comment(mongo_curs, query_id)
+                    for id_video in list_vid:
+                        print(id_video)
+                        video_result = api.get_query('videos', id=id_video, part=part)
+                        current_query.add_stats_for_each_entry(video_result)
+
+
                 if 'comments' in options_api:
                     # init Comment class & for each video loop to each comment
                     current_comment_thread = Comment(mongo_curs, query_id)
-
                     for id_video in list_vid:
                         commentThreads_result = api.get_query(
                             'commentThreads',
@@ -514,8 +537,8 @@ def aggregate():
 
                 ############################
                 if 'captions' in options_api:
-                    path_captions = dir_to_check + '/captions/'
-                    FileData.create_dir(path_captions)
+                    
+                    FileData.create_dir('captions')
                     # for each video loop to captions
                     for id_video in list_vid:
                         captions_result = api.get_query(
@@ -554,6 +577,58 @@ def aggregate():
         return render_template('aggregate.html', stats=stats)
 
     return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
+
+
+
+
+
+
+# ##########################################################################
+# # Metrics
+# ##########################################################################
+# @app.route('/metrics', methods=['POST', 'GET'])
+# def metrics(query_obj):
+    
+#     ## NEED TO REFACT HERE FOR CAPTIONS DATA...
+#     #options_api = query_id['options_api']
+#     api = YouTube(api_key=session['api_key'])
+    
+#     list_vid = []
+#     part = query_obj['part']
+
+#     import pprint as pp
+
+#     print(query_obj)
+    
+#     for id_video in query_obj['list_vid']:
+#         print(id_video)
+#         video_result = api.get_query('videos', id=id_video, part=part)
+#         #list_vid.append(result['id']['videoId'])
+    
+#     print(len(list_vid))
+#     #for id_video in list_vid:
+#         ## PUT CODE TO GET STATS FOR EACH VID HERE
+#         # commentThreads_result = api.get_query(
+#         #     'commentThreads',
+#         #     videoId=id_video,
+#         #     part='id, replies, snippet')
+#         # current_comment_thread.create_comment_entry_for_each(commentThreads_result)
+
+#         ## Loop and save
+#         # while 'nextPageToken' in commentThreads_result:
+#         #     commentThreads_result = api.get_query(
+#         #         'commentThreads',
+#         #         videoId=id_video,
+#         #         part='id, replies, snippet',
+#         #         pageToken=commentThreads_result['nextPageToken'])
+#         #     current_comment_thread.create_comment_entry_for_each(commentThreads_result)
+
+#     return redirect(url_for('manage'))
+
+
+
+
+
 
 ##########################################################################
 # processing results uesd by /search and /aggregate
@@ -715,22 +790,7 @@ def process_results():
 @app.route('/config', methods=['POST', 'GET'])
 def config():
 
-    profil = session['profil']
-    json_filtered = {
-        'name' : profil['name'],
-        'institution' : profil['institution'],
-        'activitydomain' : profil['activitydomain'],
-        'country' : profil['country'],
-        'researchdomain' : profil['researchdomain'],
-        'website' : profil['website'],
-        'birthdate' : profil['birthdate'],
-        'username' : profil['username'],
-        'email' : profil['email'],
-        'last_connexion' : profil['last_connexion'],
-        'description' : profil['description']
-    } 
-
-    json_formated = json.dumps(json_filtered, indent=2) 
+    json_formated = json.dumps(session['profil'], indent=2) 
 
     if not 'api_key' in session:
        api_key_validate = 'You need an API KEY from youtube'
@@ -742,7 +802,7 @@ def config():
             session['api_key'] = request.form.get('api_key')
             return redirect(url_for('home'))
 
-    return render_template('config.html', session_data=json_formated, api_key_validate=api_key_validate)
+    return render_template('config.html', session_data=json_formated, message=api_key_validate)
 
 
 ##########################################################################

@@ -10,7 +10,7 @@ from flask import session
 from flask import redirect
 from flask import url_for
 from database import Database
-from youtube import User
+from user import User
 
 oauth = Blueprint('oauth', __name__,)
 

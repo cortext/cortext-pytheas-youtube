@@ -1,4 +1,5 @@
-Flask==0.12
+xmltodict
+Flask==1.02
 Flask_PyMongo==0.4.1
 Flask_Bootstrap==3.3.7.1
 requests==2.13.0
