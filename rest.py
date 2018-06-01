@@ -92,8 +92,8 @@ def download_videos(query_id):
 @rest.route('/download/comments/<query_id>', methods=['GET'])
 def download_comments(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})
-    result = mongo_curs.db.videos.find({'query_id': query_id})
-    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
+    from_query = json.dumps(query, default=json_util.default)
+    from_query = json.loads(from_query)
     
     # tmp patch...    
     if 'query' in query:
@@ -103,6 +103,9 @@ def download_comments(query_id):
             query_name = '_'.join([query['query'], query['language'], query['ranking']])
     elif 'channel_id' in query:
         query_name = query['channel_id']
+
+    result = mongo_curs.db.comments.find({'query_id': query_id})
+    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
 
     response = jsonify(json.loads(json_res))
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
