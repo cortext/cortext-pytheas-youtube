@@ -228,39 +228,39 @@ def video():
 
 @app.route('/playlist', methods=['POST', 'GET'])
 def playlist():
-    # if request.method == 'POST':
-    #     session['request'] = {
-    #         'part': ', '.join(request.form.getlist('part')),
-    #         'channelId': request.form.get('id'),
-    #         # 'forUsername': ', '.join(request.form.getlist('forUsername')),
-    #         # 'categoryId': request.form.get('categoryId'),
-    #         'maxResults': maxResults
-    #     }
+    if request.method == 'POST':
+        id_playlist = cleaning_ytb_input(request.form.get('id'))
+        session['counter'] = 0
+        session['request'] = {
+            'part': ', '.join(request.form.getlist('part')),
+            'playlistId': id_playlist,
+            'maxResults': maxResults
+        }
 
-    #     channel_results = YouTube.get_channel(
-    #         session['api_key'], session['request'])
-    #     channel_results_string = json.dumps(
-    #         channel_results, sort_keys=True, indent=4, separators=(',', ': '))
-    #     return render_template('actions/view_results.html', search_results=channel_results, string=channel_results_string, counter=session['counter'])
+        playlist_results = YouTube.get_playlist(
+            session['api_key'], session['request'])
+        results_string = json.dumps(
+            playlist_results, sort_keys=True, indent=4, separators=(',', ': '))
 
-    # # Go to next page
-    # elif request.method == 'GET' and request.args.get('nextPageToken'):
-    #     session['counter'] += 1
-    #     pageToken = request.args.get('nextPageToken')
-    #     session['pageToken'] = pageToken
-    #     channel_results = YouTube.get_channel(
-    #         session['api_key'], session['request'])
-    #     results_string = json.dumps(
-    #         channel_results, sort_keys=True, indent=2, separators=(',', ': ')
-    #     )
-    #     return render_template('actions/view_results.html', search_results=channel_results, string=results_string, counter=session['counter'])
+        return render_template('actions/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
+
+    # Go to next page
+    elif request.method == 'GET' and request.args.get('nextPageToken'):
+        session['counter'] += 1
+        pageToken = request.args.get('nextPageToken')
+        session['pageToken'] = pageToken
+        playlist_results = YouTube.get_channel(
+            session['api_key'], session['request'])
+        results_string = json.dumps(
+            playlist_results, sort_keys=True, indent=2, separators=(',', ': ')
+        )
+        return render_template('actions/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
     return render_template('download/playlist.html')
 
 @app.route('/channel', methods=['POST', 'GET'])
 def channel():
     if request.method == 'POST':
         id_channel = cleaning_ytb_input(request.form.get('id'))
-
         session['counter'] = 0
         session['request'] = {
             'part': ', '.join(request.form.getlist('part')),
@@ -272,10 +272,10 @@ def channel():
 
         channel_results = YouTube.get_channel(
             session['api_key'], session['request'])
-        channel_results_string = json.dumps(
+        results_string = json.dumps(
             channel_results, sort_keys=True, indent=4, separators=(',', ': '))
 
-        return render_template('actions/view_results.html', results=channel_results, string=channel_results_string, counter=session['counter'])
+        return render_template('actions/view_results.html', results=channel_results, string=results_string, counter=session['counter'])
 
     # Go to next page
     elif request.method == 'GET' and request.args.get('nextPageToken'):
@@ -686,6 +686,57 @@ def process_results():
                 each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
+    elif 'playlistId' in session['request']:
+        # build request based on session
+        playlist_results = api.get_query(
+            'search',
+            playlistId=session['request']['playlistId'],
+            part=session['request']['part'],
+            maxResults=maxResults
+        )
+        # insert query
+        mongo_curs.db.query.insert_one(
+            {   
+                'author_id':session['profil']['id'],
+                'query_id': str(uid),
+                'playlist_id': session['request']['playlistId'],
+                'part': session['request']['part'],
+                'maxResults': maxResults,
+            }
+        )
+        # insert videos
+        for each in playlist_results['items']:
+            each.update({'query_id': str(uid)})
+            if 'snippet' in each:
+                if 'videoId' in each['contentDetails']:
+                    each['snippet'].update({'videoId': each['contentDetails']['videoId']})
+                elif 'playlistId' in each['contentDetails']:
+                    each['snippet'].update({'playlistId' : each['contentDetails']['playlistId']})
+            elif 'videoId' in each['contentDetails']:
+                each.update({'videoId': each['contentDetails']['videoId']})
+            elif 'playlistId' in each['contentDetails']:
+                each.update({'playlistId': each['contentDetails']['playlistId']})
+            mongo_curs.db.videos.insert_one(each)
+        ## Loop and save
+        while 'nextPageToken' in playlist_results:
+            session['counter'] += 1
+            name_file = str(session['counter']) + '.json'
+            playlist_results = api.get_query(
+                'search',
+                playlistId=session['request']['playlistId'],
+                part=session['request']['part'],
+                maxResults=maxResults,
+                pageToken=playlist_results['nextPageToken']
+            )
+            if not playlist_results['items']:
+                return render_template('actions/download_process.html', message='ok it is done')
+
+            # insert video-info
+            for each in playlist_results['items']:
+                each.update({'query_id': str(uid)})
+                each = cleaning_each(each)
+                mongo_curs.db.videos.insert_one(each)
+
     return render_template('actions/download_process.html', message='ok it is done')
 
 
@@ -742,7 +793,6 @@ def manage():
             videos_count = 0
             comments_count = 0
             for each in list_queries:
-                print(each['query_id'])
                 videos_count += mongo_curs.db.videos.find({
                     'query_id' : each['query_id']
                 }).count()
@@ -761,7 +811,6 @@ def manage():
 
     return render_template('manage.html', stats=stats)
 
-
 ##########################################################################
 # Reset session
 ##########################################################################
@@ -769,7 +818,6 @@ def manage():
 def reset():
     session.clear()
     return redirect(url_for('oauth.login'))
-
 
 ##########################################################################
 # Start

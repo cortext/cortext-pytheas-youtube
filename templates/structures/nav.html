@@ -30,7 +30,7 @@
                                 <a href="/search">Search </a></li>
                             <li {%- if request.path=="/channel" %} class="active" {% endif %}>
                                 <a href="/channel">Channel </a></li>
-                            <li {%- if request.path=="/playlist" %} class="active" {% endif %} class="disabled">
+                            <li {%- if request.path=="/playlist" %} class="active" {% endif %}>
                                 <a href="/playlist">Playlist </a></li>
                             <li {%- if request.path=="/video" %} class="active" {% endif %}>
                                 <a href="/videos-list">Custom video list </a></li>
@@ -39,21 +39,7 @@
                 </ul>
 
                 <ul class="nav navbar-nav">
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Aggregate data
-                            <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li {%- if request.path=="/aggregate" %} class="active" {% endif %}>
-                                <a href="/aggregate">Get comments</a></li>
-                            <li class="disabled">
-                                <a href="#">Get metrics </a></li>
-                            <li class="disabled">
-                                <a href="#">Get subtitles </a></li>
-                            <li class="disabled">
-                                <a href="#">Get authors info </a></li>
-                        </ul>
-                    </li>
+                     <li {%- if request.path=="/aggregate" %} class="active" {% endif %}><a href="/aggregate">Aggregate data</a></li>
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">

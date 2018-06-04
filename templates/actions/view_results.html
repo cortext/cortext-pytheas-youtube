@@ -151,9 +151,9 @@
               <li> CHANNEL_ID : {{ value['channelId']|safe }}</li>
               <li> PUBLISHED_AT : {{ value['publishedAt']|safe }}</li>
               <p>
-                <a href="https://www.youtube.com/watch?v={{ dict_item['id']['videoId']|safe }}">
+                {# <a href="https://www.youtube.com/watch?v={{ dict_item['id']['videoId']|safe }}">
                   <img src="{{ value['thumbnails']['default']['url']|safe }}">
-                </a>
+                </a> #}
               </p>
             {% endif %} {% endfor %}
           </ul>

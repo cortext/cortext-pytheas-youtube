@@ -77,7 +77,13 @@ class YouTube():
 
     # TODO
     def get_playlist(api_key, session):
-        return playlis_results
+        playlist_results = YouTube(api_key).get_query(
+            'playlistItems',
+            playlistId=session['playlistId'],
+            part=session['part'],
+            maxResults=session['maxResults']
+        )
+        return playlist_results
 
     def verify_error(api_key, result_query):
         if not 'error' in result_query:
@@ -138,24 +144,15 @@ class Videos():
     #     )
     #     return user_update
 
+    # def add_metrics_for_each(self, list_video):
+    #     for each in list_video:
+    #         print(each)
+    #         # if 'youtube#video' in result['kind']:
+    #             # print(results['kind'])
+    #     return
+
     def delete():
         return
-
-##########################################################################
-# Metrics
-# Maybe better as method in Videos Class
-##########################################################################
-# class Metrics():
-#     def __init__(self, mongo_curs, query_id):
-#         self.db = mongo_curs.db
-#         self.query_id = query_id
-
-#     def add_metrics_for_each(self, list_video):
-#         for each in list_video:
-#             print(each)
-#             # if 'youtube#video' in result['kind']:
-#                 # print(results['kind'])
-#         return
 
 
 ##########################################################################
