@@ -30,7 +30,7 @@ from user import User
 from youtube import YouTube
 from youtube import YouTubeTranscriptApi
 from youtube import Comment
-from youtube import FileData
+from youtube import Caption
 from code_country import language_code
 # from celery import Celery
 
@@ -446,10 +446,7 @@ def search():
 ##########################################################################
 @app.route('/aggregate', methods=['POST', 'GET'])
 def aggregate():
-    if os.path.exists(data_dir):
-        # dir_list was used to list dir when json was only downlaod as file
-        # be care to refact here
-        dir_list = os.listdir(data_dir)
+    if request.method == 'GET':
         db_list = mongo_curs.db.query.find(
             {'author_id': session['profil']['id']}
         )
@@ -505,66 +502,17 @@ def aggregate():
                     query_id = result['query_id']
                     
                     if 'captions' in options_api:
-                        dir_captions = data_dir + 'captions/' + query_id + '/'
-                        FileData.create_dir('captions/' + query_id)
-                        # https://github.com/jdepoix/youtube-transcript-api
-                        # use an undocumentad part of the api youtube (web client api)
-                        captions_result = api.get_query(
-                            'captions',
-                            videoId=id_video,
-                            part='id, snippet'
-                        )
-                        # Check if error (eg unactivated captions)
-                        if 'error' in captions_result:
-                            print(captions_result['error']
-                                  ['errors'][0]['reason'])
-                            continue
-                        if not captions_result['items']:
-                            print('empty captions')
-                            continue
-                        # get different captions language
-                        for key, val in captions_result.items():
-                            if key == 'items':
-                                for item in val:
-                                    lang_caption = item['snippet']['language']
-                                    track_kind = item['snippet']['trackKind']
-                                    transcript = YouTubeTranscriptApi().get_transcript(id_video)
-                                    json_caption = json.dumps(transcript, ensure_ascii=False)
-                                    if json_caption is not None:
-                                        name_file = dir_captions \
-                                            + id_video + '_' \
-                                            + lang_caption + '_' \
-                                            + track_kind + '.json'
-                                        with open(name_file, 'w') as f:
-                                            f.write(json_caption)
-
-                    
-
-                ############################
-                if 'metrics' in options_api:
-                    ##OLD need to refact depending on routes (eg. /metrics)
-                    # query_obj = {
-                    #     'list_vid': list_vid,
-                    #     'part' : part
-                    # }
-                    # return render_template('metrics', query_obj=results)
-                    current_query = Comment(mongo_curs, query_id)
-                    for id_video in list_vid:
-                        print(id_video)
-                        video_result = api.get_query('videos', id=id_video, part=part)
-                        current_query.add_stats_for_each_entry(video_result)
-
+                        current_captions = Caption(mongo_curs, query_id)
+                        current_captions.create_if_not_exist(id_video)
 
                 if 'comments' in options_api:
-                    # init Comment class & for each video loop to each comment
                     current_comment_thread = Comment(mongo_curs, query_id)
                     for id_video in list_vid:
                         commentThreads_result = api.get_query(
                             'commentThreads',
                             videoId=id_video,
                             part='id, replies, snippet')
-                        current_comment_thread.create_comment_entry_for_each(commentThreads_result)
-
+                        current_comment_thread.create_comment_for_each(commentThreads_result)
                         ## Loop and save
                         while 'nextPageToken' in commentThreads_result:
                             commentThreads_result = api.get_query(
@@ -572,67 +520,20 @@ def aggregate():
                                 videoId=id_video,
                                 part='id, replies, snippet',
                                 pageToken=commentThreads_result['nextPageToken'])
-                            current_comment_thread.create_comment_entry_for_each(commentThreads_result)
+                            current_comment_thread.create_comment_for_each(commentThreads_result)
 
-                
+                # if 'metrics' in options_api:
+                #     current_query = Comment(mongo_curs, query_id)
+                #     for id_video in list_vid:
+                #         print(id_video)
+                #         video_result = api.get_query('videos', id=id_video, part=part)
+                #         current_query.add_stats_for_each_entry(video_result)
 
                 return render_template('actions/download_process.html', message='ok it is done')
 
         return render_template('aggregate.html', stats=stats)
 
     return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
-
-
-
-
-
-
-# ##########################################################################
-# # Metrics
-# ##########################################################################
-# @app.route('/metrics', methods=['POST', 'GET'])
-# def metrics(query_obj):
-    
-#     ## NEED TO REFACT HERE FOR CAPTIONS DATA...
-#     #options_api = query_id['options_api']
-#     api = YouTube(api_key=session['api_key'])
-    
-#     list_vid = []
-#     part = query_obj['part']
-
-#     import pprint as pp
-
-#     print(query_obj)
-    
-#     for id_video in query_obj['list_vid']:
-#         print(id_video)
-#         video_result = api.get_query('videos', id=id_video, part=part)
-#         #list_vid.append(result['id']['videoId'])
-    
-#     print(len(list_vid))
-#     #for id_video in list_vid:
-#         ## PUT CODE TO GET STATS FOR EACH VID HERE
-#         # commentThreads_result = api.get_query(
-#         #     'commentThreads',
-#         #     videoId=id_video,
-#         #     part='id, replies, snippet')
-#         # current_comment_thread.create_comment_entry_for_each(commentThreads_result)
-
-#         ## Loop and save
-#         # while 'nextPageToken' in commentThreads_result:
-#         #     commentThreads_result = api.get_query(
-#         #         'commentThreads',
-#         #         videoId=id_video,
-#         #         part='id, replies, snippet',
-#         #         pageToken=commentThreads_result['nextPageToken'])
-#         #     current_comment_thread.create_comment_entry_for_each(commentThreads_result)
-
-#     return redirect(url_for('manage'))
-
-
-
-
-
 
 ##########################################################################
 # processing results uesd by /search and /aggregate
@@ -814,38 +715,51 @@ def config():
 ##########################################################################
 @app.route('/manage', methods=['POST', 'GET'])
 def manage():
-    if os.path.exists(data_dir):
-        dir_list = os.listdir(data_dir)
-
-        stats = {
-            'query_totalCount': mongo_curs.db.query.find({}).count(),
-            'videos': mongo_curs.db.videos.find({}).count(),
-            'comments': mongo_curs.db.comments.find({}).count(),            
-            'list_queries': []
-        }
-
-        result = mongo_curs.db.query.find(
-            {'author_id': session['profil']['id']
+    if request.method == 'GET':
+        result = mongo_curs.db.query.find({
+            'author_id': session['profil']['id']
         })
+        list_queries = []
+
         for doc in result:
-            # add basic stat for admin
-            countVideos = mongo_curs.db.videos.find(
-                {'query_id': doc['query_id']
-            })
-            countComments = mongo_curs.db.comments.find(
-                {'query_id': doc['query_id']
-            })
-            doc['countVideos'] = countVideos.count()
-            doc['countComments'] = countComments.count()
-            stats['list_queries'].append(doc)
+            doc['countVideos'] = mongo_curs.db.videos.find(
+                {'query_id': doc['query_id']}).count()
+            doc['countComments'] = mongo_curs.db.comments.find(
+                {'query_id': doc['query_id']}).count()
+            doc['countCaptions'] = mongo_curs.db.captions.find(
+                {'id_query': doc['query_id']}).count()
+            list_queries.append(doc)
 
-        # Del Dir data
-        if request.method == 'POST':
-            if request.form and request.form.get('del'):
-                shutil.rmtree(data_dir + request.form.get('del'))
-                dir_list = os.listdir(data_dir)
+        if not 'ROLE_ADMIN' in session['profil']['roles']:
+            stats = {
+                'query_totalCount': mongo_curs.db.query.find({}).count(),
+                'videos': mongo_curs.db.videos.find({}).count(),
+                'comments': mongo_curs.db.comments.find({}).count(),            
+                'list_queries': list_queries,
+                'message' : 'admin roles should be able to see counted db'
+            }
+        else:
+            videos_count = 0
+            comments_count = 0
+            for each in list_queries:
+                print(each['query_id'])
+                videos_count += mongo_curs.db.videos.find({
+                    'query_id' : each['query_id']
+                }).count()
+                comments_count += mongo_curs.db.comments.find({
+                    'query_id' : each['query_id']
+                }).count()
 
-    return render_template('manage.html',  dir_list=dir_list, stats=stats)
+            stats = {
+                'query_totalCount': mongo_curs.db.query.find({
+                    'author_id': session['profil']['id']
+                    }).count(),
+                'videos': videos_count,
+                'comments': comments_count,            
+                'list_queries': list_queries
+            }
+
+    return render_template('manage.html', stats=stats)
 
 
 ##########################################################################

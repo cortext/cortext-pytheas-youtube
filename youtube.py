@@ -5,14 +5,13 @@ import datetime as dt
 import dateutil.parser as time
 from pprint import pprint
 from uuid import uuid4
-
+from pprint import pprint as pprint
 data_dir = 'data/'
 
 # from https://github.com/jdepoix/youtube-transcript-api/blob/master/src/transcript_api.py
 from xml.etree import ElementTree
 import re
 import logging
-import requests
 from html_unescaping import unescape
 logger = logging.getLogger(__name__)
 
@@ -76,6 +75,10 @@ class YouTube():
         )
         return channel_results
 
+    # TODO
+    def get_playlist(api_key, session):
+        return playlis_results
+
     def verify_error(api_key, result_query):
         if not 'error' in result_query:
             return result_query
@@ -85,16 +88,7 @@ class YouTube():
 
     @staticmethod
     def response(response):
-        # print('RES = ')
-        # pprint(response)
-        # pprint(response.json())
         return response.json()
-
-##########################################################################
-# Query
-# rename in aggregate class (because of list of videos)
-##########################################################################
-
 
 ##########################################################################
 # Video
@@ -137,38 +131,31 @@ class Videos():
     def view_query_videos(self):
         return str(current_video)    
 
-    def create(self):
-        return
-
-    def create_or_replace_user_cortext(self, dataUser):
-        dataUser = dataUser.json()
-        self.username = dataUser['username']
-        self.id_cortext = dataUser['id']
-        
-        try:
-            current_user = self.db.users.find_one_or_404({ 'id_cortext': self.id_cortext})
-            print('get cortext user : ', current_user['username'])
-            if (current_user):
-                # self.udpate(dataUser)
-                self.db.users.update_one(
-                  { 'id_cortext' : self.id_cortext },
-                  { '$set': { 'username': dataUser['username']} }
-                )
-        except BaseException as e:
-            print('user not found or error : ', e)
-            self.create()
-            return 'user not found or error : '+ str(e)
-        return
-
-    def update(self, dataUser):
-        user_update = self.db.users.update_one(
-          { 'id_pytheas' : self.id_pytheas },
-          { '$set': { 'username': dataUser['username']} }
-        )
-        return user_update
+    # def update(self, dataUser):
+    #     user_update = self.db.users.update_one(
+    #       { 'id_pytheas' : self.id_pytheas },
+    #       { '$set': { 'username': dataUser['username']} }
+    #     )
+    #     return user_update
 
     def delete():
         return
+
+##########################################################################
+# Metrics
+# Maybe better as method in Videos Class
+##########################################################################
+# class Metrics():
+#     def __init__(self, mongo_curs, query_id):
+#         self.db = mongo_curs.db
+#         self.query_id = query_id
+
+#     def add_metrics_for_each(self, list_video):
+#         for each in list_video:
+#             print(each)
+#             # if 'youtube#video' in result['kind']:
+#                 # print(results['kind'])
+#         return
 
 
 ##########################################################################
@@ -178,32 +165,28 @@ class Videos():
 class Comment():
     def __init__(self, mongo_curs, query_id):
         #super(Executive, self).__init__(*args)
-
         self.db = mongo_curs.db
         self.query_id = query_id
 
-
-    def add_stats_for_each_entry(self, list_video):
-        #Youtube.verify_error(list_video)
-        # part = 'statistics'
-        for each in list_video:
-            print(each)
-            #video_result = api.get_query('videos', id=id_video, part=part)
-            #pprint.print(video_result)
-
-            if 'youtube#video' in result['kind']:
-                print(results['kind'])
-
-                # self.db.videos.update_one(
-                #   { '' : self.id_pytheas },
-                #   { '$set': { 'username': dataUser['username']} }
-                # )
+    def create_comments(self, id_video):
         return
 
-    def create_comment_entry_for_each(self, commentThread):
+    def create_if_not_exist(self, id_video):
+        id_query = self.id_query
+        try:
+            current_caption = self.db.captions.find_one_or_404(
+                { '$and':[{ 'id_query': id_query }, { 'id_video': id_video }] }
+            )
+        except BaseException as e:
+            self.create_captions(id_video)
+            logger.warning(
+                str('Caption not found or error. Log is here : ') + str(e) + str(type(e))
+            )
+        return
+
+    def create_comment_for_each(self, commentThread):
         if not 'error' in commentThread:
             for each in commentThread['items']:
-                # try:
                 snippet = each['snippet']['topLevelComment']['snippet']
                 if 'authorChannelId' in snippet:
                     snippet['authorChannelId'] = snippet['authorChannelId']['value']
@@ -235,63 +218,81 @@ class Comment():
                             'snippet': snippet,
                             'is_top_level_comment': 'false'
                         })
-                # except Exception as e:
-                #     print('error here : ' + e)
-                #     pass
-
         else:
             print(commentThread['error'])
             return str('reason of error is : ' + commentThread['error']['errors'][0]['reason'])
-
         return
 
+    # def add_stats_for_each(self, list_video):
+    #     #Youtube.verify_error(list_video)
+    #     # part = 'statistics'
+    #     for each in list_video:
+    #         print(each)
+    #         #video_result = api.get_query('videos', id=id_video, part=part)
+    #         #pprint.print(video_result)
+
+    #         if 'youtube#video' in result['kind']:
+    #             print(results['kind'])
+    #             # self.db.videos.update_one(
+    #             #   { '' : self.id_pytheas },
+    #             #   { '$set': { 'username': dataUser['username']} }
+    #             # )
+    #     return
 
 ##########################################################################
-# I/O File/dir access (PROBABLY OBSOLETE NOW EXCEPT CAPTIONS)
+# Captions
+# rename in aggregate class (because of list of videos)
 ##########################################################################
-class FileData:
+class Caption():
+    # https://github.com/jdepoix/youtube-transcript-api
+    # use an undocumentad part of the api youtube (web client api)
+    
+    def __init__(self, mongo_curs, id_query):
+        self.db = mongo_curs.db
+        self.id_query = id_query
 
-    def create_dir(path_query):
-        # data_dir = 'data/'
-        complete_path = data_dir + path_query
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-            if not os.path.exists(complete_path):
-                os.makedirs(complete_path)
-        else:
-            if not os.path.exists(complete_path):
-                os.makedirs(complete_path)
+    # def verify_caption(self, id_video):
+    #     captions_result = self.Youtube.get_query(
+    #         'captions',
+    #         videoId=id_video,
+    #         part='id, snippet'
+    #     )
+    #     # Check if error (eg unactivated captions)
+    #     if 'error' in captions_result:
+    #         print(captions_result['error']
+    #               ['errors'][0]['reason'])
+    #     if not captions_result['items']:
+    #         print('empty captions')
+    #     # get different captions language
+    #     for key, val in captions_result.items():
+    #         if key == 'items':
+    #             for item in val:
+    #                 lang_caption = item['snippet']['language']
+    #                 track_kind = item['snippet']['trackKind']
+    #                 current_captions = Caption(mongo_curs, id_query)
+    #                 current_captions.create_captions(id_video)
+    #     return
+
+    def create_captions(self, id_video):
+        transcript = YouTubeTranscriptApi().get_transcript(id_video)
+        self.db.captions.insert_one({
+            'id_query' : self.id_query,
+            'id_video' : id_video,
+            'captions' : transcript,
+        })
+
+    def create_if_not_exist(self, id_video):
+        id_query = self.id_query
+        try:
+            current_caption = self.db.captions.find_one_or_404(
+                { '$and':[{ 'id_query': id_query }, { 'id_video': id_video }] }
+            )
+        except BaseException as e:
+            self.create_captions(id_video)
+            logger.warning(
+                str('Caption not found or error. Log is here : ') + str(e) + str(type(e))
+            ) 
         return
-
-    def list_file(path):
-        items_videoId = []
-        items_playlist = []
-        for json_file in os.listdir(path):
-            if any(word in json_file for word in ['comments', 'captions', 'meta_info.txt']):
-                continue
-            path_file = path + '/' + json_file
-        items_videoId = []
-        with open(path_file, 'r') as json_data:
-            search_data = json.load(json_data)
-            for item in search_data:
-                if not 'video_result' in search_data:
-                    if 'videoId' in item['id']:
-                        id_video = item['id']['videoId']
-                        items_videoId.append(id_video)
-                    elif 'playlistId'in item['id']:
-                        id_playlist = item['id']['playlistId']
-                        items_playlist.append(id_playlist)
-
-        return {'items_videoId': items_videoId,
-                'items_playlist': items_playlist}
-
-    def save_json(path_file, data):
-        # data_dir = self.data_dir
-        data_dir = 'data/'
-        with open(data_dir + path_file, 'w') as outfile:
-            json.dump(data, outfile)
-        return
-
 
 
 #################################################################""

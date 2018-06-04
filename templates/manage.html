@@ -24,13 +24,13 @@
                             <th>ChannelId</th>
                             <th>PlaylistId</th>
                             <th>VideoId</th>
-                            <th>ranking</th>
-                            <th>part(query)</th>
-                            <th>language</th>
-                            <th>videos</th>
-                            <th>comments</th>
-                            <th>date start </th>
-                            <th>date end </th>
+                            <th>Ranking</th>
+                            <th>Part(query)</th>
+                            <th>Language</th>
+                            <th>Videos</th>
+                            <th>Comments</th>
+                            <th>Captions</th>
+                            <th>Date start/end </th>
                             <th>Download videos</th>
                             <th>Download comments</th>
                             <th>Delete</th>
@@ -48,13 +48,9 @@
                                 <td class="text-center">{{query['language']}}</td>
                                 <td class="text-center">{{query['countVideos']}}</td>
                                 <td class="text-center">{{query['countComments']}}</td>
+                                <td class="text-center">{{query['countCaptions']}}</td>
                                 {% if query['date_start'] is defined %}
-                                    <td>{{query['date_start'][0:10]}}</td>
-                                {% else %}
-                                    <td></td>
-                                {% endif %}
-                                {% if query['date_end'] is defined %}
-                                    <td>{{query['date_end'][0:10]}}</td>
+                                    <td>{{query['date_start'][0:10]}} / {{query['date_end'][0:10]}}</td>
                                 {% else %}
                                     <td></td>
                                 {% endif %}
