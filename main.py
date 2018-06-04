@@ -730,7 +730,7 @@ def manage():
                 {'id_query': doc['query_id']}).count()
             list_queries.append(doc)
 
-        if not 'ROLE_ADMIN' in session['profil']['roles']:
+        if 'ROLE_ADMIN' in session['profil']['roles']:
             stats = {
                 'query_totalCount': mongo_curs.db.query.find({}).count(),
                 'videos': mongo_curs.db.videos.find({}).count(),
