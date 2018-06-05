@@ -19,20 +19,30 @@
                 <h5>List queries :</h5>
                 <table class="table">
                     <thead>
+                        <tr id="headCol">
+                            <th colspan="4">TYPE</th>
+                            <th colspan="4">PARAMETERS</th>
+                            <th colspan="3">COUNT</th>
+                            <th colspan="4">METHOD</th>
+                        </tr>
                         <tr>
                             <th>Query</th>
                             <th>ChannelId</th>
                             <th>PlaylistId</th>
                             <th>VideoId</th>
+                            <!-- -->
                             <th>Ranking</th>
                             <th>Part(query)</th>
                             <th>Language</th>
+                            <th>Date start/end </th>
+                            <!-- -->
                             <th>Videos</th>
                             <th>Comments</th>
                             <th>Captions</th>
-                            <th>Date start/end </th>
+                            <!-- -->
                             <th>Download videos</th>
                             <th>Download comments</th>
+                            <th>Download captions</th>
                             <th>Delete</th>
                         </tr>
                     </thead>
@@ -43,21 +53,27 @@
                                 <td>{{query['channel_id']}}</td>
                                 <td></td>
                                 <td></td>
+                                <!-- -->
                                 <td>{{query['ranking']}}</td>
                                 <td>{{query['part']}}</td>
                                 <td class="text-center">{{query['language']}}</td>
-                                <td class="text-center">{{query['countVideos']}}</td>
-                                <td class="text-center">{{query['countComments']}}</td>
-                                <td class="text-center">{{query['countCaptions']}}</td>
                                 {% if query['date_start'] is defined %}
                                     <td>{{query['date_start'][0:10]}} / {{query['date_end'][0:10]}}</td>
                                 {% else %}
                                     <td></td>
                                 {% endif %}
+                                <!-- -->
+                                <td class="text-center">{{query['countVideos']}}</td>
+                                <td class="text-center">{{query['countComments']}}</td>
+                                <td class="text-center">{{query['countCaptions']}}</td>
+                                <!-- -->
                                 <td class="text-center"><a href="/download/queries/{{ query['query_id'] }}/videos">
                                     <i class="fa fa-download" aria-hidden="true"></i>
                                 </a></td>
                                 <td class="text-center"><a href="/download/comments/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a></td>
+                                <td class="text-center"><a href="/download/captions/{{ query['query_id'] }}">
                                     <i class="fa fa-download" aria-hidden="true"></i>
                                 </a></td>
                                 <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>

@@ -19,7 +19,6 @@ from flask import redirect
 from flask import url_for
 # Ext lib
 from flask_bootstrap import Bootstrap
-from bson.objectid import ObjectId
 from furl import furl
 # local modules
 from rest import rest
@@ -446,6 +445,10 @@ def search():
 ##########################################################################
 @app.route('/aggregate', methods=['POST', 'GET'])
 def aggregate():
+    stats = {    
+            'list_queries': [],
+        }
+
     if request.method == 'GET':
         db_list = mongo_curs.db.query.find(
             {'author_id': session['profil']['id']}
@@ -462,78 +465,70 @@ def aggregate():
             countVideos = mongo_curs.db.videos.find(
                 {'query_id': doc['query_id']
             })
-            # NOT EFFICIENT
-            # countComments = mongo_curs.db.comments.find(
-            #     {'query_id': doc['query_id']
-            # })
             doc['countVideos'] = countVideos.count()
-            #doc['countComments'] = countComments.count()
             stats['list_queries'].append(doc)
         
-        if request.method == 'POST':
-            if 'api_key' not in session:
-                return render_template('aggregate.html', message='api key not set', stats=stats)
-            elif request.form and request.form.get('optionsRadios'):
-                ## NEED TO REFACT HERE FOR CAPTIONS DATA...
-                query_id = request.form.get('optionsRadios')
-                options_api = request.form.getlist('api_part')
-                print(options_api)
-                part = ', '.join(request.form.getlist('part'))
-                api_key = session['api_key']
-                api = YouTube(api_key=api_key)
-                results = mongo_curs.db.videos.find(
-                    {
-                        "$and": [
-                            {"$or" : [ {"id": {"$type": "string"}}, {"videoId": {"$exists": "True"}} ]} ,
-                            {"query_id": query_id}
-                        ]
-                    }
-                )
+    if request.method == 'POST':
+        if request.form and request.form.get('optionsRadios'):
+            ## NEED TO REFACT HERE FOR CAPTIONS DATA...
+            query_id = request.form.get('optionsRadios')
+            options_api = request.form.getlist('api_part')
+            print(options_api)
+            part = ', '.join(request.form.getlist('part'))
+            api_key = session['api_key']
+            api = YouTube(api_key=api_key)
+            results = mongo_curs.db.videos.find(
+                {
+                    "$and": [
+                        {"$or" : [ {"id": {"$type": "string"}}, {"videoId": {"$exists": "True"}} ]} ,
+                        {"query_id": query_id}
+                    ]
+                }
+            )
 
-                list_vid = []
-                # absolutely need to fix this later
-                for result in results:
-                    if 'videoId' in result:
-                        id_video = result['videoId']
-                    else:
-                        id_video = result['id']
+            list_vid = []
+            # absolutely need to fix this later
+            for result in results:
+                if 'videoId' in result:
+                    id_video = result['videoId']
+                else:
+                    id_video = result['id']
 
-                    list_vid.append(id_video)
-                    query_id = result['query_id']
-                    
-                    if 'captions' in options_api:
-                        current_captions = Caption(mongo_curs, query_id)
-                        current_captions.create_if_not_exist(id_video)
+                list_vid.append(id_video)
+                query_id = result['query_id']
+                
+                if 'captions' in options_api:
+                    current_captions = Caption(mongo_curs, query_id)
+                    current_captions.create_if_not_exist(id_video)
 
-                if 'comments' in options_api:
-                    current_comment_thread = Comment(mongo_curs, query_id)
-                    for id_video in list_vid:
+            if 'comments' in options_api:
+                current_comment_thread = Comment(mongo_curs, query_id)
+                for id_video in list_vid:
+                    commentThreads_result = api.get_query(
+                        'commentThreads',
+                        videoId=id_video,
+                        part='id, replies, snippet')
+                    current_comment_thread.create_comment_for_each(commentThreads_result)
+                    ## Loop and save
+                    while 'nextPageToken' in commentThreads_result:
                         commentThreads_result = api.get_query(
                             'commentThreads',
                             videoId=id_video,
-                            part='id, replies, snippet')
+                            part='id, replies, snippet',
+                            pageToken=commentThreads_result['nextPageToken'])
                         current_comment_thread.create_comment_for_each(commentThreads_result)
-                        ## Loop and save
-                        while 'nextPageToken' in commentThreads_result:
-                            commentThreads_result = api.get_query(
-                                'commentThreads',
-                                videoId=id_video,
-                                part='id, replies, snippet',
-                                pageToken=commentThreads_result['nextPageToken'])
-                            current_comment_thread.create_comment_for_each(commentThreads_result)
+            # if 'metrics' in options_api:
+            #     current_query = Comment(mongo_curs, query_id)
+            #     for id_video in list_vid:
+            #         print(id_video)
+            #         video_result = api.get_query('videos', id=id_video, part=part)
+            #         current_query.add_stats_for_each_entry(video_result)
 
-                # if 'metrics' in options_api:
-                #     current_query = Comment(mongo_curs, query_id)
-                #     for id_video in list_vid:
-                #         print(id_video)
-                #         video_result = api.get_query('videos', id=id_video, part=part)
-                #         current_query.add_stats_for_each_entry(video_result)
+            return render_template('actions/download_process.html', message='ok it is done')
 
-                return render_template('actions/download_process.html', message='ok it is done')
+    return render_template('aggregate.html', stats=stats)
 
-        return render_template('aggregate.html', stats=stats)
-
-    return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
+    #return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
 
 ##########################################################################
 # processing results uesd by /search and /aggregate

@@ -2,6 +2,26 @@ iframe {
   width: 490px;
 }
 
+tbody {
+  font-size: x-small;
+}
+
+th {
+  text-align: center;
+  border: 1px solid white;
+  background: #80808066;
+  vertical-align: middle !important;
+}
+
+
+#headCol th {
+  text-align: center;
+  border: 1px solid white;
+  background: #959595bf !important;
+}
+
+
+
 .vertical-align{
   display: flex;
   align-items: center;
