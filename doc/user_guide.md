@@ -1,56 +1,47 @@
 Pytheas guide utilisateur
 ======
-
-***Guide utilisateur de l'application en ligne Pytheas***
+##### ***Guide utilisateur de l'application en ligne Pytheas***
 
 **http://pytheas.cortext.net**
 
-Pytheas est une interface simplifiée de téléchargement de données youtube via l'API youtube Data V3 fournis par les services Google.
+#### Summary
 
-------------------------------------------
+* [Pytheas guide utilisateur]() 
+	* [What is with Pytheas for youtube ?](#What-is-with-Pytheas-for-youtube-?) 
+	* [How to do with Pytheas for youtube ?]()
+	* [Methodologie]()
+	* [Obtenir via Google une clé pour l'api Youtube Data V3]()   
+* [Explorer]()
+	* [par videos]()
+	* [par chaines]()
+	* [par playlist]()
+* [Paramètre de récoltes]()
+	* [les parts]()
+	* [par moteur de recherche youtube]()
+	* [par chaines]()
+	* [par playlist]()
+	* [par liste de vidéos arbitraires]()
+* [Recoltes de données]()
+	* [liste de vidéos]()
+	* [liste de commentaires associés à un set de liste de vidéos]()
+	* [liste de sous-titres associés à un set de liste de vidéos]()
+* [Exportation des données]()
+	* [JSON]()
+* [Lexique et mots-clés]()
 
-[TOC]
+## What is Pytheas for Youtube ?
 
-------------------------------------------
+Pytheas est une interface web en ligne conçue pour  simplifier et enrichir le téléchargement de données liés a youtube. 
 
+Pytheas est lié à **l'API youtube Data V3**, fournis par Google, qui donne accès aux données suivantes : vidéos, chaines d'auteurs, playlist, commentaires, sous-titres, etc.
 
-## Lexique et mots-clés
-* Concepts API :
-	* API 
-	* clé api
-	* parts
-* Ressources :
-	* requêtes
-	* liste de vidéos
-		* vidéo
-		* channel
-		* playlist 
-		* vidéos arbitraire
-	* commentaires
-	* sous-titres
-* Methodes de recoltes
-	* recherche par ressources (voir section 'ressources')
-	* moteur de recherche Youtube
-	* recherche horodaté
-* Données produites :
-	* liste de vidéos
-	* liste de commentaires
-	* liste de sous-titre
+## How to do with Pytheas for youtube ?
 
+With the use of a [**free key provided by Google**](http://pytheas.cortext.net/manage) you will be **able to explore, gather and exporting data responded by Youtube**. 
 
+Like **videos/channel/playlist** ; Possibly **horodated by a search query**. Including **comments and subtitles** if exists. Dowbloading them as **Json**.
 
-
-
-
-## Presentation pytheas
-
-Pytheas simplifie téléchargement de données liés a youtube. Entres autres : 
-
-- données liés aux vidéos
-- données des commentaires
-- données des sous-titres
-- données liés aux auteurs (en cours)
-
+## Methodologie générale
 
 La méthodologie générale est la suivante :
 1. On télécharge un ensemble de vidéos selon certains paramètre (chaine, search, playlist ou list custom) 
@@ -60,14 +51,7 @@ La méthodologie générale est la suivante :
 3. On télécharge nos sets de données en JSON
 "Manage data"
 
-
-
-
-
-
-
-
-## Google api
+## Obtention d'une clé API Youtube Data V3 via Google 
 
 https://console.developers.google.com/apis
 
@@ -88,8 +72,6 @@ Une fois activée, il nous faut recuperer, une ***clé api***. Celle-ci va nous 
 ![Image of Yaktocat](./img/config.png)
 
 
-
-
 ## Exploration 
 
 https://pytheas.cortext.net/explore
@@ -99,13 +81,6 @@ Permettre simplement la vue en données que nous  montre Google, pour :
 - une vidéo
 - un chaine
 - une playlist
-
-
-
-
-
-
-
 
 ## Méthode et requetes de récoltes
 
@@ -138,13 +113,6 @@ https://pytheas.cortext.net/videos-list
 
 Egalement possible de récolté en fonction de listes de vidéos données arbitrairement.
 
-
-
-
-
-
-
-
 ## Recoltes de données
 
 #### liste de vidéos
@@ -162,11 +130,6 @@ Egalement possible de récolté en fonction de listes de vidéos données arbitr
 #### liste de sous-titres associés à un set de liste de vidéos
 
 
-
-
-
-
-
 ## Exportation des données
 
 http://pytheas.cortext.net/manage
@@ -174,5 +137,25 @@ JSON
 
 
 
-
-
+## Lexique et mots-clés
+* Concepts API :
+	* API 
+	* clé api
+	* parts
+* Ressources :
+	* requêtes
+	* liste de vidéos
+		* vidéo
+		* channel
+		* playlist 
+		* vidéos arbitraire
+	* commentaires
+	* sous-titres
+* Methodes de recoltes
+	* recherche par ressources (voir section 'ressources')
+	* moteur de recherche Youtube
+	* recherche horodaté
+* Données produites :
+	* liste de vidéos
+	* liste de commentaires
+	* liste de sous-titre
