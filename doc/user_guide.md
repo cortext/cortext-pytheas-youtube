@@ -71,15 +71,21 @@ La méthodologie générale est la suivante :
 
 https://console.developers.google.com/apis
 
+![Image of Yaktocat](./img/console_dev.png)
+
 Un set complet d'API, fournis par les services de Google
 
 Possible d'activer via son compte google, l'acces aux API Youtube : il existe 3 API pour Youtube, celle qui nous interesse :  
 **Youtube DATA API v3** 
 
+https://console.developers.google.com/apis/library/youtube.googleapis.com?q=youtube%20data&id=125bab65-cfb6-4f25-9826-4dcc309bc508&project=api-project-154609&folder&organizationId
+
+![Image of Yaktocat](./img/select_api.png)
+
 Une fois activée, il nous faut recuperer, une ***clé api***. Celle-ci va nous permettre de nous authentifier aupres de Google, pour pouvoir acceder aux données via Pytheas.
 
 
-
+![Image of Yaktocat](./img/config.png)
 
 
 
