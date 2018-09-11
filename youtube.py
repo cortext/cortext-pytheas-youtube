@@ -3,17 +3,35 @@ import json
 import os
 import datetime as dt
 import dateutil.parser as time
-from pprint import pprint
+import logging
+import re
 from uuid import uuid4
-from pprint import pprint as pprint
+from xml.etree import ElementTree
+from html_unescaping import unescape
+# see https://github.com/jdepoix/youtube-transcript-api/blob/master/src/transcript_api.py
 data_dir = 'data/'
 
-# from https://github.com/jdepoix/youtube-transcript-api/blob/master/src/transcript_api.py
-from xml.etree import ElementTree
-import re
-import logging
-from html_unescaping import unescape
 logger = logging.getLogger(__name__)
+# on met le niveau du logger à DEBUG, comme ça il écrit tout
+logger.setLevel(logging.DEBUG)
+# création d'un formateur qui va ajouter le temps, le niveau
+# de chaque message quand on écrira un message dans le log
+formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+# Console handler
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+logger.addHandler(stream_handler)
+
+# FILE HANDLER LOGGER (not implemented again)
+# from logging.handlers import RotatingFileHandler
+# # création d'un handler qui va rediriger une écriture du log vers
+# # un fichier en mode 'append', avec 1 backup et une taille max de 1Mo
+# file_handler = RotatingFileHandler('activity.log', 'a', 1000000, 1)
+# # on lui met le niveau sur DEBUG, on lui dit qu'il doit utiliser le formateur
+# # créé précédement et on ajoute ce handler au logger
+# file_handler.setLevel(logging.DEBUG)
+# file_handler.setFormatter(formatter)
+# logger.addHandler(file_handler)
 
 
 ##########################################################################
@@ -39,8 +57,10 @@ class YouTube():
         url = self.api_base_url + endpoint
         try:
             req = requests.get(url, kwargs)
+            logger.info('try_request success', url, kwargs)
         except requests.exceptions.RequestException as e:
             print(e)
+            logger.warning('try_request failed')
         return self.response(req)
 
     # prepare request with same obligatory param
@@ -89,7 +109,7 @@ class YouTube():
         if not 'error' in result_query:
             return result_query
         else:
-            print('Reason of error is : ' + commentThread['error']['errors'][0]['reason'])
+            logger.errors('Reason of error is : ' + commentThread['error']['errors'][0]['reason'])
             return commentThread['error']
 
     @staticmethod
@@ -118,17 +138,17 @@ class Videos():
     def get_one_video(self):
         try:
             current_video = self.db.videos.find_one_or_404({ 'id_video': self.id_video})
-            print('get video : ', current_video['id_video'])
+            logger.info('get video : ', current_video['id_video'])
         except BaseException as e:
-            print('video not found : ', e)
+            logger.error('video not found : ', e)
         return
 
     def get_one_query_videos(self):
         try:
             current_videos = self.db.videos.find({ 'query_id': self.query_id})
-            print('get one query videos : ', current_user['query_id'])
+            logger.info('get one query videos : ', current_user['query_id'])
         except BaseException as e:
-            print('one query videos not found : ', e)
+            logger.error('one query videos not found : ', e)
         return
 
     def view_one_video(self):
@@ -216,8 +236,10 @@ class Comment():
                             'is_top_level_comment': 'false'
                         })
         else:
-            print(commentThread['error'])
-            return str('reason of error is : ' + commentThread['error']['errors'][0]['reason'])
+            logger.error(commentThread['error'])
+            logger.error('reason of error is : ' + ['errors'][0]['reason'])
+            return
+
         return
 
     # def add_stats_for_each(self, list_video):
@@ -358,7 +380,7 @@ class YouTubeTranscriptApi():
                     video_url=_TranscriptFetcher.WATCH_URL.format(video_id=video_id)
                 )
             )
-            print(YouTubeTranscriptApi.CouldNotRetrieveTranscript(video_id))
+            logger(YouTubeTranscriptApi.CouldNotRetrieveTranscript(video_id))
             #raise YouTubeTranscriptApi.CouldNotRetrieveTranscript(video_id)
             
 

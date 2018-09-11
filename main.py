@@ -473,7 +473,6 @@ def aggregate():
             ## NEED TO REFACT HERE FOR CAPTIONS DATA...
             query_id = request.form.get('optionsRadios')
             options_api = request.form.getlist('api_part')
-            print(options_api)
             part = ', '.join(request.form.getlist('part'))
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
