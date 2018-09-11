@@ -43,15 +43,17 @@
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="https://github.com/cortext/cortext-pytheas-youtube/blob/master/doc/user_guide.md">Docs</a></li>
+
                     <li {%- if request.path=="/manage" %} class="active" {% endif %}>
                         <a href="/manage">Manage data</a></li>
+
                     <li {%- if request.path=="/config" %} class="active" {% endif %}>
                         <a href="/config">Config</a></li>
+
                     <li>
                         <a href="/reset"><i class="fa fa-times" aria-hidden="true"></i></a></li>
-                    <li>
-                        
-                    </li>
                 </ul>            
         {% endif %}
     </div>
