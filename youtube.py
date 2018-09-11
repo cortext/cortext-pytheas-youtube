@@ -14,9 +14,6 @@ data_dir = 'data/'
 logger = logging.getLogger(__name__)
 # on met le niveau du logger à DEBUG, comme ça il écrit tout
 logger.setLevel(logging.DEBUG)
-# création d'un formateur qui va ajouter le temps, le niveau
-# de chaque message quand on écrira un message dans le log
-formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 # Console handler
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
@@ -30,6 +27,9 @@ logger.addHandler(stream_handler)
 # # on lui met le niveau sur DEBUG, on lui dit qu'il doit utiliser le formateur
 # # créé précédement et on ajoute ce handler au logger
 # file_handler.setLevel(logging.DEBUG)
+# # création d'un formateur qui va ajouter le temps, le niveau
+# # de chaque message quand on écrira un message dans le log
+# formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 # file_handler.setFormatter(formatter)
 # logger.addHandler(file_handler)
 
@@ -57,7 +57,7 @@ class YouTube():
         url = self.api_base_url + endpoint
         try:
             req = requests.get(url, kwargs)
-            logger.info('try_request success', url, kwargs)
+            logger.info('try_request success' + '\n' + url + '\n' + str(kwargs))
         except requests.exceptions.RequestException as e:
             print(e)
             logger.warning('try_request failed')
