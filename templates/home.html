@@ -10,44 +10,38 @@
         </div>
         
         
-        <div class="row jumbotron">
+        <div class="jumbotron ">
             <div class="row">
-                <div class="col-md-9">
-                    <h2>How it works ?</h2>
-                    <h2><small>
-                    <ol>
-                        <li>Explore video info individualy and look for what you might be interested</li>
-                        <li>Unzoom and request a list of vidéo as a dataset (e.g. with a search query)</li>
-                        <li>Export and aggregate information (like comments, stats, or captions)</li>
-                    </ol></small>
-                    </h2>
-                </div>
-                <div class="col-md-3 ">
-                    <a class="btn btn-primary" href="https://developers.google.com/youtube/v3/docs/" role="button">Youtube documentation</a>
+                <div class="col-md-12">
+                    <h2>What is Pytheas ?</h2>
+                    <p>Pytheas a simple webtool helping you to download data from youtube API,</p>
+                    <p>Permitting you to manage and export data in json.</p>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-offset-2 col-md-8">
-                    <form action="/video_info" id="video" method="POST">
-                        <div class="form-group">
-                            <p class="page-header">Try it !</p>
-                            <small>Put an url from youtube here</small>
-                            
-                            <input hidden type="text" name='unique_id_video' class="form-control" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
-                            <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                            <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                            <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                        </div>
-                        <button type="submit" class="btn btn-default center-block">Submit</button>
-                    </form>
-                </div>
+  
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8">
+                <form action="/video_info" id="video" method="POST">
+                    <div class="form-group">
+                        <h3 class=""><strong>Try it !</strong></h3>
+                        <h4>Just put an url from youtube and see what it will respond to you : </h4>
+                        
+                        <input hidden type="text" name='unique_id_video' class="form-control" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
+                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                    </div>
+                    <button type="submit" class="btn btn-default center-block">Submit</button>
+                </form>
             </div>
         </div>
+        </div>
+        
         <div class="row">
             <div class="col-md-6">
                 <div class="row">

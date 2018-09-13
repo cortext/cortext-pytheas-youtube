@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Login</h2>
+                <hr/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-6 col-md-4 col-md-offset-4 jumbotron">
+                <h3 class="text-center">Sign in via Cortext to continue to Pytheas explorer</h3>
+                <a class="btn btn-default center-block" href="/grant">Login with Oauth</a>
+                {# <div class="account-wall">
+                    <img class="profile-img" src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=120"
+                    alt="">
+                    <form action="/login" name="test" id="test" method="post" class="form-signin">
+                        <input name="email" type="text" class="form-control" placeholder="Email" required autofocus>
+                        <input name="password" type="password" class="form-control" placeholder="Password" required>
+                        <button class="btn btn-lg btn-primary btn-block" type="submit">
+                        Sign in</button>
+                        <label class="checkbox pull-left">
+                            <input type="checkbox" value="remember-me">
+                            Remember me
+                        </label>
+                        <a href="#" class="pull-right need-help">Need help? </a><span class="clearfix"></span>
+                    </form>
+                </div> #}
+                {# <a href="#" class="text-center new-account">Create an account </a> #}
+            </div>
+        </div>
+    </div>
+{% endblock  %}
