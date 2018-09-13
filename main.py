@@ -144,7 +144,7 @@ def video_info():
             video_result = api.get_query('videos', id=id_video, part=part)
             video_result_string = json.dumps(
                 video_result, sort_keys=True, indent=2, separators=(',', ': '))
-            return render_template('actions/view_results.html', result=video_result, string=video_result_string)
+            return render_template('methods/view_results.html', result=video_result, string=video_result_string)
         else:
             return render_template('explore.html', message='api key not set')
     return render_template('explore.html')
@@ -163,7 +163,7 @@ def channel_info():
                 'channels', id=id_channel, part=part)
             channel_result_string = json.dumps(
                 channel_result, sort_keys=True, indent=2, separators=(',', ': '))
-            return render_template('actions/view_results.html', result=channel_result, string=channel_result_string)
+            return render_template('methods/view_results.html', result=channel_result, string=channel_result_string)
         else:
             return render_template('explore.html', message='api key not set')
     return render_template('explore.html')
@@ -183,7 +183,7 @@ def playlist_info():
                 'playlists', id=id_playlist, part=part)
             playlist_info_string = json.dumps(
                 playlist_info, sort_keys=True, indent=2, separators=(',', ': '))
-            return render_template('actions/view_results.html', result=playlist_info, string=playlist_info_string)
+            return render_template('methods/view_results.html', result=playlist_info, string=playlist_info_string)
         else:
             return render_template('explore.html', message='api key not set')
     return render_template('explore.html')
@@ -220,9 +220,9 @@ def video():
             list_results_string = json.dumps(
                 list_results, sort_keys=True, indent=4, separators=(',', ': ')
             )
-            return render_template('actions/view_results.html', results=list_results, string=list_results_string,  counter=session['counter'])
+            return render_template('methods/view_results.html', results=list_results, string=list_results_string,  counter=session['counter'])
         else:
-            return render_template('actions/view_results.html', message='api key not set')
+            return render_template('methods/view_results.html', message='api key not set')
     return render_template('download/videos_list.html')
 
 @app.route('/playlist', methods=['POST', 'GET'])
@@ -241,7 +241,7 @@ def playlist():
         results_string = json.dumps(
             playlist_results, sort_keys=True, indent=4, separators=(',', ': '))
 
-        return render_template('actions/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
+        return render_template('methods/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
 
     # Go to next page
     elif request.method == 'GET' and request.args.get('nextPageToken'):
@@ -253,7 +253,7 @@ def playlist():
         results_string = json.dumps(
             playlist_results, sort_keys=True, indent=2, separators=(',', ': ')
         )
-        return render_template('actions/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
+        return render_template('methods/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
     return render_template('download/playlist.html')
 
 @app.route('/channel', methods=['POST', 'GET'])
@@ -274,7 +274,7 @@ def channel():
         results_string = json.dumps(
             channel_results, sort_keys=True, indent=4, separators=(',', ': '))
 
-        return render_template('actions/view_results.html', results=channel_results, string=results_string, counter=session['counter'])
+        return render_template('methods/view_results.html', results=channel_results, string=results_string, counter=session['counter'])
 
     # Go to next page
     elif request.method == 'GET' and request.args.get('nextPageToken'):
@@ -286,7 +286,7 @@ def channel():
         results_string = json.dumps(
             channel_results, sort_keys=True, indent=2, separators=(',', ': ')
         )
-        return render_template('actions/view_results.html', results=channel_results, string=results_string, counter=session['counter'])
+        return render_template('methods/view_results.html', results=channel_results, string=results_string, counter=session['counter'])
     return render_template('download/channel.html', language_code=language_code)
 
 @app.route('/search', methods=['POST', 'GET'])
@@ -423,7 +423,7 @@ def search():
                 previous_token = search_results['nextPageToken']
                 search_results_string = json.dumps(
                     search_results, sort_keys=True, indent=4, separators=(',', ': '))
-                return render_template('actions/view_results.html', results=search_results, string=search_results_string, counter=session['counter'], prev=previous_token)
+                return render_template('methods/view_results.html', results=search_results, string=search_results_string, counter=session['counter'], prev=previous_token)
 
         else:
             return render_template('download/search.html', message='api key not set')
@@ -435,7 +435,7 @@ def search():
             session['api_key'], session['request'])
         search_results_string = json.dumps(
             search_results, sort_keys=True, indent=2, separators=(',', ': '))
-        return render_template('actions/view_results.html', results=search_results, string=search_results_string, counter=session['counter'], prev=pageToken)
+        return render_template('methods/view_results.html', results=search_results, string=search_results_string, counter=session['counter'], prev=pageToken)
     return render_template('download/search.html', language_code=language_code)
 
 
@@ -500,22 +500,22 @@ def aggregate():
                     current_captions = Caption(mongo_curs, query_id)
                     current_captions.create_if_not_exist(id_video)
 
-            if 'comments' in options_api:
-                current_comment_thread = Comment(mongo_curs, query_id)
-                for id_video in list_vid:
-                    commentThreads_result = api.get_query(
-                        'commentThreads',
-                        videoId=id_video,
-                        part='id, replies, snippet')
-                    current_comment_thread.create_comment_for_each(commentThreads_result)
-                    ## Loop and save
-                    while 'nextPageToken' in commentThreads_result:
+                if 'comments' in options_api:
+                    current_comment_thread = Comment(mongo_curs, query_id)
+                    for id_video in list_vid:
                         commentThreads_result = api.get_query(
                             'commentThreads',
                             videoId=id_video,
-                            part='id, replies, snippet',
-                            pageToken=commentThreads_result['nextPageToken'])
+                            part='id, replies, snippet')
                         current_comment_thread.create_comment_for_each(commentThreads_result)
+                        ## Loop and save
+                        while 'nextPageToken' in commentThreads_result:
+                            commentThreads_result = api.get_query(
+                                'commentThreads',
+                                videoId=id_video,
+                                part='id, replies, snippet',
+                                pageToken=commentThreads_result['nextPageToken'])
+                            current_comment_thread.create_comment_for_each(commentThreads_result)
             # if 'metrics' in options_api:
             #     current_query = Comment(mongo_curs, query_id)
             #     for id_video in list_vid:
@@ -523,7 +523,7 @@ def aggregate():
             #         video_result = api.get_query('videos', id=id_video, part=part)
             #         current_query.add_stats_for_each_entry(video_result)
 
-            return render_template('actions/download_process.html', message='ok it is done')
+            return render_template('methods/download_process.html', message='ok it is done')
 
     return render_template('aggregate.html', stats=stats)
 
@@ -621,7 +621,7 @@ def process_results():
                 pageToken=search_results['nextPageToken']
             )
             if not search_results['items']:
-                return render_template('actions/download_process.html', message='ok it is done')
+                return render_template('methods/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in search_results['items']:
@@ -672,7 +672,7 @@ def process_results():
                 pageToken=channel_results['nextPageToken']
             )
             if not channel_results['items']:
-                return render_template('actions/download_process.html', message='ok it is done')
+                return render_template('methods/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in channel_results['items']:
@@ -723,7 +723,7 @@ def process_results():
                 pageToken=playlist_results['nextPageToken']
             )
             if not playlist_results['items']:
-                return render_template('actions/download_process.html', message='ok it is done')
+                return render_template('methods/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in playlist_results['items']:
@@ -731,7 +731,7 @@ def process_results():
                 each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
-    return render_template('actions/download_process.html', message='ok it is done')
+    return render_template('methods/download_process.html', message='ok it is done')
 
 
 ##########################################################################
@@ -804,6 +804,29 @@ def manage():
             }
 
     return render_template('manage.html', stats=stats)
+
+
+##########################################################################
+# Export
+##########################################################################
+@app.route('/export', methods=['POST', 'GET'])
+def export():
+    if request.method == 'GET':
+        result = mongo_curs.db.query.find({
+            'author_id': session['profil']['id']
+        })
+        list_queries = []
+
+        for doc in result:
+            doc['countVideos'] = mongo_curs.db.videos.find(
+                {'query_id': doc['query_id']}).count()
+            doc['countComments'] = mongo_curs.db.comments.find(
+                {'query_id': doc['query_id']}).count()
+            doc['countCaptions'] = mongo_curs.db.captions.find(
+                {'id_query': doc['query_id']}).count()
+            list_queries.append(doc)
+
+    return render_template('export.html', list_queries=list_queries)
 
 ##########################################################################
 # Reset session
