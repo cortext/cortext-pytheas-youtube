@@ -1,5 +1,6 @@
 import json
 import requests
+import logging
 from uuid import uuid4
 from flask import Blueprint
 from flask import Flask, current_app
@@ -11,6 +12,14 @@ from flask import redirect
 from flask import url_for
 from database import Database
 from user import User
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(filename)s ## [%(asctime)s] -- %(levelname)s == "%(message)s"')
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 oauth = Blueprint('oauth', __name__,)
 
@@ -24,7 +33,7 @@ with app.app_context():
 ##########################################################################
 @oauth.route('/login')
 def login():   
-    return render_template('actions/login.html')
+    return render_template('methods/login.html')
 
 @oauth.route('/grant', methods=['GET'])
 def grant():
@@ -71,7 +80,7 @@ def auth():
     data = r_grant.json()
     r_access = requests.get(grant_host_url + '/auth/access?access_token=' + str(data['access_token']))
     
-    print(r_access.json())
+    logger.debug(r_access.json())
 
     session['access_token'] = data['access_token']
     session['profil'] = r_access.json()

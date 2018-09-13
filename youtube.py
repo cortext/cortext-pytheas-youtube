@@ -12,11 +12,15 @@ from html_unescaping import unescape
 data_dir = 'data/'
 
 logger = logging.getLogger(__name__)
-# on met le niveau du logger à DEBUG, comme ça il écrit tout
 logger.setLevel(logging.DEBUG)
+
 # Console handler
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
+# format
+formatter = logging.Formatter('%(filename)s ## [%(asctime)s] -- %(levelname)s == "%(message)s"')
+stream_handler.setFormatter(formatter)
+# add handler
 logger.addHandler(stream_handler)
 
 # FILE HANDLER LOGGER (not implemented again)
@@ -57,10 +61,11 @@ class YouTube():
         url = self.api_base_url + endpoint
         try:
             req = requests.get(url, kwargs)
-            logger.info('try_request success' + '\n' + url + '\n' + str(kwargs))
+            logger.info('try_request success on ' +  url)
+            logger.debug('kwargs are ' + str(kwargs))
         except requests.exceptions.RequestException as e:
-            print(e)
-            logger.warning('try_request failed')
+            logger.warning('try_request failed on ' + url)
+            logger.warning('error is : ' + e)
         return self.response(req)
 
     # prepare request with same obligatory param
@@ -138,7 +143,7 @@ class Videos():
     def get_one_video(self):
         try:
             current_video = self.db.videos.find_one_or_404({ 'id_video': self.id_video})
-            logger.info('get video : ', current_video['id_video'])
+            logger.debug('get video : ', current_video['id_video'])
         except BaseException as e:
             logger.error('video not found : ', e)
         return
@@ -146,7 +151,7 @@ class Videos():
     def get_one_query_videos(self):
         try:
             current_videos = self.db.videos.find({ 'query_id': self.query_id})
-            logger.info('get one query videos : ', current_user['query_id'])
+            logger.debug('get one query videos : ', current_user['query_id'])
         except BaseException as e:
             logger.error('one query videos not found : ', e)
         return
@@ -185,9 +190,6 @@ class Comment():
         self.db = mongo_curs.db
         self.query_id = query_id
 
-    def create_comments(self, id_video):
-        return
-
     def create_if_not_exist(self, id_video):
         id_query = self.id_query
         try:
@@ -197,20 +199,23 @@ class Comment():
         except BaseException as e:
             self.create_captions(id_video)
             logger.warning(
-                str('Caption not found or error. Log is here : ') + str(e) + str(type(e))
+                str('comment not found or error. Log is here : ') + str(e) + str(type(e))
             )
         return
 
     def create_comment_for_each(self, commentThread):
         if not 'error' in commentThread:
+            nb_comment = 0
             for each in commentThread['items']:
+                nb_comment += 1
+                
                 snippet = each['snippet']['topLevelComment']['snippet']
                 if 'authorChannelId' in snippet:
                     snippet['authorChannelId'] = snippet['authorChannelId']['value']
                 else:
                     snippet['authorChannelId'] = 'cortext_pytheas_unknown_author#' + each['id']
                 
-                self.db.comments.insert_one({
+                topCommentIntegrated = {
                     'id' : each['id'],
                     'query_id' : self.query_id,
                     'isPublic': each['snippet']['isPublic'],
@@ -219,22 +224,28 @@ class Comment():
                     'videoId' : each['snippet']['videoId'],
                     'snippet': snippet,
                     'is_top_level_comment': 'true',
-                })
+                }
+                self.db.comments.insert_one(topCommentIntegrated)
                 
                 if 'replies' in each:
                     for child in each['replies']['comments']:
+                        nb_comment += 1
                         snippet = child['snippet']
                         if 'authorChannelId' in snippet:
                             snippet['authorChannelId'] = snippet['authorChannelId']['value']
                         else:
                             snippet['authorChannelId'] = 'cortext_pytheas_unknown_author#' + each['id']
-                        self.db.comments.insert_one({
+
+                        CommentIntegrated = {
                             'id' : child['id'],
                             'query_id' : self.query_id,
                             'videoId' : child['snippet']['videoId'],
                             'snippet': snippet,
                             'is_top_level_comment': 'false'
-                        })
+                        }
+                        self.db.comments.insert_one(CommentIntegrated)
+            logger.debug('total nb comment for this request = ' + str(nb_comment))
+
         else:
             logger.error(commentThread['error'])
             logger.error('reason of error is : ' + ['errors'][0]['reason'])

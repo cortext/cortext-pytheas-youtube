@@ -1,6 +1,17 @@
 import json
+import logging
 from pprint import pprint
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(filename)s ## [%(asctime)s] -- %(levelname)s == "%(message)s"')
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+
 ##########################################################################
 # User
 ##########################################################################
@@ -17,9 +28,9 @@ class User():
         try:
             current_user = self.db.users.find_one_or_404({ 'id_pytheas': self.id_pytheas})
             self.username = current_user['username']
-            print('get user : ', current_user['username'])
+            logger.debug('get user : ' + current_user['username'])
         except BaseException as e:
-            print('user not found : ', e)
+            logger.debug('user not found : ' + e)
         return
 
     def view(self):
@@ -44,7 +55,7 @@ class User():
         
         try:
             current_user = self.db.users.find_one_or_404({ 'id_cortext': self.id_cortext})
-            print('get cortext user : ', current_user['username'])
+            logger.debug('get cortext user : ' + current_user['username'])
             if (current_user):
                 # self.udpate(dataUser)
                 self.db.users.update_one(
@@ -52,7 +63,7 @@ class User():
                   { '$set': { 'username': dataUser['username']} }
                 )
         except BaseException as e:
-            print('user not found or error : ', e)
+            logger.debug('user not found or error : ' + e)
             self.create()
             return 'user not found or error : '+ str(e)
         return
