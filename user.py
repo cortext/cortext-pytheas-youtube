@@ -49,6 +49,8 @@ class User():
         return
 
     def create_or_replace_user_cortext(self, dataUser):
+        print(type(dataUser.json()))
+        print(dataUser.json())
         dataUser = dataUser.json()
         self.username = dataUser['username']
         self.id_cortext = dataUser['id']
@@ -63,7 +65,7 @@ class User():
                   { '$set': { 'username': dataUser['username']} }
                 )
         except BaseException as e:
-            logger.debug('user not found or error : ' + e)
+            logger.debug('user not found or error : ' + str(e))
             self.create()
             return 'user not found or error : '+ str(e)
         return

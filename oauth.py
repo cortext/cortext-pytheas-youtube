@@ -50,9 +50,6 @@ def grant():
 
     headers = {
         'Location': grant_url
-
-
-
     }
 
     return Response(grant_url, status=302, headers=headers)
@@ -78,9 +75,13 @@ def auth():
 
     r_grant = requests.post(grant_host_url + '/auth/grant', data=payload)
     data = r_grant.json()
-    r_access = requests.get(grant_host_url + '/auth/access?access_token=' + str(data['access_token']))
-    
-    logger.debug(r_access.json())
+
+    if 'access_token' in data:
+        r_access = requests.get(grant_host_url + '/auth/access?access_token=' + str(data['access_token']))
+        logger.debug(r_access.json())
+    else:
+        logger.debug('bad access token')
+        return redirect(url_for('/'))
 
     session['access_token'] = data['access_token']
     session['profil'] = r_access.json()

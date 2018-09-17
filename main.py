@@ -74,6 +74,7 @@ def create_app():
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
         app.config['api_key'] = conf_data['api_key']
+        app.config['oauth_status'] = conf_data['oauth_status']
         Bootstrap(app)
         app.config['debug_level'] = conf_data['debug_level']
         return app
@@ -95,14 +96,26 @@ def before_request():
             session['api_key'] = app.config['api_key']
         # tricky way to get URL 404 etc. rooting as I want
         if 'access_token' not in session:
-            if request.endpoint is None:
-                return redirect(url_for('oauth.login'))
-            elif 'oauth.auth' in request.endpoint:
-                return 
-            elif 'oauth.grant' in request.endpoint:
-                return 
-            elif 'oauth.login' not in request.endpoint:
-                return redirect(url_for('oauth.login'))
+            if app.config['oauth_status'] == 'False':
+                app.config['MONGO_HOST'] = 'localhost'
+                session['profil'] = {
+                      'roles': ['ROLE_ADMIN', 'ROLE_USER'],
+                      'username': 'test_user',
+                      'id': 'foo'
+                      }
+                r_access_bypass = json.dumps(session['profil'])
+                current_user = User(mongo_curs)
+                current_user.create_or_replace_user_cortext(r_access_bypass)
+                return
+            else:
+                if request.endpoint is None:
+                    return redirect(url_for('oauth.login'))
+                elif 'oauth.auth' in request.endpoint:
+                    return 
+                elif 'oauth.grant' in request.endpoint:
+                    return 
+                elif 'oauth.login' not in request.endpoint:
+                    return redirect(url_for('oauth.login'))
     except BaseException as e:
         print(e)
 

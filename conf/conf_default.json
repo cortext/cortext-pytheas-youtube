@@ -6,6 +6,7 @@
   "MONGO_HOST": "mongo",
   "MONGO_DBNAME": "youtube",
   "MONGO_PORT": 27017,
+  "oauth_status" : "True",
   "redirect_uri": "",
   "grant_host_url": "",
   "debug_level": "False"
