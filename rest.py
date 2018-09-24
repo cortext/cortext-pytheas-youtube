@@ -42,6 +42,20 @@ def videos_list_by_query(query_id):
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
 
+@rest.route('/queries/<query_id>/comments/', methods=['GET'])
+def comments_list_by_query(query_id):
+    result = mongo_curs.db.comments.find({'query_id': query_id})
+    json_res = json_util.dumps(
+        result, sort_keys=True, indent=2, separators=(',', ': '))
+    return jsonify(json.loads(json_res))
+
+@rest.route('/queries/<query_id>/captions/', methods=['GET'])
+def captions_list_by_query(query_id):
+    result = mongo_curs.db.captions.find({'query_id': query_id})
+    json_res = json_util.dumps(
+        result, sort_keys=True, indent=2, separators=(',', ': '))
+    return jsonify(json.loads(json_res))
+
 @rest.route('/videos/<video_id>', methods=['GET'])
 def video_search(video_id):
     result = mongo_curs.db.videos.find({'id.videoId': video_id})
