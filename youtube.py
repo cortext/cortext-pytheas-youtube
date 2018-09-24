@@ -391,7 +391,6 @@ class YouTubeTranscriptApi():
                     video_url=_TranscriptFetcher.WATCH_URL.format(video_id=video_id)
                 )
             )
-            logger(YouTubeTranscriptApi.CouldNotRetrieveTranscript(video_id))
             #raise YouTubeTranscriptApi.CouldNotRetrieveTranscript(video_id)
             
 
