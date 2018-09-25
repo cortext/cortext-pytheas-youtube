@@ -748,27 +748,6 @@ def process_results():
 
 
 ##########################################################################
-# Config
-##########################################################################
-@app.route('/config', methods=['POST', 'GET'])
-def config():
-
-    json_formated = json.dumps(session['profil'], indent=2) 
-
-    if not 'api_key' in session:
-       api_key_validate = 'You need an API KEY from youtube'
-    else:
-       api_key_validate = session['api_key']
-
-    if request.method == 'POST':
-        if request.form.get('api_key'):
-            session['api_key'] = request.form.get('api_key')
-            return redirect(url_for('home'))
-
-    return render_template('config.html', session_data=json_formated, message=api_key_validate)
-
-
-##########################################################################
 # Manage
 ##########################################################################
 @app.route('/manage', methods=['POST', 'GET'])
@@ -818,7 +797,32 @@ def manage():
 
     return render_template('manage.html', stats=stats)
 
+##########################################################################
+# View db
+##########################################################################
+@app.route('/view-videos/<query_id>', methods=['POST','GET'])
+def view_videos(query_id):
+    #34cd696a-0d24-4ba0-9351-fbe8fdd80348
+    
+    r = requests.get('http://127.0.01:8081/queries/' + query_id + '/videos/')
+    print(r.text)
+    return render_template('view.html', list_queries=r.json())
 
+@app.route('/view-comments/<query_id>', methods=['POST','GET'])
+def view_comments(query_id):
+    #34cd696a-0d24-4ba0-9351-fbe8fdd80348
+    
+    r = requests.get('http://127.0.01:8081/queries/' + query_id + '/comments/')
+    print(r.text)
+    return render_template('view.html', list_queries=r.json())
+
+@app.route('/view-captions/<query_id>', methods=['POST','GET'])
+def view_captions(query_id):
+    #34cd696a-0d24-4ba0-9351-fbe8fdd80348
+    
+    r = requests.get('http://127.0.01:8081/queries/' + query_id + '/captions/')
+    print(r.text)
+    return render_template('view.html', list_queries=r.json())
 ##########################################################################
 # Export
 ##########################################################################
@@ -840,6 +844,27 @@ def export():
             list_queries.append(doc)
 
     return render_template('export.html', list_queries=list_queries)
+
+
+##########################################################################
+# Config
+##########################################################################
+@app.route('/config', methods=['POST', 'GET'])
+def config():
+
+    json_formated = json.dumps(session['profil'], indent=2) 
+
+    if not 'api_key' in session:
+       api_key_validate = 'You need an API KEY from youtube'
+    else:
+       api_key_validate = session['api_key']
+
+    if request.method == 'POST':
+        if request.form.get('api_key'):
+            session['api_key'] = request.form.get('api_key')
+            return redirect(url_for('home'))
+
+    return render_template('config.html', session_data=json_formated, message=api_key_validate)
 
 ##########################################################################
 # Reset session
