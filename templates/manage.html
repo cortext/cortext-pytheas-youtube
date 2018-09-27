@@ -59,9 +59,12 @@
                                     <td></td>
                                 {% endif %}
                                 <!-- -->
-                                <td class="text-center">{{query['countVideos']}}</td>
-                                <td class="text-center">{{query['countComments']}}</td>
-                                <td class="text-center">{{query['countCaptions']}}</td>
+                                <td class="text-center"> 
+                                    <a href="/view-videos/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>{{query['countVideos']}}</td>
+                                <td class="text-center">
+                                    <a href="/view-comments/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>{{query['countComments']}}</td>
+                                <td class="text-center">
+                                    <a href="/view-captions/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>{{query['countCaptions']}}</td>
                                 <!-- -->
                                 <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
                             </tr>

@@ -190,11 +190,11 @@ class Comment():
         self.db = mongo_curs.db
         self.query_id = query_id
 
-    def create_if_not_exist(self, id_video):
-        id_query = self.id_query
+    def create_if_not_exist(self, video_id):
+        query_id = self.query_id
         try:
             current_caption = self.db.captions.find_one_or_404(
-                { '$and':[{ 'id_query': id_query }, { 'id_video': id_video }] }
+                { '$and':[{ 'query_id': query_id }, { 'videoId': video_id }] }
             )
         except BaseException as e:
             self.create_captions(id_video)
@@ -277,9 +277,9 @@ class Caption():
     # https://github.com/jdepoix/youtube-transcript-api
     # use an undocumentad part of the api youtube (web client api)
     
-    def __init__(self, mongo_curs, id_query):
+    def __init__(self, mongo_curs, query_id):
         self.db = mongo_curs.db
-        self.id_query = id_query
+        self.query_id = query_id
 
     # def verify_caption(self, id_video):
     #     captions_result = self.Youtube.get_query(
@@ -299,26 +299,26 @@ class Caption():
     #             for item in val:
     #                 lang_caption = item['snippet']['language']
     #                 track_kind = item['snippet']['trackKind']
-    #                 current_captions = Caption(mongo_curs, id_query)
+    #                 current_captions = Caption(mongo_curs, query_id)
     #                 current_captions.create_captions(id_video)
     #     return
 
-    def create_captions(self, id_video):
-        transcript = YouTubeTranscriptApi().get_transcript(id_video)
+    def create_captions(self, video_id):
+        transcript = YouTubeTranscriptApi().get_transcript(video_id)
         self.db.captions.insert_one({
-            'id_query' : self.id_query,
-            'id_video' : id_video,
+            'query_id' : self.query_id,
+            'videoId' : video_id,
             'captions' : transcript,
         })
 
-    def create_if_not_exist(self, id_video):
-        id_query = self.id_query
+    def create_if_not_exist(self, video_id):
+        query_id = self.query_id
         try:
             current_caption = self.db.captions.find_one_or_404(
-                { '$and':[{ 'id_query': id_query }, { 'id_video': id_video }] }
+                { '$and':[{ 'query_id': query_id }, { 'videoId': video_id }] }
             )
         except BaseException as e:
-            self.create_captions(id_video)
+            self.create_captions(video_id)
             logger.warning(
                 str('Caption not found or error. Log is here : ') + str(e) + str(type(e))
             ) 

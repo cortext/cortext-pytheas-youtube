@@ -764,14 +764,15 @@ def manage():
             doc['countComments'] = mongo_curs.db.comments.find(
                 {'query_id': doc['query_id']}).count()
             doc['countCaptions'] = mongo_curs.db.captions.find(
-                {'id_query': doc['query_id']}).count()
+                {'query_id': doc['query_id']}).count()
             list_queries.append(doc)
 
         if 'ROLE_ADMIN' in session['profil']['roles']:
             stats = {
                 'query_totalCount': mongo_curs.db.query.find({}).count(),
                 'videos': mongo_curs.db.videos.find({}).count(),
-                'comments': mongo_curs.db.comments.find({}).count(),            
+                'comments': mongo_curs.db.comments.find({}).count(),
+                'captions': mongo_curs.db.captions.find({}).count(),           
                 'list_queries': list_queries,
                 'message' : 'admin roles should be able to see counted db'
             }
@@ -809,17 +810,13 @@ def view_videos(query_id):
     return render_template('view.html', list_queries=r.json())
 
 @app.route('/view-comments/<query_id>', methods=['POST','GET'])
-def view_comments(query_id):
-    #34cd696a-0d24-4ba0-9351-fbe8fdd80348
-    
+def view_comments(query_id):    
     r = requests.get('http://127.0.01:8081/queries/' + query_id + '/comments/')
     print(r.text)
     return render_template('view.html', list_queries=r.json())
 
 @app.route('/view-captions/<query_id>', methods=['POST','GET'])
-def view_captions(query_id):
-    #34cd696a-0d24-4ba0-9351-fbe8fdd80348
-    
+def view_captions(query_id):    
     r = requests.get('http://127.0.01:8081/queries/' + query_id + '/captions/')
     print(r.text)
     return render_template('view.html', list_queries=r.json())

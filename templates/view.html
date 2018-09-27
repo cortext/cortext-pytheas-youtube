@@ -13,26 +13,79 @@
                 <h4>Data in db </h4>
                 <h5>List queries :</h5>
 
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>id</th>
-                            <th>Title</th>
-                            {# <th>Desc</th> #}
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for q in list_queries %}
-                        	<tr>
-                        		<td>{{ q['_id'] }}</td>
-                                <td>{{ q['snippet']['title'] }}</td>
-                                {# <td>{{ q['snippet']['localized']['description'] }}</td> #}
-                                <td>{{ q['snippet']['publishedAt'] }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+
+                {% if 'snippet' in list_queries[0] %}
+                	{% if 'is_top_level_comment' in list_queries[0] %}
+                		{# COMMENTS #}
+		                <table class="table">
+		                    <thead>
+		                        <tr>
+		                            <th>id</th>
+		                            <th>authorDisplayName</th>
+		                            <th>LikeCount</th>
+		                            <th>textDisplay</th>
+		                            <th>Date</th>
+		                        </tr>
+		                    </thead>
+		                    <tbody>
+		                        {% for q in list_queries %}
+		                        	<tr>
+		                        		<td>{{ q['_id'] }}</td>
+		                        		<td>{{ q['snippet']['authorDisplayName'] }}</td>
+		                                <td>{{ q['snippet']['likeCount'] }}</td>
+		                                <td>{{ q['snippet']['textDisplay'] }}</td>
+		                                <td>{{ q['snippet']['publishedAt'] }}</td>
+		                            </tr>
+		                        {% endfor %}
+		                    </tbody>
+		                </table>
+	                {% else %}
+	                	{# VIDEOS #}
+		                <table class="table">
+		                    <thead>
+		                        <tr>
+		                            <th>id</th>
+		                            <th>Author</th>
+		                            <th>Title</th>
+		                            <th>Desc</th>
+		                            <th>Date</th>
+		                        </tr>
+		                    </thead>
+		                    <tbody>
+		                        {% for q in list_queries %}
+		                        	<tr>
+		                        		<td>{{ q['_id'] }}</td>
+		                        		<td>{{ q['snippet']['channelTitle'] }}</td>
+		                                <td>{{ q['snippet']['title'] }}</td>
+		                                <td>{{ q['snippet']['description'] }}</td>
+		                                <td>{{ q['snippet']['publishedAt'] }}</td>
+		                            </tr>
+		                        {% endfor %}
+		                    </tbody>
+		                </table>
+	                {% endif %}
+                {% else %}
+                	{# CAPTIONS #}
+					<table class="table">
+	                    <thead>
+	                        <tr>
+	                            <th>id</th>
+	                        </tr>
+	                    </thead>
+	                    <tbody>
+	                        {% for q in list_queries %}
+	                        	<tr>
+	                        		<td>{{ q['_id'] }}</td>
+	                            </tr>
+	                        {% endfor %}
+	                    </tbody>
+	                </table>
+                {% endif %}
+
+
+
+
             </div>
         </div>
     </div>
