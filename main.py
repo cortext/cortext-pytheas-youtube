@@ -805,20 +805,17 @@ def manage():
 def view_videos(query_id):
     #34cd696a-0d24-4ba0-9351-fbe8fdd80348
     
-    r = requests.get('http://127.0.01:8081/queries/' + query_id + '/videos/')
-    print(r.text)
+    r = requests.get('http://127.0.0.1:'+ str(app.config['PORT']) +'/queries/' + query_id + '/videos/')
     return render_template('view.html', list_queries=r.json())
 
 @app.route('/view-comments/<query_id>', methods=['POST','GET'])
 def view_comments(query_id):    
-    r = requests.get('http://127.0.01:8081/queries/' + query_id + '/comments/')
-    print(r.text)
+    r = requests.get('http://127.0.0.1:'+ str(app.config['PORT']) +'/queries/' + query_id + '/comments/')
     return render_template('view.html', list_queries=r.json())
 
 @app.route('/view-captions/<query_id>', methods=['POST','GET'])
 def view_captions(query_id):    
-    r = requests.get('http://127.0.01:8081/queries/' + query_id + '/captions/')
-    print(r.text)
+    r = requests.get('http://127.0.0.1:'+ str(app.config['PORT']) +'/queries/' + query_id + '/captions/')
     return render_template('view.html', list_queries=r.json())
 ##########################################################################
 # Export
