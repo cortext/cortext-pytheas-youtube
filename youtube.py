@@ -248,8 +248,7 @@ class Comment():
 
         else:
             logger.error(commentThread['error'])
-            logger.error('reason of error is : ' + ['errors'][0]['reason'])
-            return
+            logger.error('reason of error is : ' + commentThread['error']['errors'][0]['reason'])
 
         return
 
