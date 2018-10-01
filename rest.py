@@ -157,6 +157,40 @@ def download_captions(query_id):
     return response
 
 
+
+##########################################################################
+# View db
+##########################################################################
+# @rest.route('/view-videos/<query_id>', methods=['POST','GET'])
+# def view_videos(query_id):
+#     print( session['access_token'] )
+#     session['access_token'] = session['access_token']
+#     url_req = 'http://127.0.0.1:' + str('8080') + '/queries/' + query_id + '/videos/'
+#     headers_req = {'access_token': session['access_token']}
+#     #print(url_req, headers_req)
+
+#     # r = requests.get( url_req, headers=headers_req)
+#     t = videos_list_by_query(query_id)
+#     print(json.dumps(json.loads(t.response)))
+
+
+#     # data = json.loads(my_json)
+#     # s = json.dumps(data, indent=4, sort_keys=True)
+
+#     from flask import render_template
+#     return render_template('view.html', list_queries=t.response)
+
+# @rest.route('/view-comments/<query_id>', methods=['POST','GET'])
+# def view_comments(query_id):    
+#     r = requests.get('http://127.0.0.1:' + str(app.config['PORT']) +'/queries/' + query_id + '/comments/')
+#     return render_template('view.html', list_queries=r.json())
+
+# @rest.route('/view-captions/<query_id>', methods=['POST','GET'])
+# def view_captions(query_id):    
+#     r = requests.get('http://127.0.0.1:' + str(app.config['PORT']) +'/queries/' + query_id + '/captions/')
+#     return render_template('view.html', list_queries=r.json())
+
+
 ##########################################################################
 # Delete dataset
 ##########################################################################

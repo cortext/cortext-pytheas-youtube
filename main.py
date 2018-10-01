@@ -86,7 +86,7 @@ try:
     # fixed this parameter until real charge management (if necessary)
     maxResults = 50
 except BaseException as error:
-    print('An exception occurred : {}'.format(error))
+    logger.debug('An exception occurred : {}'.format(error))
 
 @app.before_request
 def before_request():
@@ -96,6 +96,7 @@ def before_request():
             session['api_key'] = app.config['api_key']
         # tricky way to get URL 404 etc. rooting as I want
         if 'access_token' not in session:
+            # and here to bypass oauth for debug purpose
             if app.config['oauth_status'] == 'False':
                 app.config['MONGO_HOST'] = 'localhost'
                 session['profil'] = {
@@ -117,7 +118,7 @@ def before_request():
                 elif 'oauth.login' not in request.endpoint:
                     return redirect(url_for('oauth.login'))
     except BaseException as e:
-        print(e)
+        logger.debug(e)
 
 
 @app.errorhandler(404)
@@ -798,25 +799,7 @@ def manage():
 
     return render_template('manage.html', stats=stats)
 
-##########################################################################
-# View db
-##########################################################################
-@app.route('/view-videos/<query_id>', methods=['POST','GET'])
-def view_videos(query_id):
-    #34cd696a-0d24-4ba0-9351-fbe8fdd80348
-    
-    r = requests.get('http://127.0.0.1:'+ str(app.config['PORT']) +'/queries/' + query_id + '/videos/')
-    return render_template('view.html', list_queries=r.json())
 
-@app.route('/view-comments/<query_id>', methods=['POST','GET'])
-def view_comments(query_id):    
-    r = requests.get('http://127.0.0.1:'+ str(app.config['PORT']) +'/queries/' + query_id + '/comments/')
-    return render_template('view.html', list_queries=r.json())
-
-@app.route('/view-captions/<query_id>', methods=['POST','GET'])
-def view_captions(query_id):    
-    r = requests.get('http://127.0.0.1:'+ str(app.config['PORT']) +'/queries/' + query_id + '/captions/')
-    return render_template('view.html', list_queries=r.json())
 ##########################################################################
 # Export
 ##########################################################################
