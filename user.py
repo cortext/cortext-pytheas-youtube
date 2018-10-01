@@ -1,13 +1,12 @@
 import json
 import logging
-from pprint import pprint
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(filename)s ## [%(asctime)s] -- %(levelname)s == "%(message)s"')
+formatter = logging.Formatter('%(filename)s  ## [%(asctime)s] -- %(levelname)s == "%(message)s"')
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
@@ -49,15 +48,13 @@ class User():
         return
 
     def create_or_replace_user_cortext(self, dataUser):
-        print(type(dataUser.json()))
-        print(dataUser.json())
         dataUser = dataUser.json()
         self.username = dataUser['username']
         self.id_cortext = dataUser['id']
         
         try:
             current_user = self.db.users.find_one_or_404({ 'id_cortext': self.id_cortext})
-            logger.debug('get cortext user : ' + current_user['username'])
+            logger.info('get cortext user : ' + current_user['username'])
             if (current_user):
                 # self.udpate(dataUser)
                 self.db.users.update_one(
