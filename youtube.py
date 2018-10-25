@@ -87,7 +87,7 @@ class YouTube():
             part=session['part'],
             relevanceLanguage=session['language'],
             maxResults=session['maxResults'],
-            ranking=session['ranking']
+            order=session['ranking']
         )
         return search_results
 

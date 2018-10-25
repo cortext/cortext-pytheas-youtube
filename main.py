@@ -118,7 +118,8 @@ def before_request():
                 elif 'oauth.login' not in request.endpoint:
                     return redirect(url_for('oauth.login'))
     except BaseException as e:
-        logger.debug(e)
+        #logger.debug(e)
+        print(ea)
 
 
 @app.errorhandler(404)
@@ -326,7 +327,7 @@ def search():
                     'part': ', '.join(request.form.getlist('part')),
                     'language': request.form.get('language'),
                     'maxResults': maxResults,
-                    'ranking': request.form.get('ranking'),
+                    'order': request.form.get('order'),
                     'publishedAfter': st_point,
                     'publishedBefore': ed_point
                 }
@@ -341,7 +342,7 @@ def search():
                         'part': session['request']['part'],
                         'language': session['request']['language'],
                         'maxResults': maxResults,
-                        'ranking': session['request']['ranking'],
+                        'order': session['request']['order'],
                         'date_start': session['request']['publishedAfter'],
                         'date_end': session['request']['publishedBefore']
                     }
@@ -400,6 +401,7 @@ def search():
                                 maxResults=maxResults,
                                 publishedAfter=session['request']['publishedAfter'],
                                 publishedBefore=session['request']['publishedBefore'],
+                                order=session['request']['order']
                                 key=session['api_key'],
                                 nextPageToken=session['request']['nextPageToken'])
 
@@ -430,7 +432,7 @@ def search():
                     'part': ', '.join(request.form.getlist('part')),
                     'language': request.form.get('language'),
                     'maxResults': maxResults,
-                    'ranking': request.form.get('ranking')
+                    'order': request.form.get('ranking')
                 }
                 search_results = YouTube.get_search(
                     session['api_key'], session['request'])
@@ -591,7 +593,7 @@ def process_results():
             part=session['request']['part'],
             language=session['request']['language'],
             maxResults=maxResults,
-            ranking=session['request']['ranking']
+            order=session['request']['order']
         )
 
         # insert query
@@ -603,7 +605,7 @@ def process_results():
                 'part': session['request']['part'],
                 'language': session['request']['language'],
                 'maxResults': maxResults,
-                'ranking': session['request']['ranking'],
+                'order': session['request']['order'],
             }
         )
         # insert videos
@@ -631,7 +633,7 @@ def process_results():
                 part=session['request']['part'],
                 language=session['request']['language'],
                 maxResults=maxResults,
-                ranking=session['request']['ranking'],
+                order=session['request']['order'],
                 pageToken=search_results['nextPageToken']
             )
             if not search_results['items']:
