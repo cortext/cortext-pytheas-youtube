@@ -403,7 +403,7 @@ def search():
                                 publishedBefore=session['request']['publishedBefore'],
                                 order=session['request']['order']
                                 key=session['api_key'],
-                                nextPageToken=session['request']['nextPageToken'])
+                                PageToken=session['request']['nextPageToken'])
 
                             # insert video-info except if last result
                             if not date_results['items']:
