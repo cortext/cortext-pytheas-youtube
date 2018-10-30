@@ -1,7 +1,7 @@
 Flask==1.0.2
 Flask_PyMongo==0.4.1
 Flask_Bootstrap==3.3.7.1
-requests==2.13.0
+requests>=2.20.0
 furl==0.5.7
 python_dateutil==2.6.0
 # not implemented yet
