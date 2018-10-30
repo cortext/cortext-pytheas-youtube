@@ -401,7 +401,7 @@ def search():
                                 maxResults=maxResults,
                                 publishedAfter=session['request']['publishedAfter'],
                                 publishedBefore=session['request']['publishedBefore'],
-                                order=session['request']['order']
+                                order=session['request']['order'],
                                 key=session['api_key'],
                                 PageToken=session['request']['nextPageToken'])
 
