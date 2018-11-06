@@ -801,12 +801,26 @@ def manage():
 
     return render_template('manage.html', stats=stats)
 
+##########################################################################
+## View in-db human readable
+# request by type_data and query_id to rest urls 
+# then rendering html template
+##########################################################################
+@app.route('/view-<data_type>/<query_id>', methods=['POST','GET'])
+def view_data_by_type(query_id, data_type):
+    if data_type not in ['videos', 'comments', 'captions']:
+        redirect(url_for(page_not_found))
+    r = requests.get('http://127.0.0.1:' + str(app.config['PORT']) +'/queries/' + query_id + '/' + data_type + '/')
+    return render_template('view.html', list_queries=r.json())
 
 ##########################################################################
-# Export
+## Export
+# call mongo db to make list
+# FOR NOW ONLY downloads methods are located in @rest modules
 ##########################################################################
 @app.route('/export', methods=['POST', 'GET'])
 def export():
+    print( session )
     if request.method == 'GET':
         result = mongo_curs.db.query.find({
             'author_id': session['profil']['id']
@@ -859,4 +873,5 @@ def reset():
 if __name__ == '__main__':
     app.jinja_env.auto_reload = True
     app.secret_key = os.urandom(24)
+    app.session_cookie_path = '/'
     app.run(debug=app.config['debug_level'], host='0.0.0.0', port=app.config['PORT'], threaded=True )
