@@ -119,7 +119,7 @@ def before_request():
                     return redirect(url_for('oauth.login'))
     except BaseException as e:
         #logger.debug(e)
-        print(ea)
+        print(e)
 
 
 @app.errorhandler(404)
