@@ -31,7 +31,6 @@ python main.py
 ```
 
 #### Work as webapp :
-
 **On top of this in order to get fully functionnal Pytheas you will need to get :**
 - A functionnal mongodb :
   - configure it via **conf/conf.json**
@@ -50,9 +49,8 @@ python main.py
 - Playlist is list from video
 - Author/Channel are different
 
-
 #### Very basic rest implemented
-- /queries/
+- /queries/ss
 - /queries/***query_id***
 - /queries/***query_id***/videos/
 - /videos/***video_id***
@@ -61,10 +59,9 @@ python main.py
 - /captions/***caption_id***
 
 #### Next to do
-- Queuded requested videos in order to clearly separate back/front(CELERY ?)
-- multiThreaded // parallele (CELERY again ?)
-- continue refactoring
+- multiThreaded // parallele // queuding (CELERY again ?)
+- continue refactoring : meaning dynamic and self function
+- integrate errorhandler directly from flask
 - Integrate api openSpec
-- make captions data integrable by CORTEXT
-- Continue to integrate methods
+- Continue to integrate methods (see about network of reccommandation mainly)
 - ...

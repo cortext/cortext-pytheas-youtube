@@ -86,10 +86,41 @@ def caption_search(caption_id):
         result, sort_keys=True, indent=2, separators=(',', ': '))
     return jsonify(json.loads(json_res))
 
-
 ##########################################################################
 # Download videos, comments set
 ##########################################################################
+## future work to get dynamically repetitive methods access data. 
+## Could be possibly apply on others data side of code.
+# but warn because will need to identify query_type in url
+# and also rename ontolgogy for query_type based between videos (as lists of videos by query) and others (see below)
+@rest.route('/download/<query_type>/<query_id>', methods=['GET'])
+def download_videos_by_type(query_id, query_type):
+    print(query_type)
+    if query_type not in ['comments', 'captions']:
+        # need to fix later. There is 404 function in @app
+        from flask import render_template
+        return render_template('structures/error.html', error='error')
+
+    query = mongo_curs.db.query.find_one({'query_id': query_id})    
+    
+    if 'query' in query:
+        if not 'ranking' in query: 
+            query_name = str(query['query'])
+        else:
+            query_name = '_'.join([query['query'], query['language'], query['ranking']])
+    elif 'channel_id' in query:
+        query_name = query['channel_id']
+    
+    query_type = mongo_curs.db[query_type]
+    result = query_type.find({'query_id': query_id})
+    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
+
+    response = jsonify(json.loads(json_res))
+    response.headers['Content-Disposition'] = 'attachment;filename=' + \
+        str(query_name) + '_videos.json'
+    return response
+
+# old style hard query_type fro /queries/videos...
 @rest.route('/download/queries/<query_id>/videos', methods=['GET'])
 def download_videos(query_id):
     query = mongo_curs.db.query.find_one({'query_id': query_id})    
@@ -109,53 +140,6 @@ def download_videos(query_id):
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
         str(query_name) + '_videos.json'
     return response
-
-@rest.route('/download/comments/<query_id>', methods=['GET'])
-def download_comments(query_id):
-    query = mongo_curs.db.query.find_one({'query_id': query_id})
-    from_query = json.dumps(query, default=json_util.default)
-    from_query = json.loads(from_query)
-
-    # tmp patch...    
-    if 'query' in query:
-        if not 'ranking' in query: 
-            query_name = str(query['query'])
-        else:
-            query_name = '_'.join([query['query'], query['language'], query['ranking']])
-    elif 'channel_id' in query:
-        query_name = query['channel_id']
-
-    result = mongo_curs.db.comments.find({'query_id': query_id})
-    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
-
-    response = jsonify(json.loads(json_res))
-    response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        str(query_name) + '_comments.json'
-    return response
-
-@rest.route('/download/captions/<query_id>', methods=['GET'])
-def download_captions(query_id):
-    query = mongo_curs.db.query.find_one({'query_id': query_id})
-    from_query = json.dumps(query, default=json_util.default)
-    from_query = json.loads(from_query)
-
-    # tmp patch...    
-    if 'query' in query:
-        if not 'ranking' in query: 
-            query_name = str(query['query'])
-        else:
-            query_name = '_'.join([query['query'], query['language'], query['ranking']])
-    elif 'channel_id' in query:
-        query_name = query['channel_id']
-
-    result = mongo_curs.db.captions.find({'id_query': query_id})
-    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
-
-    response = jsonify(json.loads(json_res))
-    response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        str(query_name) + '_captions.json'
-    return response
-
 
 
 ##########################################################################
