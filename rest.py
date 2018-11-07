@@ -112,14 +112,14 @@ def download_videos_by_type(query_id, query_type):
     elif 'channel_id' in query:
         query_name = query['channel_id']
     
-    query_name = query_name.encode('utf8')
+    query_name = str(query_name.encode('utf8'))
     query_type = mongo_curs.db[query_type]
     result = query_type.find({'query_id': query_id})
     json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
 
     response = jsonify(json.loads(json_res))
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        str(query_name.encode('utf8')) + '_videos.json'
+        query_name + '_videos.json'
     return response
 
 # old style hard query_type fro /queries/videos...
@@ -134,14 +134,14 @@ def download_videos(query_id):
             query_name = '_'.join([query['query'], query['language'], query['ranking']])
     elif 'channel_id' in query:
         query_name = query['channel_id']
-    query_name = query_name.encode('utf8')
+    query_name = str(query_name.encode('utf8'))
 
     result = mongo_curs.db.videos.find({'query_id': query_id})
     json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
 
     response = jsonify(json.loads(json_res))
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        str(query_name) + '_videos.json'
+        query_name + '_videos.json'
     return response
 
 
