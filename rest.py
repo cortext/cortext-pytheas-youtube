@@ -93,6 +93,7 @@ def caption_search(caption_id):
 ## Could be possibly apply on others data side of code.
 # but warn because will need to identify query_type in url
 # and also rename ontolgogy for query_type based between videos (as lists of videos by query) and others (see below)
+# also have to download filename as utf8 (and have to see better process about downloading files...)
 @rest.route('/download/<query_type>/<query_id>', methods=['GET'])
 def download_videos_by_type(query_id, query_type):
     print(query_type)
@@ -111,6 +112,7 @@ def download_videos_by_type(query_id, query_type):
     elif 'channel_id' in query:
         query_name = query['channel_id']
     
+    query_name = query_name.encode('utf8')
     query_type = mongo_curs.db[query_type]
     result = query_type.find({'query_id': query_id})
     json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
