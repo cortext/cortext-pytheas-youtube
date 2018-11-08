@@ -263,7 +263,7 @@ def playlist():
         session['counter'] += 1
         pageToken = request.args.get('nextPageToken')
         session['pageToken'] = pageToken
-        playlist_results = YouTube.get_channel(
+        playlist_results = YouTube.get_playlist(
             session['api_key'], session['request'])
         results_string = json.dumps(
             playlist_results, sort_keys=True, indent=2, separators=(',', ': ')
@@ -355,6 +355,7 @@ def search():
                     part=session['request']['part'],
                     language=session['request']['language'],
                     maxResults=maxResults,
+                    order=session['request']['order'],
                     publishedAfter=session['request']['publishedAfter'],
                     publishedBefore=session['request']['publishedBefore'],
                     key=session['api_key'])
@@ -378,6 +379,7 @@ def search():
                         part=session['request']['part'],
                         language=session['request']['language'],
                         maxResults=maxResults,
+                        order=session['request']['order'],
                         publishedAfter=session['request']['publishedAfter'],
                         publishedBefore=session['request']['publishedBefore'],
                         key=session['api_key'])
@@ -399,9 +401,9 @@ def search():
                                 part=session['request']['part'],
                                 language=session['request']['language'],
                                 maxResults=maxResults,
+                                order=session['request']['order'],
                                 publishedAfter=session['request']['publishedAfter'],
                                 publishedBefore=session['request']['publishedBefore'],
-                                order=session['request']['order'],
                                 key=session['api_key'],
                                 PageToken=session['request']['nextPageToken'])
 
@@ -432,7 +434,7 @@ def search():
                     'part': ', '.join(request.form.getlist('part')),
                     'language': request.form.get('language'),
                     'maxResults': maxResults,
-                    'order': request.form.get('ranking')
+                    'order': request.form.get('order')
                 }
                 search_results = YouTube.get_search(
                     session['api_key'], session['request'])
@@ -532,12 +534,13 @@ def aggregate():
                                 part='id, replies, snippet',
                                 pageToken=commentThreads_result['nextPageToken'])
                             current_comment_thread.create_comment_for_each(commentThreads_result)
-            # if 'metrics' in options_api:
-            #     current_query = Comment(mongo_curs, query_id)
-            #     for id_video in list_vid:
-            #         print(id_video)
-            #         video_result = api.get_query('videos', id=id_video, part=part)
-            #         current_query.add_stats_for_each_entry(video_result)
+                if 'metrics' in options_api:
+                    # Here we will just add 'statistics' part from youtube to our videos set
+                    current_query = Video(mongo_curs, query_id)
+                    for id_video in list_vid:
+                        print(id_video)
+                        video_result = api.get_query('videos', id=id_video, part='statistics')
+                        current_query.add_stats_for_each_entry(video_result)
 
             return render_template('methods/download_process.html', message='ok it is done')
 

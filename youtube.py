@@ -40,6 +40,7 @@ logger.addHandler(stream_handler)
 
 ##########################################################################
 # Youtube Data Api request
+# used to make all http request to Youtube Data Api
 ##########################################################################
 class YouTube():
     #api_key = None
@@ -47,7 +48,7 @@ class YouTube():
     #api_base_url = 'https://www.googleapis.com/youtube/v3/'
     #part = None
 
-    def __init__(self, api_key, access_token=None, part=None,api_url=None):
+    def __init__(self, api_key, access_token=None, api_url=None ,part=None):
         self.api_key = api_key
         self.access_token = access_token
         self.api_base_url = 'https://www.googleapis.com/youtube/v3/'
@@ -80,6 +81,8 @@ class YouTube():
         kwargs = json.loads(kwargs)
         return self.try_request(kwargs, endpoint)
 
+    # not used anymore for now but later...
+    # have to invert between generic and complex methods who have to be repetaed often
     def get_search(api_key, session):
         search_results = YouTube(api_key).get_query(
             'search',
@@ -91,6 +94,7 @@ class YouTube():
         )
         return search_results
 
+    # same
     def get_channel(api_key, session):
         channel_results = YouTube(api_key).get_query(
             'search',
@@ -100,7 +104,7 @@ class YouTube():
         )
         return channel_results
 
-    # TODO
+    # same 
     def get_playlist(api_key, session):
         playlist_results = YouTube(api_key).get_query(
             'playlistItems',
@@ -131,14 +135,12 @@ class Videos():
     snippet_fields = ['']
     stats_fields = ['']
 
-    def __init__(self, mongo_curs, id=None, query_id=None):
+    def __init__(self, mongo_curs, video_id=None, query_id=None):
         self.db = mongo_curs.db
         if id:
             self.id_video = id
-            self.get()
         if query_id:
             self.query_id = query_id
-            self.get()
 
     def get_one_video(self):
         try:
@@ -146,7 +148,7 @@ class Videos():
             logger.debug('get video : ', current_video['id_video'])
         except BaseException as e:
             logger.error('video not found : ', e)
-        return
+        return str(current_video)
 
     def get_one_query_videos(self):
         try:
@@ -156,11 +158,9 @@ class Videos():
             logger.error('one query videos not found : ', e)
         return
 
-    def view_one_video(self):
-        return str(current_video)
-
-    def view_query_videos(self):
-        return str(current_video)    
+    def add_stats_for_each_entry(self):
+        res_req = get_one_video(self)
+        return     
 
     # def update(self, dataUser):
     #     user_update = self.db.users.update_one(
@@ -252,55 +252,17 @@ class Comment():
 
         return
 
-    # def add_stats_for_each(self, list_video):
-    #     #Youtube.verify_error(list_video)
-    #     # part = 'statistics'
-    #     for each in list_video:
-    #         print(each)
-    #         #video_result = api.get_query('videos', id=id_video, part=part)
-    #         #pprint.print(video_result)
-
-    #         if 'youtube#video' in result['kind']:
-    #             print(results['kind'])
-    #             # self.db.videos.update_one(
-    #             #   { '' : self.id_pytheas },
-    #             #   { '$set': { 'username': dataUser['username']} }
-    #             # )
-    #     return
-
 ##########################################################################
 # Captions
 # rename in aggregate class (because of list of videos)
 ##########################################################################
 class Caption():
-    # https://github.com/jdepoix/youtube-transcript-api
+    # https://github.com/jdepoix/youtube-transcript-api (sese below next Class YoutubeTranscript API)
     # use an undocumentad part of the api youtube (web client api)
     
     def __init__(self, mongo_curs, query_id):
         self.db = mongo_curs.db
         self.query_id = query_id
-
-    # def verify_caption(self, id_video):
-    #     captions_result = self.Youtube.get_query(
-    #         'captions',
-    #         videoId=id_video,
-    #         part='id, snippet'
-    #     )
-    #     # Check if error (eg unactivated captions)
-    #     if 'error' in captions_result:
-    #         print(captions_result['error']
-    #               ['errors'][0]['reason'])
-    #     if not captions_result['items']:
-    #         print('empty captions')
-    #     # get different captions language
-    #     for key, val in captions_result.items():
-    #         if key == 'items':
-    #             for item in val:
-    #                 lang_caption = item['snippet']['language']
-    #                 track_kind = item['snippet']['trackKind']
-    #                 current_captions = Caption(mongo_curs, query_id)
-    #                 current_captions.create_captions(id_video)
-    #     return
 
     def create_captions(self, video_id):
         transcript = YouTubeTranscriptApi().get_transcript(video_id)
@@ -325,7 +287,7 @@ class Caption():
 
 
 #################################################################""
-
+# integrated here for more conveniance for now...
 
 class YouTubeTranscriptApi():
     class CouldNotRetrieveTranscript(Exception):

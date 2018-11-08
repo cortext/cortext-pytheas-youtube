@@ -17,6 +17,8 @@ with app.app_context():
     current_app = app
     mongo_curs = Database().init_mongo(app)
 
+## HAVE TO INTEGRATE LOGGER HERE..
+
 
 ##########################################################################
 # REST view
@@ -96,7 +98,6 @@ def caption_search(caption_id):
 # also have to download filename as utf8 (and have to see better process about downloading files...)
 @rest.route('/download/<query_type>/<query_id>', methods=['GET'])
 def download_videos_by_type(query_id, query_type):
-    print(query_type)
     if query_type not in ['comments', 'captions']:
         # need to fix later. There is 404 function in @app
         from flask import render_template
@@ -113,13 +114,13 @@ def download_videos_by_type(query_id, query_type):
         query_name = query['channel_id']
     
     query_name = str(query_name.encode('utf8'))
-    query_type = mongo_curs.db[query_type]
-    result = query_type.find({'query_id': query_id})
+    query_type_filename = (str(query_type))
+    result = mongo_curs.db[query_type].find({'query_id': query_id})
     json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
 
     response = jsonify(json.loads(json_res))
     response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        query_name + '_videos.json'
+        query_name + '_'+ query_type +'.json'
     return response
 
 # old style hard query_type fro /queries/videos...
