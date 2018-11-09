@@ -21,7 +21,6 @@ from flask import url_for
 from flask_bootstrap import Bootstrap
 from furl import furl
 # local modules
-from rest import rest
 from oauth import oauth
 from database import Database
 # Main class
@@ -66,7 +65,6 @@ def create_app():
     with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         app = Flask(__name__)
-        app.register_blueprint(rest)
         app.register_blueprint(oauth)
         app.config['DATA_DIR'] = conf_data['DATA_DIR']
         app.config['PORT'] = conf_data['PORT']
@@ -77,7 +75,7 @@ def create_app():
         app.config['oauth_status'] = conf_data['oauth_status']
         Bootstrap(app)
         app.config['debug_level'] = conf_data['debug_level']
-        return app
+    return app
 
 try:
     app = create_app()
@@ -125,6 +123,15 @@ def before_request():
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
+
+
+
+@app.route('/queries/', methods=['GET'])
+def queries_list():
+    r = requests.get('http://0.0.0.0:5002/queries/')
+    from flask import jsonify
+    return jsonify(r.json())
+
 
 
 @app.route('/')
@@ -805,6 +812,25 @@ def manage():
     return render_template('manage.html', stats=stats)
 
 ##########################################################################
+# Delete dataset
+##########################################################################
+@app.route('/delete/<query_id>', methods=['GET'])
+def delete(query_id):
+    # using json_util from dumping querying (see later)
+    from bson import json_util
+
+    query = mongo_curs.db.query.find_one({'query_id': query_id})
+    from_query = json.dumps(query, default=json_util.default)
+    from_query = json.loads(from_query)
+    
+    # erase all from query
+    for table in ['captions', 'comments', 'videos', 'query']: 
+        mongo_curs.db[table].remove({'query_id': query_id})
+
+    return redirect(url_for('manage'))
+
+
+##########################################################################
 ## View in-db human readable
 # request by type_data and query_id to rest urls 
 # then rendering html template
@@ -813,7 +839,8 @@ def manage():
 def view_data_by_type(query_id, data_type):
     if data_type not in ['videos', 'comments', 'captions']:
         redirect(url_for(page_not_found))
-    r = requests.get('http://127.0.0.1:' + str(app.config['PORT']) +'/queries/' + query_id + '/' + data_type + '/')
+
+    r = requests.get('http://0.0.0.0:' + str(app.config['PORT']) +'/queries/' + query_id + '/' + data_type + '/')
     return render_template('view.html', list_queries=r.json())
 
 ##########################################################################

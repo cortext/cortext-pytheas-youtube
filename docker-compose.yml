@@ -25,3 +25,12 @@ services:
      - "3000:3000"
     depends_on:
       - mongo
+  rest:
+    container_name: cortext_pytheas_rest
+    ports:
+     - "5002:5002"
+    volumes:
+     - './rest:/opt/pytheas_rest'
+    depends_on:
+      - mongo
+      - web

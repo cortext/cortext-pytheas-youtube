@@ -1,0 +1,7 @@
+{
+  "LOG_DIR": "log/",
+  "PORT": 5002,
+  "MONGO_HOST": "localhost",
+  "MONGO_DBNAME": "youtube",
+  "MONGO_PORT": 27017
+}
