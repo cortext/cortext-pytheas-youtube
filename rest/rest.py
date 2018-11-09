@@ -29,7 +29,7 @@ logger.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
 # format
-formatter = logging.Formatter('%(filename)s ## [%(asctime)s] -- %(levelname)s == "%(message)s"')
+formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
 stream_handler.setFormatter(formatter)
 # add handler
 logger.addHandler(stream_handler)
@@ -51,136 +51,147 @@ logger.addHandler(stream_handler)
 
 try:
     rest = create_rest_app()
+    logger.debug('app is initied')
     mongo_curs = Database().init_mongo(rest)
+    logger.debug('mongo_curs is initiated')
     #log_dir = rest.config['LOG_DIR']
 except BaseException as error:
     logger.debug('An exception occurred : {}'.format(error))
 
+
 ##########################################################################
-# REST view
+# REST view - all
 ##########################################################################
+# all queries 
 @rest.route('/queries/', methods=['GET'])
-def queries_list():
+def all_queries_list():
     result = mongo_curs.db.query.find({})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for *wildcard'.format(url=request.endpoint))
     return jsonify(json.loads(json_res))
 
-@rest.route('/queries/<query_id>', methods=['GET'])
-def query_search(query_id):
+# all videos 
+@rest.route('/queries/videos/', methods=['GET'])
+def all_videos_list():
+    result = mongo_curs.db.videos.find({})
+    json_res = json_util.dumps(
+        result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for *wildcard'.format(url=request.endpoint))
+    return jsonify(json.loads(json_res))
+
+# all comments 
+@rest.route('/queries/comments/', methods=['GET'])
+def all_comments_list():
+    result = mongo_curs.db.comments.find({})
+    json_res = json_util.dumps(
+        result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for *wildcard'.format(url=request.endpoint))
+    return jsonify(json.loads(json_res))
+
+# all captions
+@rest.route('/queries/captions/', methods=['GET'])
+def all_captions_list():
+    result = mongo_curs.db.captions.find({})
+    json_res = json_util.dumps(
+        result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for *wildcard'.format(url=request.endpoint))
+    return jsonify(json.loads(json_res))
+
+##########################################################################
+# REST view by users
+##########################################################################
+# all queries by user
+@rest.route('/<user_id>/queries/', methods=['GET'])
+def queries_list(user_id):
+    result = mongo_curs.db.query.find({'author_id': user_id})
+    json_res = json_util.dumps(
+        result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
+    return jsonify(json.loads(json_res))
+
+# one query by user
+@rest.route('/<user_id>/queries/<query_id>', methods=['GET'])
+def query_search(user_id, query_id):
     result = mongo_curs.db.query.find_one_or_404({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
-@rest.route('/queries/<query_id>/videos/', methods=['GET'])
-def videos_list_by_query(query_id):
+# list of videos by queries
+@rest.route('/<user_id>/queries/<query_id>/videos/', methods=['GET'])
+def videos_list_by_query(user_id, query_id):
     result = mongo_curs.db.videos.find({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
-@rest.route('/queries/<query_id>/comments/', methods=['GET'])
-def comments_list_by_query(query_id):
+# list of comments by queries
+@rest.route('/<user_id>/queries/<query_id>/comments/', methods=['GET'])
+def comments_list_by_query(user_id, query_id):
     result = mongo_curs.db.comments.find({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
-@rest.route('/queries/<query_id>/captions/', methods=['GET'])
-def captions_list_by_query(query_id):
+# list of captions by queries
+@rest.route('/<user_id>/queries/<query_id>/captions/', methods=['GET'])
+def captions_list_by_query(user_id, query_id):
     result = mongo_curs.db.captions.find({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
-@rest.route('/videos/<video_id>', methods=['GET'])
-def video_search(video_id):
+@rest.route('/<user_id>/videos/<video_id>', methods=['GET'])
+def video_search(user_id, video_id):
     result = mongo_curs.db.videos.find({'id.videoId': video_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
-@rest.route('/videos/<video_id>/comments/', methods=['GET'])
-def comments_list_by_video(video_id):
+@rest.route('/<user_id>/videos/<video_id>/comments/', methods=['GET'])
+def comments_list_by_video(user_id, video_id):
     result = mongo_curs.db.comments.find({'videoId': video_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
-@rest.route('/comments/<comment_id>', methods=['GET'])
-def comment_search(comment_id):
+@rest.route('/<user_id>/comments/<comment_id>', methods=['GET'])
+def comment_search(user_id, comment_id):
     result = mongo_curs.db.comments.find_one_or_404(
         {'_id': ObjectId(comment_id)})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
-@rest.route('/captions/<caption_id>', methods=['GET'])
-def caption_search(caption_id):
+@rest.route('/<user_id>/captions/<caption_id>', methods=['GET'])
+def caption_search(user_id, caption_id):
     result = mongo_curs.db.captions.find_one_or_404(
         {'_id': ObjectId(caption_id)})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
+    logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
-
-##########################################################################
-# Download videos, comments set
-##########################################################################
-## future work to get dynamically repetitive methods access data. 
-## Could be possibly apply on others data side of code.
-# but warn because will need to identify query_type in url
-# and also rename ontolgogy for query_type based between videos (as lists of videos by query) and others (see below)
-# also have to download filename as utf8 (and have to see better process about downloading files...)
-@rest.route('/download/<query_type>/<query_id>', methods=['GET'])
-def download_videos_by_type(query_id, query_type):
-    if query_type not in ['comments', 'captions']:
-        # need to fix later. There is 404 function in @app
-        from flask import render_template
-        return render_template('structures/error.html', error='error')
-
-    query = mongo_curs.db.query.find_one({'query_id': query_id})    
-    
-    if 'query' in query:
-        if not 'ranking' in query: 
-            query_name = str(query['query'])
-        else:
-            query_name = '_'.join([query['query'], query['language'], query['ranking']])
-    elif 'channel_id' in query:
-        query_name = query['channel_id']
-    
-    query_name = str(query_name.encode('utf8'))
-    query_type_filename = (str(query_type))
-    result = mongo_curs.db[query_type].find({'query_id': query_id})
-    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
-
-    response = jsonify(json.loads(json_res))
-    response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        query_name + '_'+ query_type +'.json'
-    return response
-
-# old style hard query_type fro /queries/videos...
-@rest.route('/download/queries/<query_id>/videos', methods=['GET'])
-def download_videos(query_id):
-    query = mongo_curs.db.query.find_one({'query_id': query_id})    
-    
-    if 'query' in query:
-        if not 'ranking' in query: 
-            query_name = str(query['query'])
-        else:
-            query_name = '_'.join([query['query'], query['language'], query['ranking']])
-    elif 'channel_id' in query:
-        query_name = query['channel_id']
-    query_name = str(query_name.encode('utf8'))
-
-    result = mongo_curs.db.videos.find({'query_id': query_id})
-    json_res = json_util.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
-
-    response = jsonify(json.loads(json_res))
-    response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        query_name + '_videos.json'
-    return response
-
 
 
 if __name__ == '__main__':

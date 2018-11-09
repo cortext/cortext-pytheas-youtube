@@ -17,6 +17,7 @@ from flask import session
 from flask import send_file
 from flask import redirect
 from flask import url_for
+from flask import jsonify
 # Ext lib
 from flask_bootstrap import Bootstrap
 from furl import furl
@@ -84,7 +85,7 @@ try:
     # fixed this parameter until real charge management (if necessary)
     maxResults = 50
 except BaseException as error:
-    logger.debug('An exception occurred : {}'.format(error))
+    app.logger.debug('An exception occurred : {}'.format(error))
 
 @app.before_request
 def before_request():
@@ -116,23 +117,11 @@ def before_request():
                 elif 'oauth.login' not in request.endpoint:
                     return redirect(url_for('oauth.login'))
     except BaseException as e:
-        #logger.debug(e)
-        print(e)
-
+        app.logger.debug(e)
 
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
-
-
-
-@app.route('/queries/', methods=['GET'])
-def queries_list():
-    r = requests.get('http://0.0.0.0:5002/queries/')
-    from flask import jsonify
-    return jsonify(r.json())
-
-
 
 @app.route('/')
 def home():
@@ -475,22 +464,12 @@ def aggregate():
         }
 
     if request.method == 'GET':
-        db_list = mongo_curs.db.query.find(
-            {'author_id': session['profil']['id']}
-        )
-        stats = {    
-            'list_queries': [],
-        }
-        result = mongo_curs.db.query.find(
-            {'author_id': session['profil']['id']
-        })
-
+        result = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/')
+        result = result.json()
         for doc in result:
-            # add basic stat for admin
-            countVideos = mongo_curs.db.videos.find(
-                {'query_id': doc['query_id']
-            })
-            doc['countVideos'] = countVideos.count()
+            # add basic stat (nb vid) for admin
+            r = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
+            doc['countVideos'] = len(r.json())
             stats['list_queries'].append(doc)
         
     if request.method == 'POST':
@@ -766,48 +745,35 @@ def process_results():
 @app.route('/manage', methods=['POST', 'GET'])
 def manage():
     if request.method == 'GET':
-        result = mongo_curs.db.query.find({
-            'author_id': session['profil']['id']
-        })
+        # get all query fur user
+        r = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/')
+        result = r.json()
         list_queries = []
+        total_videos_count = 0
+        total_comments_count = 0
+        total_captions_count = 0
 
         for doc in result:
-            doc['countVideos'] = mongo_curs.db.videos.find(
-                {'query_id': doc['query_id']}).count()
-            doc['countComments'] = mongo_curs.db.comments.find(
-                {'query_id': doc['query_id']}).count()
-            doc['countCaptions'] = mongo_curs.db.captions.find(
-                {'query_id': doc['query_id']}).count()
+            # add basic stat (nb vid) for admin
+            r_videos   = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
+            r_comments = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/comments/')
+            r_captions = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/captions/')
+            doc['countVideos'] = len(r_videos.json())
+            doc['countComments'] = len(r_comments.json())
+            doc['countCaptions'] = len(r_captions.json())
+            total_videos_count += len(r_videos.json())
+            total_comments_count += len(r_comments.json())
+            total_captions_count += len(r_captions.json())
             list_queries.append(doc)
 
-        if 'ROLE_ADMIN' in session['profil']['roles']:
-            stats = {
-                'query_totalCount': mongo_curs.db.query.find({}).count(),
-                'videos': mongo_curs.db.videos.find({}).count(),
-                'comments': mongo_curs.db.comments.find({}).count(),
-                'captions': mongo_curs.db.captions.find({}).count(),           
-                'list_queries': list_queries,
-                'message' : 'admin roles should be able to see counted db'
-            }
-        else:
-            videos_count = 0
-            comments_count = 0
-            for each in list_queries:
-                videos_count += mongo_curs.db.videos.find({
-                    'query_id' : each['query_id']
-                }).count()
-                comments_count += mongo_curs.db.comments.find({
-                    'query_id' : each['query_id']
-                }).count()
-
-            stats = {
-                'query_totalCount': mongo_curs.db.query.find({
-                    'author_id': session['profil']['id']
-                    }).count(),
-                'videos': videos_count,
-                'comments': comments_count,            
-                'list_queries': list_queries
-            }
+        # send all as json, template will manage it
+        stats = {
+            'query_totalCount': len(r.json()),
+            'countVideos': total_videos_count,
+            'countComments': total_comments_count,
+            'countCaptions': total_captions_count,
+            'list_queries': list_queries
+        }
 
     return render_template('manage.html', stats=stats)
 
@@ -829,7 +795,6 @@ def delete(query_id):
 
     return redirect(url_for('manage'))
 
-
 ##########################################################################
 ## View in-db human readable
 # request by type_data and query_id to rest urls 
@@ -839,8 +804,7 @@ def delete(query_id):
 def view_data_by_type(query_id, data_type):
     if data_type not in ['videos', 'comments', 'captions']:
         redirect(url_for(page_not_found))
-
-    r = requests.get('http://0.0.0.0:' + str(app.config['PORT']) +'/queries/' + query_id + '/' + data_type + '/')
+    r = requests.get('http://0.0.0.0:5002/queries/' + query_id + '/' + data_type + '/')
     return render_template('view.html', list_queries=r.json())
 
 ##########################################################################
@@ -850,11 +814,9 @@ def view_data_by_type(query_id, data_type):
 ##########################################################################
 @app.route('/export', methods=['POST', 'GET'])
 def export():
-    print( session )
     if request.method == 'GET':
-        result = mongo_curs.db.query.find({
-            'author_id': session['profil']['id']
-        })
+        r = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/')
+        result = r.json()
         list_queries = []
 
         for doc in result:
@@ -868,13 +830,47 @@ def export():
 
     return render_template('export.html', list_queries=list_queries)
 
+##########################################################################
+# Download videos, comments set
+##########################################################################
+@app.route('/download/<query_type>/<query_id>', methods=['GET'])
+def download_videos_by_type(query_id, query_type):
+    if query_type not in ['videos', 'comments', 'captions']:
+        return redirect(url_for('page_not_found'))
+    from bson import json_util
+
+    # find name of query for filename download
+    r_name = requests.get('http://0.0.0.0:5002/'+session['profil']['id']+'/queries/'+query_id)
+    query = r_name.json()
+
+    # prepare filename
+    if 'query' in query:
+        if not 'order' in query: 
+            query_name = str(query['query'])
+        else:
+            query_name = '_'.join([query['query'], query['language'], query['ranking']])
+    elif 'channel_id' in query:
+        query_name = query['channel_id']
+    
+    query_name = str(query_name.encode('utf8'))
+    query_type_filename = (str(query_type))
+    
+    # get results
+    r = requests.get('http://0.0.0.0:5002/'+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
+    query_result = r.json()
+    json_res = json_util.dumps(query_result, sort_keys=True, indent=2, separators=(',', ': '))
+
+    # send back 
+    response = jsonify(json.loads(json_res))
+    response.headers['Content-Disposition'] = 'attachment;filename=' + \
+        query_name + '_'+ query_type +'.json'
+    return response
 
 ##########################################################################
 # Config
 ##########################################################################
 @app.route('/config', methods=['POST', 'GET'])
 def config():
-
     json_formated = json.dumps(session['profil'], indent=2) 
 
     if not 'api_key' in session:
