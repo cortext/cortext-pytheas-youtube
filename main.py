@@ -30,6 +30,7 @@ from youtube import YouTube
 from youtube import YouTubeTranscriptApi
 from youtube import Comment
 from youtube import Caption
+from youtube import Video
 from code_country import language_code
 # from celery import Celery
 
@@ -480,6 +481,8 @@ def aggregate():
             part = ', '.join(request.form.getlist('part'))
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
+            # qui un id de type str ou un id video qui existe
+            # ET un id query
             results = mongo_curs.db.videos.find(
                 {
                     "$and": [
@@ -522,11 +525,15 @@ def aggregate():
                             current_comment_thread.create_comment_for_each(commentThreads_result)
                 if 'metrics' in options_api:
                     # Here we will just add 'statistics' part from youtube to our videos set
-                    current_query = Video(mongo_curs, query_id)
-                    for id_video in list_vid:
-                        print(id_video)
-                        video_result = api.get_query('videos', id=id_video, part='statistics')
-                        current_query.add_stats_for_each_entry(video_result)
+                    # also we have to work with unique object id instead of id_video to avoid duplicate etc.
+                    ressources_id = [item['_id'] for item in results]
+                    current_query = Video(mongo_curs)
+                    for ressource_id in ressources_id:
+                        # after ressources id taking videoId
+                        get_video_by_id = current_query.get_one_video(ressource_id)
+                        video_result = api.get_query('videos', id=get_video_by_id['videoId'], part='statistics')
+                        #call add_stats to update()
+                        current_query.add_stats_for_each_entry(video_result, ressource_id)
 
             return render_template('methods/download_process.html', message='ok it is done')
 
@@ -802,9 +809,12 @@ def delete(query_id):
 ##########################################################################
 @app.route('/view-<data_type>/<query_id>', methods=['POST','GET'])
 def view_data_by_type(query_id, data_type):
+    print(data_type)
     if data_type not in ['videos', 'comments', 'captions']:
         redirect(url_for(page_not_found))
-    r = requests.get('http://0.0.0.0:5002/queries/' + query_id + '/' + data_type + '/')
+    url = 'http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + query_id + '/' + data_type + '/'
+    print(url)
+    r = requests.get(url)
     return render_template('view.html', list_queries=r.json())
 
 ##########################################################################
@@ -820,12 +830,14 @@ def export():
         list_queries = []
 
         for doc in result:
-            doc['countVideos'] = mongo_curs.db.videos.find(
-                {'query_id': doc['query_id']}).count()
-            doc['countComments'] = mongo_curs.db.comments.find(
-                {'query_id': doc['query_id']}).count()
-            doc['countCaptions'] = mongo_curs.db.captions.find(
-                {'id_query': doc['query_id']}).count()
+            r_videos = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/videos/' )
+            r_comments = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/comments/' )
+            r_captions = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/captions/' )
+            
+            doc['countVideos']   = len(r_videos.json())
+            doc['countComments'] = len(r_comments.json())
+            doc['countCaptions'] = len(r_captions.json())
+            
             list_queries.append(doc)
 
     return render_template('export.html', list_queries=list_queries)

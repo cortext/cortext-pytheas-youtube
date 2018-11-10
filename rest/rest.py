@@ -155,6 +155,7 @@ def captions_list_by_query(user_id, query_id):
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
+## by VIDEOS
 @rest.route('/<user_id>/videos/<video_id>', methods=['GET'])
 def video_search(user_id, video_id):
     result = mongo_curs.db.videos.find({'id.videoId': video_id})
@@ -173,6 +174,7 @@ def comments_list_by_video(user_id, video_id):
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
+## by comments
 @rest.route('/<user_id>/comments/<comment_id>', methods=['GET'])
 def comment_search(user_id, comment_id):
     result = mongo_curs.db.comments.find_one_or_404(
@@ -183,6 +185,7 @@ def comment_search(user_id, comment_id):
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
+## by captions
 @rest.route('/<user_id>/captions/<caption_id>', methods=['GET'])
 def caption_search(user_id, caption_id):
     result = mongo_curs.db.captions.find_one_or_404(
@@ -192,6 +195,25 @@ def caption_search(user_id, caption_id):
     logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
+
+
+##########################################################################
+# REST DEL
+##########################################################################
+# all queries by user
+# @rest.route('/<user_id>/queries/', methods=['GET'])
+# def queries_list(user_id):
+#     result = mongo_curs.db.query.find({'author_id': user_id})
+#     json_res = json_util.dumps(
+#         result, sort_keys=True, indent=2, separators=(',', ': '))
+#     logger.info(
+#         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
+#     return jsonify(json.loads(json_res))
+
+##########################################################################
+# REST POST
+##########################################################################
+
 
 
 if __name__ == '__main__':

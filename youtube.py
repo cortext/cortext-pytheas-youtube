@@ -129,28 +129,28 @@ class YouTube():
 # Video
 # rename in aggregate class (because of list of videos)
 ##########################################################################
-class Videos():
+class Video():
     # to complete
-    video_fields = ['id','videoId','query_id','kind']
+    video_fields = ['_id','videoId','query_id','kind', 'part']
     snippet_fields = ['']
     stats_fields = ['']
 
     def __init__(self, mongo_curs, video_id=None, query_id=None):
         self.db = mongo_curs.db
-        if id:
-            self.id_video = id
+        if video_id:
+            self.id_video = id_video
         if query_id:
             self.query_id = query_id
 
-    def get_one_video(self):
+    def get_one_video(self, ressource_id):
         try:
-            current_video = self.db.videos.find_one_or_404({ 'id_video': self.id_video})
-            logger.debug('get video : ', current_video['id_video'])
+            current = self.db.videos.find_one({ '_id' : ressource_id })
+            return current
         except BaseException as e:
             logger.error('video not found : ', e)
-        return str(current_video)
+            return e
 
-    def get_one_query_videos(self):
+    def get_one_query_videos(self, query_id):
         try:
             current_videos = self.db.videos.find({ 'query_id': self.query_id})
             logger.debug('get one query videos : ', current_user['query_id'])
@@ -158,9 +158,21 @@ class Videos():
             logger.error('one query videos not found : ', e)
         return
 
-    def add_stats_for_each_entry(self):
-        res_req = get_one_video(self)
-        return     
+    # future update methode
+    def add_stats_for_each_entry(self, video_result, ressource_id):
+        if len(video_result['items']) != 0 :
+            res_req = self.db.videos.update(
+                {   
+                    '_id' : ressource_id 
+                },{ 
+                    '$set': {
+                        'statistics': video_result['items'][0]['statistics']
+                    }
+                }, upsert=False
+            )
+        else:
+            print('ELSE')
+        return print('add_stats_for_each_entry is done !')
 
     # def update(self, dataUser):
     #     user_update = self.db.users.update_one(
