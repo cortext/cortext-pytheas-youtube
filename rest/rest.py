@@ -1,5 +1,6 @@
 import logging
 import json
+from logging.handlers import RotatingFileHandler
 from flask import Flask, current_app
 from flask import jsonify
 from flask import request
@@ -8,9 +9,9 @@ from flask import redirect
 from flask import url_for
 from bson import json_util
 from bson.objectid import ObjectId
-
 from database import Database
 
+# config app
 def create_rest_app():
     with open('config/config.json') as conf_file:
         conf_data = json.load(conf_file)
@@ -22,38 +23,12 @@ def create_rest_app():
         rest.config['MONGO_PORT'] = conf_data['MONGO_PORT']
     return rest
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-# Console handler
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
-# format
-formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
-stream_handler.setFormatter(formatter)
-# add handler
-logger.addHandler(stream_handler)
-
-# FILE HANDLER LOGGER (not implemented again)
-# from logging.handlers import RotatingFileHandler
-# # création d'un handler qui va rediriger une écriture du log vers
-# # un fichier en mode 'append', avec 1 backup et une taille max de 1Mo
-# file_handler = RotatingFileHandler('activity.log', 'a', 1000000, 1)
-# # on lui met le niveau sur DEBUG, on lui dit qu'il doit utiliser le formateur
-# # créé précédement et on ajoute ce handler au logger
-# file_handler.setLevel(logging.DEBUG)
-# # création d'un formateur qui va ajouter le temps, le niveau
-# # de chaque message quand on écrira un message dans le log
-# formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
-# file_handler.setFormatter(formatter)
-# logger.addHandler(file_handler)
-
-
+#init app
 try:
     rest = create_rest_app()
-    logger.debug('app is initied')
+    rest.logger.debug('app is initied')
     mongo_curs = Database().init_mongo(rest)
-    logger.debug('mongo_curs is initiated')
+    rest.logger.debug('mongo_curs is initiated')
     #log_dir = rest.config['LOG_DIR']
 except BaseException as error:
     logger.debug('An exception occurred : {}'.format(error))
@@ -68,7 +43,7 @@ def all_queries_list():
     result = mongo_curs.db.query.find({})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for *wildcard'.format(url=request.endpoint))
     return jsonify(json.loads(json_res))
 
@@ -78,7 +53,7 @@ def all_videos_list():
     result = mongo_curs.db.videos.find({})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for *wildcard'.format(url=request.endpoint))
     return jsonify(json.loads(json_res))
 
@@ -88,7 +63,7 @@ def all_comments_list():
     result = mongo_curs.db.comments.find({})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for *wildcard'.format(url=request.endpoint))
     return jsonify(json.loads(json_res))
 
@@ -98,7 +73,7 @@ def all_captions_list():
     result = mongo_curs.db.captions.find({})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for *wildcard'.format(url=request.endpoint))
     return jsonify(json.loads(json_res))
 
@@ -111,7 +86,7 @@ def queries_list(user_id):
     result = mongo_curs.db.query.find({'author_id': user_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -121,7 +96,7 @@ def query_search(user_id, query_id):
     result = mongo_curs.db.query.find_one_or_404({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -131,7 +106,7 @@ def videos_list_by_query(user_id, query_id):
     result = mongo_curs.db.videos.find({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -141,7 +116,7 @@ def comments_list_by_query(user_id, query_id):
     result = mongo_curs.db.comments.find({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -151,7 +126,7 @@ def captions_list_by_query(user_id, query_id):
     result = mongo_curs.db.captions.find({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -161,7 +136,7 @@ def video_search(user_id, video_id):
     result = mongo_curs.db.videos.find({'id.videoId': video_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -170,7 +145,7 @@ def comments_list_by_video(user_id, video_id):
     result = mongo_curs.db.comments.find({'videoId': video_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -181,7 +156,7 @@ def comment_search(user_id, comment_id):
         {'_id': ObjectId(comment_id)})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -192,7 +167,7 @@ def caption_search(user_id, caption_id):
         {'_id': ObjectId(caption_id)})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
-    logger.info(
+    rest.logger.info(
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
@@ -214,7 +189,14 @@ def caption_search(user_id, caption_id):
 # REST POST
 ##########################################################################
 
-
-
+# run app
 if __name__ == '__main__':
+    # config logger (prefering builtin flask logger)
+    formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
+    handler = RotatingFileHandler('activity.log', maxBytes=10000, backupCount=1)
+    handler.setFormatter(formatter)
+    #logger = logging.getLogger(__name__)
+    rest.logger.setLevel(logging.DEBUG)
+    rest.logger.addHandler(handler)
     rest.run(debug=True, host='0.0.0.0', port=rest.config['PORT'], threaded=True )
+    
