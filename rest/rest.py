@@ -13,7 +13,7 @@ from database import Database
 
 # config app
 def create_rest_app():
-    with open('config/config.json') as conf_file:
+    with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         rest = Flask(__name__)
         rest.config['LOG_DIR'] = conf_data['LOG_DIR']
@@ -176,7 +176,7 @@ def caption_search(user_id, caption_id):
 # REST DEL
 ##########################################################################
 # all queries by user
-# @rest.route('/<user_id>/queries/', methods=['GET'])
+# @rest.route('/<user_id>/queries/', methods=['DELETE'])
 # def queries_list(user_id):
 #     result = mongo_curs.db.query.find({'author_id': user_id})
 #     json_res = json_util.dumps(
