@@ -73,6 +73,7 @@ def create_app():
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
+        app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
         Bootstrap(app)
@@ -465,11 +466,11 @@ def aggregate():
         }
 
     if request.method == 'GET':
-        result = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/')
+        result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = result.json()
         for doc in result:
             # add basic stat (nb vid) for admin
-            r = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
+            r = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
             doc['countVideos'] = len(r.json())
             stats['list_queries'].append(doc)
         
@@ -753,7 +754,7 @@ def process_results():
 def manage():
     if request.method == 'GET':
         # get all query fur user
-        r = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/')
+        r = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = r.json()
         list_queries = []
         total_videos_count = 0
@@ -762,9 +763,9 @@ def manage():
 
         for doc in result:
             # add basic stat (nb vid) for admin
-            r_videos   = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
-            r_comments = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/comments/')
-            r_captions = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/captions/')
+            r_videos   = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
+            r_comments = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/comments/')
+            r_captions = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/captions/')
             doc['countVideos'] = len(r_videos.json())
             doc['countComments'] = len(r_comments.json())
             doc['countCaptions'] = len(r_captions.json())
@@ -812,7 +813,7 @@ def view_data_by_type(query_id, data_type):
     print(data_type)
     if data_type not in ['videos', 'comments', 'captions']:
         redirect(url_for(page_not_found))
-    url = 'http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/' + query_id + '/' + data_type + '/'
+    url = app.config['REST_URL']+ session['profil']['id'] +'/queries/' + query_id + '/' + data_type + '/'
     print(url)
     r = requests.get(url)
     return render_template('view.html', list_queries=r.json())
@@ -825,14 +826,14 @@ def view_data_by_type(query_id, data_type):
 @app.route('/export', methods=['POST', 'GET'])
 def export():
     if request.method == 'GET':
-        r = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] +'/queries/')
+        r = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = r.json()
         list_queries = []
 
         for doc in result:
-            r_videos = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/videos/' )
-            r_comments = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/comments/' )
-            r_captions = requests.get('http://0.0.0.0:5002/'+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/captions/' )
+            r_videos = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/videos/' )
+            r_comments = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/comments/' )
+            r_captions = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/captions/' )
             
             doc['countVideos']   = len(r_videos.json())
             doc['countComments'] = len(r_comments.json())
@@ -852,7 +853,7 @@ def download_videos_by_type(query_id, query_type):
     from bson import json_util
 
     # find name of query for filename download
-    r_name = requests.get('http://0.0.0.0:5002/'+session['profil']['id']+'/queries/'+query_id)
+    r_name = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id)
     query = r_name.json()
 
     # prepare filename
@@ -868,7 +869,7 @@ def download_videos_by_type(query_id, query_type):
     query_type_filename = (str(query_type))
     
     # get results
-    r = requests.get('http://0.0.0.0:5002/'+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
+    r = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
     query_result = r.json()
     json_res = json_util.dumps(query_result, sort_keys=True, indent=2, separators=(',', ': '))
 
