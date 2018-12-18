@@ -861,7 +861,7 @@ def download_videos_by_type(query_id, query_type):
         if not 'order' in query: 
             query_name = str(query['query'])
         else:
-            query_name = '_'.join([query['query'], query['language'], query['ranking']])
+            query_name = '_'.join([query['query'], query['language'], query['order']])
     elif 'channel_id' in query:
         query_name = query['channel_id']
     

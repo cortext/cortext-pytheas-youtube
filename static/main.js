@@ -1,5 +1,9 @@
 'use strict'
 
+$(document).ready( function () {
+    $('.dataTableView').DataTable();
+} );
+
 $(function() {
 
     function download(filename, text) {
@@ -16,17 +20,22 @@ $(function() {
     }
 
 
-    var jsonExport = document.getElementById('json');
-    jsonExport.onclick = function() {
-        var title = document.getElementById('title_data').textContent;
-        var code = document.getElementById('code').innerHTML;
-        var JsonData = JSON.stringify(code);
-        console.log(title);
+
+    // var jsonExport = document.getElementById('json');
+    // console.log(jsonExport);
+    // if (jsonExport === true) {
+    //     jsonExport.onclick = function() {
+    //         var title = document.getElementById('title_data').textContent;
+    //         var code = document.getElementById('code').innerHTML;
+    //         var JsonData = JSON.stringify(code);
+    //         console.log(title);
 
 
-        download(title + "_data.json", JsonData);
+    //         download(title + "_data.json", JsonData);
 
-    };
+    //     };    
+    // }
+    
 
 
     // var table = document.getElementById("forecast-table"); 

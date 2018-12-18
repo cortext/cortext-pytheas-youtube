@@ -18,7 +18,7 @@
                 {% if 'snippet' in list_queries[0] %}
                 	{% if 'is_top_level_comment' in list_queries[0] %}
                 		{# COMMENTS #}
-		                <table class="table">
+		                <table class="table dataTableView">
 		                    <thead>
 		                        <tr>
 		                            <th>id</th>
@@ -42,7 +42,7 @@
 		                </table>
 	                {% else %}
 	                	{# VIDEOS #}
-		                <table class="table">
+		                <table class="table dataTableView">
 		                    <thead>
 		                        <tr>
 		                            <th>id</th>
@@ -67,7 +67,7 @@
 	                {% endif %}
                 {% else %}
                 	{# CAPTIONS #}
-					<table class="table">
+					<table class="table dataTableView">
 	                    <thead>
 	                        <tr>
 	                            <th>id</th>
