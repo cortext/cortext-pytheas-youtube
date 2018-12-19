@@ -482,7 +482,7 @@ def aggregate():
             part = ', '.join(request.form.getlist('part'))
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
-            # qui un id de type str ou un id video qui existe
+            # qui ont un id de type str ou un id video qui existe
             # ET un id query
             results = mongo_curs.db.videos.find(
                 {
@@ -494,7 +494,7 @@ def aggregate():
             )
 
             list_vid = []
-            # absolutely need to fix this later
+            # need to fix this later
             for result in results:
                 if 'videoId' in result:
                     id_video = result['videoId']
@@ -504,43 +504,43 @@ def aggregate():
                 list_vid.append(id_video)
                 query_id = result['query_id']
                 
-                if 'captions' in options_api:
-                    current_captions = Caption(mongo_curs, query_id)
-                    current_captions.create_if_not_exist(id_video)
+            if 'captions' in options_api:
+                # WIP
+                current_captions = Caption(mongo_curs, query_id)
+                current_captions.create_if_not_exist(id_video)
 
-                if 'comments' in options_api:
-                    current_comment_thread = Comment(mongo_curs, query_id)
-                    for id_video in list_vid:
+            if 'comments' in options_api:
+                current_comment_thread = Comment(mongo_curs, query_id)
+                for id_video in list_vid:
+                    commentThreads_result = api.get_query(
+                        'commentThreads',
+                        videoId=id_video,
+                        part='id, replies, snippet')
+                    current_comment_thread.create_comment_for_each(commentThreads_result)
+                    ## Loop and save while there is content
+                    while 'nextPageToken' in commentThreads_result:
                         commentThreads_result = api.get_query(
                             'commentThreads',
                             videoId=id_video,
-                            part='id, replies, snippet')
+                            part='id, replies, snippet',
+                            pageToken=commentThreads_result['nextPageToken'])
                         current_comment_thread.create_comment_for_each(commentThreads_result)
-                        ## Loop and save
-                        while 'nextPageToken' in commentThreads_result:
-                            commentThreads_result = api.get_query(
-                                'commentThreads',
-                                videoId=id_video,
-                                part='id, replies, snippet',
-                                pageToken=commentThreads_result['nextPageToken'])
-                            current_comment_thread.create_comment_for_each(commentThreads_result)
-                if 'metrics' in options_api:
-                    # Here we will just add 'statistics' part from youtube to our videos set
-                    # also we have to work with unique object id instead of id_video to avoid duplicate etc.
-                    ressources_id = [item['_id'] for item in results]
-                    current_query = Video(mongo_curs)
-                    for ressource_id in ressources_id:
-                        # after ressources id taking videoId
-                        get_video_by_id = current_query.get_one_video(ressource_id)
-                        video_result = api.get_query('videos', id=get_video_by_id['videoId'], part='statistics')
-                        #call add_stats to update()
-                        current_query.add_stats_for_each_entry(video_result, ressource_id)
+            
+            if 'metrics' in options_api:
+                # Here we will just add 'statistics' part from youtube to our videos set
+                # also we have to work with unique object id instead of id_video to avoid duplicate etc.
+                ressources_id = [item['_id'] for item in results]
+                current_query = Video(mongo_curs)
+                for ressource_id in ressources_id:
+                    # after ressources id taking videoId
+                    get_video_by_id = current_query.get_one_video(ressource_id)
+                    video_result = api.get_query('videos', id=get_video_by_id['videoId'], part='statistics')
+                    #call add_stats to update()
+                    current_query.add_stats_for_each_entry(video_result, ressource_id)
 
             return render_template('methods/download_process.html', message='ok it is done')
 
     return render_template('aggregate.html', stats=stats)
-
-    #return render_template('aggregate.html', message='hmmm it seems to have a bug on dir_path...')
 
 ##########################################################################
 # processing results uesd by /search and /aggregate
