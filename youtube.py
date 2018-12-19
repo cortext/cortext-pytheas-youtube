@@ -205,7 +205,6 @@ class Comment():
         if not 'error' in commentThread:
             nb_comment = 0
             for each in commentThread['items']:
-                print(each)
                 nb_comment += 1
                 
                 snippet = each['snippet']['topLevelComment']['snippet']
