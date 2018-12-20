@@ -48,7 +48,7 @@ class User():
         return
 
     def create_or_replace_user_cortext(self, dataUser):
-        dataUser = json.loads(dataUser)
+        dataUser = dataUser.json()
         self.username = dataUser['username']
         self.id_cortext = dataUser['id']
         
