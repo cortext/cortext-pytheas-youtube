@@ -39,8 +39,8 @@ def login():
 def grant():
     with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
-        grant_host_url = conf_data['grant_host_url']
-        redirect_uri_conf = conf_data['redirect_uri']
+        grant_host_url = conf_data['GRANT_HOST_URL']
+        redirect_uri_conf = conf_data['REDIRECT_URI']
 
     grant_url = grant_host_url + "/auth/authorize" + \
                 "?response_type=code" + \

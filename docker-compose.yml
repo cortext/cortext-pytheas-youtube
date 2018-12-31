@@ -15,7 +15,7 @@ services:
     container_name: cortext_pytheas_mongoserver
     image: "mongo:3.4"
     ports: 
-     - "27017:27017"
+     - "27018:27018"
     volumes: 
      - './data/mongo:/data/db'
   mongoclient:
@@ -27,6 +27,7 @@ services:
       - mongo
   rest:
     container_name: cortext_pytheas_rest
+    build: ./rest/
     ports:
      - "5002:5002"
     volumes:

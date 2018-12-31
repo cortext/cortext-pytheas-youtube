@@ -23,4 +23,4 @@ EXPOSE 5002
 VOLUME ["/opt/pytheas_rest", "/opt/pytheas_rest/conf"]
 
 #lauch app
-CMD python main.py
+CMD python rest.py

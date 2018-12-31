@@ -74,9 +74,9 @@ def create_app():
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
         app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
+        Bootstrap(app)
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
-        Bootstrap(app)
         app.config['debug_level'] = conf_data['debug_level']
     return app
 
@@ -118,6 +118,7 @@ def before_request():
                     return 
                 elif 'oauth.login' not in request.endpoint:
                     return redirect(url_for('oauth.login'))
+        # else nothing let continue
     except BaseException as e:
         app.logger.debug(e)
 
