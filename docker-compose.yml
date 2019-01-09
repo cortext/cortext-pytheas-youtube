@@ -1,37 +1,63 @@
-version: '2'
+version: '3'
 services:
-  web:
-    container_name: cortext_pytheas_web
-    build: .
-    ports:
-     - "5000:8080"
-    depends_on:
-     - mongo
-    volumes:
-     - '.:/opt/pytheas'
-     - './data:/opt/pytheas/data'
-     - './conf:/opt/pytheas/conf'
+
+  # Back
   mongo:
-    container_name: cortext_pytheas_mongoserver
+    container_name: MONGOSERVER
     image: "mongo:3.4"
-    ports: 
-     - "27018:27018"
+    #command: mongod --port 27018
+    command: mongod
+    expose:
+     - "27017"
     volumes: 
      - './data/mongo:/data/db'
+    network_mode: bridge
+    hostname: mongod
+  
+  # Back
+  restapp:
+    container_name: restapp
+    build: ./rest/
+    expose:
+     - "5002"
+     - "27017"
+    network_mode: bridge
+    hostname: restapp
+    volumes:
+     - './rest:/opt/pytheas_rest'
+    depends_on:
+      - mongo
+    links:
+      - mongo
+
+  # Front
   mongoclient:
-    container_name: cortext_pytheas_mongoclient
+    container_name: mongoclient
     image: "mongoclient/mongoclient"
     ports:
      - "3000:3000"
     depends_on:
       - mongo
-  rest:
-    container_name: cortext_pytheas_rest
-    build: ./rest/
-    ports:
-     - "5002:5002"
-    volumes:
-     - './rest:/opt/pytheas_rest'
-    depends_on:
+    links:
       - mongo
-      - web
+
+  # Front
+  webapp:
+    container_name: webapp
+    hostname: webapp
+    network_mode: bridge
+
+    build: ./
+    ports:
+     - "8080:8080"
+    expose:
+     - "8080"
+    depends_on:
+     - restapp
+    links:
+      - restapp
+      - mongo
+    volumes:
+     - '.:/opt/pytheas'
+     - './data:/opt/pytheas/data'
+     - './conf:/opt/pytheas/conf'

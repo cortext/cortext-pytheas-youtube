@@ -61,8 +61,8 @@ def auth():
 
     with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
-        redirect_uri_conf = conf_data['redirect_uri']
-        grant_host_url = conf_data['grant_host_url']
+        redirect_uri_conf = conf_data['REDIRECT_URI']
+        grant_host_url = conf_data['GRANT_HOST_URL']
 
     payload = {
       'code': code,

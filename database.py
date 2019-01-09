@@ -3,8 +3,8 @@ from flask_pymongo import PyMongo
 
 # mongo = PyMongo()
 logger = logging.getLogger(__name__)
-print('test in db.py')
-logger.debug('test ?')
+# print('test in db.py')
+# logger.debug('test ?')
 
 class Database:
 

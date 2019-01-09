@@ -13,14 +13,16 @@ from database import Database
 
 # config app
 def create_rest_app():
-    with open('conf/conf.json') as conf_file:
+    with open('./conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         rest = Flask(__name__)
         rest.config['LOG_DIR'] = conf_data['LOG_DIR']
-        rest.config['PORT'] = conf_data['PORT']
+        rest.config['REST_PORT'] = conf_data['REST_PORT']
         rest.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         rest.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         rest.config['MONGO_PORT'] = conf_data['MONGO_PORT']
+        rest.config['MONGO_URI'] = "mongodb://"+conf_data['MONGO_HOST']+":"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
+        rest.config['debug_level'] = conf_data['debug_level']
     return rest
 
 #init app
@@ -32,6 +34,12 @@ try:
     #log_dir = rest.config['LOG_DIR']
 except BaseException as error:
     logger.debug('An exception occurred : {}'.format(error))
+
+
+# all queries 
+@rest.route('/', methods=['GET'])
+def hello():
+    return 'hello'
 
 
 ##########################################################################
@@ -198,5 +206,4 @@ if __name__ == '__main__':
     #logger = logging.getLogger(__name__)
     rest.logger.setLevel(logging.DEBUG)
     rest.logger.addHandler(handler)
-    rest.run(debug=True, host='0.0.0.0', port=rest.config['PORT'], threaded=True )
-    
+    rest.run(debug=rest.config['debug_level'], host='0.0.0.0', port=rest.config['REST_PORT'], threaded=True )

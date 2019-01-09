@@ -17,7 +17,7 @@ WORKDIR /opt/pytheas
 RUN pip install -r requirements.txt
 
 # prepare port
-EXPOSE 5000
+EXPOSE 8080
 
 # Define working volumes
 VOLUME ["/opt/pytheas", "/opt/pytheas/data", "/opt/pytheas/conf"]

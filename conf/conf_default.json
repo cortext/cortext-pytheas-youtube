@@ -4,7 +4,7 @@
     "REDIRECT_URI": "http://localhost:8080/auth",
     "GRANT_HOST_URL": "https://auth.cortext.net",
 
-    "MONGO_HOST": "mongo",
+    "MONGO_HOST": "localhost",
     "MONGO_DBNAME": "youtube",
     "MONGO_PORT": 27017,
 

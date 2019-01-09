@@ -73,7 +73,10 @@ def create_app():
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
+
+        app.config['MONGO_URI'] = "mongodb://mongod:"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
         app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
+
         Bootstrap(app)
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
@@ -92,6 +95,7 @@ except BaseException as error:
 @app.before_request
 def before_request():
     try:
+        app.logger.debug(app.config['REST_URL'])
         # entering api_key manually if exist in conf file
         if app.config['api_key']:
             session['api_key'] = app.config['api_key']
@@ -467,6 +471,7 @@ def aggregate():
         }
 
     if request.method == 'GET':
+        print('l.472', app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = result.json()
         for doc in result:
@@ -593,6 +598,8 @@ def process_results():
             maxResults=maxResults,
             order=session['request']['order']
         )
+
+        print(session['request']['order'])
 
         # insert query
         mongo_curs.db.query.insert_one(
@@ -755,7 +762,9 @@ def process_results():
 def manage():
     if request.method == 'GET':
         # get all query fur user
-        r = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
+        app.logger.debug('hey ==> ' + app.config['REST_URL'])
+        app.logger.debug(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
+        r = requests.get(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
         result = r.json()
         list_queries = []
         total_videos_count = 0
@@ -811,11 +820,9 @@ def delete(query_id):
 ##########################################################################
 @app.route('/view-<data_type>/<query_id>', methods=['POST','GET'])
 def view_data_by_type(query_id, data_type):
-    print(data_type)
     if data_type not in ['videos', 'comments', 'captions']:
         redirect(url_for(page_not_found))
     url = app.config['REST_URL']+ session['profil']['id'] +'/queries/' + query_id + '/' + data_type + '/'
-    print(url)
     r = requests.get(url)
     return render_template('view.html', list_queries=r.json())
 
