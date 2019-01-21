@@ -35,7 +35,7 @@ from code_country import language_code
 # from celery import Celery
 
 
-#Unclassed for moment
+# Unclassed for moment
 def cleaning_each(each):
     if 'videoId' in each['id']:
         each.update({'videoId': each['id']['videoId']})
@@ -60,7 +60,7 @@ def cleaning_ytb_input(id_video):
         else:
             id_video = id_video.replace(
                 'http://www.youtube.com/channel/', '')
-    #elif 'youtube.com/watch?v=' in id_video:
+    # elif 'youtube.com/watch?v=' in id_video:
     return id_video
 
 def create_app():
@@ -352,7 +352,7 @@ def search():
                 )
 
                 # request
-                date_results = YouTube(session['api_key']).get_query(
+                date_results = api.get_query(
                     'search',
                     q=session['request']['q'],
                     part=session['request']['part'],
@@ -360,8 +360,7 @@ def search():
                     maxResults=maxResults,
                     order=session['request']['order'],
                     publishedAfter=session['request']['publishedAfter'],
-                    publishedBefore=session['request']['publishedBefore'],
-                    key=session['api_key'])
+                    publishedBefore=session['request']['publishedBefore'])
 
                 r_before = time.parse(session['request']['publishedBefore'])
                 r_after = time.parse(session['request']['publishedAfter'])
@@ -384,8 +383,7 @@ def search():
                         maxResults=maxResults,
                         order=session['request']['order'],
                         publishedAfter=session['request']['publishedAfter'],
-                        publishedBefore=session['request']['publishedBefore'],
-                        key=session['api_key'])
+                        publishedBefore=session['request']['publishedBefore'])
 
                     # insert videos
                     for each in date_results['items']:
@@ -407,7 +405,6 @@ def search():
                                 order=session['request']['order'],
                                 publishedAfter=session['request']['publishedAfter'],
                                 publishedBefore=session['request']['publishedBefore'],
-                                key=session['api_key'],
                                 PageToken=session['request']['nextPageToken'])
 
                             # insert video-info except if last result

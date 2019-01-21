@@ -52,7 +52,7 @@ class YouTube():
             logger.debug('kwargs are ' + str(kwargs))
         except requests.exceptions.RequestException as e:
             logger.warning('try_request failed on ' + url)
-            logger.warning('error is : ' + e)
+            logger.warning('error is : ' + str(e))
         return self.response(req)
 
     # prepare request with same obligatory param
@@ -133,7 +133,7 @@ class Video():
             current = self.db.videos.find_one({ '_id' : ressource_id })
             return current
         except BaseException as e:
-            logger.error('video not found : ', e)
+            logger.error('video not found : ', str(e))
             return e
 
     def get_one_query_videos(self, query_id):
@@ -141,7 +141,7 @@ class Video():
             current_videos = self.db.videos.find({ 'query_id': self.query_id})
             logger.debug('get one query videos : ', current_user['query_id'])
         except BaseException as e:
-            logger.error('one query videos not found : ', e)
+            logger.error('one query videos not found : ', str(e))
         return
 
     # future update methode
