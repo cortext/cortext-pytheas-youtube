@@ -33,13 +33,76 @@ try:
     rest.logger.debug('mongo_curs is initiated')
     #log_dir = rest.config['LOG_DIR']
 except BaseException as error:
-    logger.debug('An exception occurred : {}'.format(error))
+    rest.logger.debug('An exception occurred : {}'.format(error))
 
 
 # all queries 
 @rest.route('/', methods=['GET'])
 def hello():
     return 'hello'
+
+
+#################
+# WORKER 
+class YouTube():
+    #api_key = None
+    #access_token = None
+    #api_base_url = 'https://www.googleapis.com/youtube/v3/'
+    #part = None
+
+    def __init__(self, api_key, access_token=None, api_url=None ,part=None):
+        self.api_key = api_key
+        self.access_token = access_token
+        self.api_base_url = 'https://www.googleapis.com/youtube/v3/'
+        if part:
+            self.part = part
+        if api_url:
+            self.api_url = api_url
+
+    # make req
+    def try_request(self, kwargs, endpoint):
+        url = self.api_base_url + endpoint
+        try:
+            req = requests.get(url, kwargs)
+            rest.logger.info('try_request success on ' +  url)
+            rest.logger.debug('kwargs are ' + str(kwargs))
+        except requests.exceptions.RequestException as e:
+            rest.logger.warning('try_request failed on ' + url)
+            rest.logger.warning('error is : ' + str(e))
+        return self.response(req)
+
+    # prepare request with same obligatory param
+    def get_query(self, endpoint, **kwargs):
+        if self.access_token:
+            kwargs['access_token'] = self.access_token
+        else:
+            kwargs['key'] = self.api_key
+        if 'part' not in kwargs:
+            kwargs['part'] = self.part
+        kwargs = json.dumps(kwargs)
+        kwargs = json.loads(kwargs)
+        return self.try_request(kwargs, endpoint)
+
+
+@rest.route('/get_one_video', methods=['POST'])
+def get_one_video():
+    rest.logger.debug('HET ')
+    rest.logger.debug(request.form.get('id_video'))
+    rest.logger.debug()
+
+    api = YouTube(api_key=request.form['key'])
+    video_result = api.get_query('videos', id=request.form['id_video'], part=request.form['part'])
+    
+    rest.logger.debug(video_result)
+    
+    #     data_post = { 
+    #     'id_video' : id_video,
+    #     'part' : part,
+    #     'key': session['api_key']
+    #     }
+
+    # r = requests.post(app.config['REST_URL'] + 'get_one_video', data=data_post )
+
 
 
 ##########################################################################

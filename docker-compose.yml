@@ -30,6 +30,22 @@ services:
     links:
       - mongo
 
+  # Back
+  # worker:
+  #   container_name: restapp
+  #   build: ./worker/
+  #   expose:
+  #    - "5003"
+  #    - "27017"
+  #   network_mode: bridge
+  #   hostname: worker
+  #   volumes:
+  #    - './rest:/opt/pytheas_worker'
+  #   depends_on:
+  #     - mongo
+  #   links:
+  #     - mongo
+
   # Front
   mongoclient:
     container_name: mongoclient

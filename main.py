@@ -351,17 +351,7 @@ def search():
                     }
                 )
 
-                # request
-                date_results = api.get_query(
-                    'search',
-                    q=session['request']['q'],
-                    part=session['request']['part'],
-                    language=session['request']['language'],
-                    maxResults=maxResults,
-                    order=session['request']['order'],
-                    publishedAfter=session['request']['publishedAfter'],
-                    publishedBefore=session['request']['publishedBefore'])
-
+                # Parse date time from form
                 r_before = time.parse(session['request']['publishedBefore'])
                 r_after = time.parse(session['request']['publishedAfter'])
                 delta = r_before - r_after
@@ -385,49 +375,55 @@ def search():
                         publishedAfter=session['request']['publishedAfter'],
                         publishedBefore=session['request']['publishedBefore'])
 
-                    # insert videos
-                    for each in date_results['items']:
-                        each.update({'query_id': str(uid)})
-                        each = cleaning_each(each)
-                        mongo_curs.db.videos.insert_one(each)
+                    # check if ['items'] is not empty 
+                    if date_results['items']: 
+                        # insert videos in db
+                        for each in date_results['items']:
+                            each.update({'query_id': str(uid)})
+                            each = cleaning_each(each)
+                            mongo_curs.db.videos.insert_one(each)
 
-                    # Loop and save while results
+                    # while len(date_results['items']) > 0 : 
+                    #     if 'nextPageToken' in date_results :
                     if not 'nextPageToken' in date_results:
                         while 'nextPageToken' in date_results:
-                            session['request']['nextPageToken'] = date_results['nextPageToken']
-
                             date_results = api.get_query(
                                 'search',
-                                q=session['request']['q'],
-                                part=session['request']['part'],
-                                language=session['request']['language'],
-                                maxResults=maxResults,
-                                order=session['request']['order'],
-                                publishedAfter=session['request']['publishedAfter'],
-                                publishedBefore=session['request']['publishedBefore'],
-                                PageToken=session['request']['nextPageToken'])
-
+                                q = session['request']['q'],
+                                part = session['request']['part'],
+                                language = session['request']['language'],
+                                maxResults = maxResults,
+                                order = session['request']['order'],
+                                publishedAfter = session['request']['publishedAfter'],
+                                publishedBefore = session['request']['publishedBefore'],
+                                PageToken = date_results['nextPageToken']
+                                )
                             # insert video-info except if last result
-                            if not date_results['items']:
-                                return
-                            for each in date_results['items']:
-                                each.update({'query_id': str(uid)})
-                                if 'snippet' in each:
-                                    if 'videoId' in each['id']:
-                                        each['snippet'].update({'videoId': each['id']['videoId']})
-                                    elif 'playlistId' in each['id']:
-                                        each['snippet'].update({'playlistId' : each['id']['playlistId']})
-                                elif 'videoId' in each['id']:
-                                    each.update({'videoId': each['id']['videoId']})
-                                elif 'playlistId' in each['id']:
-                                    each.update({'playlistId': each['id']['playlistId']})
-                                mongo_curs.db.videos.insert_one(each)
+                            # only if "items" not empty 
+                            if date_results['items']:
+                                for each in date_results['items']:
+                                    each.update({'query_id': str(uid)})
+                                    each = cleaning_each(each) 
+                                    mongo_curs.db.videos.insert_one(each)
 
                     # finally increment next after day
-                    r_after += dt.timedelta(days=1)
+                    r_after += dt.timedelta(days=1) 
 
                 return redirect(url_for('manage'))
 
+            # to integrate later to get global dated search (not one day/one day) 
+            # elif
+            #     #  request
+            #     date_results = api.get_query(
+            #         'search',
+            #         q=session['request']['q'],
+            #         part=session['request']['part'],
+            #         language=session['request']['language'],
+            #         maxResults=maxResults,
+            #         order=session['request']['order'],
+            #         publishedAfter=session['request']['publishedAfter'],
+            #         publishedBefore=session['request']['publishedBefore']) 
+            
             else:
                 session['request'] = {
                     'q': request.form.get('query'),

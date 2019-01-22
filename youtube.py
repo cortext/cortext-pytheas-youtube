@@ -53,6 +53,7 @@ class YouTube():
         except requests.exceptions.RequestException as e:
             logger.warning('try_request failed on ' + url)
             logger.warning('error is : ' + str(e))
+        logger.debug(self.response(req))    
         return self.response(req)
 
     # prepare request with same obligatory param
