@@ -375,8 +375,9 @@ def search():
                         publishedAfter=session['request']['publishedAfter'],
                         publishedBefore=session['request']['publishedBefore'])
 
-                    # check if ['items'] is not empty 
-                    if date_results['items']: 
+                    # check if ['items'] exist and not empty 
+                    # https://thispointer.com/python-how-to-check-if-a-key-exists-in-dictionary/
+                    if date_results.get('items', -1) != -1:
                         # insert videos in db
                         for each in date_results['items']:
                             each.update({'query_id': str(uid)})
@@ -384,27 +385,29 @@ def search():
                             mongo_curs.db.videos.insert_one(each)
 
                     # while len(date_results['items']) > 0 : 
-                    #     if 'nextPageToken' in date_results :
-                    if not 'nextPageToken' in date_results:
-                        while 'nextPageToken' in date_results:
-                            date_results = api.get_query(
-                                'search',
-                                q = session['request']['q'],
-                                part = session['request']['part'],
-                                language = session['request']['language'],
-                                maxResults = maxResults,
-                                order = session['request']['order'],
-                                publishedAfter = session['request']['publishedAfter'],
-                                publishedBefore = session['request']['publishedBefore'],
-                                PageToken = date_results['nextPageToken']
-                                )
-                            # insert video-info except if last result
-                            # only if "items" not empty 
-                            if date_results['items']:
-                                for each in date_results['items']:
-                                    each.update({'query_id': str(uid)})
-                                    each = cleaning_each(each) 
-                                    mongo_curs.db.videos.insert_one(each)
+                    #if not 'nextPageToken' in date_results:
+                    #if date_results.get('nextPageToken', -1) != -1:
+                    #    app.logger.debug('NEXT PAGE TOKEN ==> '+date_results['nextPageToken']) 
+                    while 'nextPageToken' in date_results and len(date_results['items']) ==  maxResults :
+                    #while 'nextPageToken' in date_results: 
+                        date_results = api.get_query(
+                            'search',
+                            q = session['request']['q'],
+                            part = session['request']['part'],
+                            language = session['request']['language'],
+                            maxResults = maxResults,
+                            order = session['request']['order'],
+                            publishedAfter = session['request']['publishedAfter'],
+                            publishedBefore = session['request']['publishedBefore'],
+                            PageToken = date_results['nextPageToken']
+                            )
+                        # insert video-info except if last result
+                        # only if "items" not empty 
+                        if date_results.get('items', -1) != -1:
+                            for each in date_results['items']:
+                                each.update({'query_id': str(uid)})
+                                each = cleaning_each(each) 
+                                mongo_curs.db.videos.insert_one(each)
 
                     # finally increment next after day
                     r_after += dt.timedelta(days=1) 

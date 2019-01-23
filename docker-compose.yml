@@ -5,7 +5,6 @@ services:
   mongo:
     container_name: MONGOSERVER
     image: "mongo:3.4"
-    #command: mongod --port 27018
     command: mongod
     expose:
      - "27017"
