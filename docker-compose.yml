@@ -47,6 +47,7 @@ services:
 
   # Front
   mongoclient:
+    network_mode: bridge
     container_name: mongoclient
     image: "mongoclient/mongoclient"
     ports:

@@ -336,10 +336,10 @@ def search():
                 }
 
                 # insert query in mongo
-                uid = uuid4()
+                uid = str(uuid4())
                 mongo_curs.db.query.insert_one(
                     {
-                        'query_id': str(uid),
+                        'query_id': uid,
                         'author_id':session['profil']['id'],
                         'query': session['request']['q'],
                         'part': session['request']['part'],
@@ -380,7 +380,7 @@ def search():
                     if date_results.get('items', -1) != -1:
                         # insert videos in db
                         for each in date_results['items']:
-                            each.update({'query_id': str(uid)})
+                            each.update({'query_id': uid})
                             each = cleaning_each(each)
                             mongo_curs.db.videos.insert_one(each)
 
@@ -405,13 +405,19 @@ def search():
                         # only if "items" not empty 
                         if date_results.get('items', -1) != -1:
                             for each in date_results['items']:
-                                each.update({'query_id': str(uid)})
+                                each.update({'query_id': uid})
                                 each = cleaning_each(each) 
                                 mongo_curs.db.videos.insert_one(each)
 
                     # finally increment next after day
                     r_after += dt.timedelta(days=1) 
 
+                # add metrics for query in json
+                count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+                mongo_curs.db.query.update_one(
+                    { 'query_id': uid },
+                    { '$set': {'count_videos': count_videos } }
+                ) 
                 return redirect(url_for('manage'))
 
             # to integrate later to get global dated search (not one day/one day) 
@@ -440,6 +446,7 @@ def search():
                 previous_token = search_results['nextPageToken']
                 search_results_string = json.dumps(
                     search_results, sort_keys=True, indent=4, separators=(',', ': '))
+
                 return render_template('methods/view_results.html', results=search_results, string=search_results_string, counter=session['counter'], prev=previous_token)
 
         else:
@@ -467,13 +474,15 @@ def aggregate():
         }
 
     if request.method == 'GET':
-        print('l.472', app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = result.json()
         for doc in result:
-            # add basic stat (nb vid) for admin
-            r = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
-            doc['countVideos'] = len(r.json())
+            # add count
+            # and for db compatibilty need to 
+            if 'count_videos' in doc:
+                doc['countVideos'] = doc['count_videos']
+            else:
+                doc['countVideos'] = 'NA'
             stats['list_queries'].append(doc)
         
     if request.method == 'POST':
@@ -549,7 +558,7 @@ def aggregate():
 ##########################################################################
 @app.route('/process_results')
 def process_results():
-    uid = uuid4()
+    uid = str(uuid4())
     api = YouTube(api_key=session['api_key'])
     session['counter'] = 0
     #### /!\ Need to refact functions here ! /!\ ####
@@ -565,14 +574,14 @@ def process_results():
         mongo_curs.db.query.insert_one(
             {
                 'author_id': session['profil']['id'],
-                'query_id': str(uid),
+                'query_id': uid,
                 'query': session['request']['name_query'] ,
                 'part': session['request']['part'],
             }
         )
 
         for each in list_results['items']:
-            each.update({'query_id': str(uid)})
+            each.update({'query_id': uid})
             if 'snippet' in each:
                 if 'videoId' in each['id']:
                     each['snippet'].update({'videoId': each['id']['videoId']})
@@ -595,13 +604,11 @@ def process_results():
             order=session['request']['order']
         )
 
-        print(session['request']['order'])
-
         # insert query
         mongo_curs.db.query.insert_one(
             {
                 'author_id':session['profil']['id'],
-                'query_id': str(uid),
+                'query_id': uid,
                 'query': session['request']['q'],
                 'part': session['request']['part'],
                 'language': session['request']['language'],
@@ -611,7 +618,7 @@ def process_results():
         )
         # insert videos
         for each in search_results['items']:
-            each.update({'query_id': str(uid)})
+            each.update({'query_id': uid})
             # thing is search query can provide video, an playlist id...
             if 'snippet' in each:
                 if 'videoId' in each['id']:
@@ -638,11 +645,17 @@ def process_results():
                 pageToken=search_results['nextPageToken']
             )
             if not search_results['items']:
+                # add metrics for query in json
+                count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+                mongo_curs.db.query.update_one(
+                    { 'query_id': uid },
+                    { '$set': {'count_videos': count_videos } }
+                )
                 return render_template('methods/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in search_results['items']:
-                each.update({'query_id': str(uid)})
+                each.update({'query_id': uid})
                 each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
@@ -658,7 +671,7 @@ def process_results():
         mongo_curs.db.query.insert_one(
             {   
                 'author_id':session['profil']['id'],
-                'query_id': str(uid),
+                'query_id': uid,
                 'channel_id': session['request']['channelId'],
                 'part': session['request']['part'],
                 'maxResults': maxResults,
@@ -666,7 +679,7 @@ def process_results():
         )
         # insert videos
         for each in channel_results['items']:
-            each.update({'query_id': str(uid)})
+            each.update({'query_id': uid})
             if 'snippet' in each:
                 if 'videoId' in each['id']:
                     each['snippet'].update({'videoId': each['id']['videoId']})
@@ -689,11 +702,17 @@ def process_results():
                 pageToken=channel_results['nextPageToken']
             )
             if not channel_results['items']:
+                # add metrics for query in json
+                count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+                mongo_curs.db.query.update_one(
+                    { 'query_id': uid },
+                    { '$set': {'count_videos': count_videos } }
+                )
                 return render_template('methods/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in channel_results['items']:
-                each.update({'query_id': str(uid)})
+                each.update({'query_id': uid})
                 each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
@@ -709,7 +728,7 @@ def process_results():
         mongo_curs.db.query.insert_one(
             {   
                 'author_id':session['profil']['id'],
-                'query_id': str(uid),
+                'query_id': uid,
                 'playlist_id': session['request']['playlistId'],
                 'part': session['request']['part'],
                 'maxResults': maxResults,
@@ -717,7 +736,7 @@ def process_results():
         )
         # insert videos
         for each in playlist_results['items']:
-            each.update({'query_id': str(uid)})
+            each.update({'query_id': uid})
             if 'snippet' in each:
                 if 'videoId' in each['contentDetails']:
                     each['snippet'].update({'videoId': each['contentDetails']['videoId']})
@@ -740,11 +759,17 @@ def process_results():
                 pageToken=playlist_results['nextPageToken']
             )
             if not playlist_results['items']:
+                # add metrics for query in json
+                count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+                mongo_curs.db.query.update_one(
+                    { 'query_id': uid },
+                    { '$set': {'count_videos': count_videos } }
+                )
                 return render_template('methods/download_process.html', message='ok it is done')
 
             # insert video-info
             for each in playlist_results['items']:
-                each.update({'query_id': str(uid)})
+                each.update({'query_id': uid})
                 each = cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
@@ -772,7 +797,13 @@ def manage():
             r_videos   = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
             r_comments = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/comments/')
             r_captions = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/captions/')
-            doc['countVideos'] = len(r_videos.json())
+            
+            # add count
+            # and for db compatibilty need to 
+            if 'count_videos' in doc:
+                doc['countVideos'] = doc['count_videos']
+            else:
+                doc['countVideos'] = 'NA'
             doc['countComments'] = len(r_comments.json())
             doc['countCaptions'] = len(r_captions.json())
             total_videos_count += len(r_videos.json())
@@ -839,7 +870,12 @@ def export():
             r_comments = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/comments/' )
             r_captions = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/captions/' )
             
-            doc['countVideos']   = len(r_videos.json())
+            # add count
+            # and for db compatibilty need to 
+            if 'count_videos' in doc:
+                doc['countVideos'] = doc['count_videos']
+            else:
+                doc['countVideos'] = 'NA'
             doc['countComments'] = len(r_comments.json())
             doc['countCaptions'] = len(r_captions.json())
             
