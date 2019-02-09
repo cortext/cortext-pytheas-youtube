@@ -1,42 +1,42 @@
 version: '3'
 services:
-
-  # Back
+# Back
+  # mongo server
   mongo:
-    container_name: MONGOSERVER
+    container_name: pytheas_mongoserver
     image: "mongo:3.4"
+    restart: always
     command: mongod
-    expose:
-     - "27017"
+    ports:
+     - "27017:27017"
     volumes: 
      - './data/mongo:/data/db'
     network_mode: bridge
     hostname: mongod
   
-  # Back
+  # restapp
   restapp:
-    container_name: restapp
+    container_name: pytheas_restapp
     build: ./rest/
-    expose:
-     - "5002"
-     - "27017"
     network_mode: bridge
     hostname: restapp
-    volumes:
-     - './rest:/opt/pytheas_rest'
+    restart: always
     depends_on:
       - mongo
     links:
       - mongo
+    ports:
+     - "5003:5003"
+    volumes:
+     - './rest:/opt/pytheas_rest'
+     - './rest/conf:/opt/pytheas_rest/conf'
 
-  # Back
-  # worker:
+  # # worker:
   #   container_name: restapp
   #   build: ./worker/
-  #   expose:
-  #    - "5003"
-  #    - "27017"
   #   network_mode: bridge
+  # ports:
+  #    - "5003:5003"
   #   hostname: worker
   #   volumes:
   #    - './rest:/opt/pytheas_worker'
@@ -45,11 +45,12 @@ services:
   #   links:
   #     - mongo
 
-  # Front
+# Front
+  # mongo client
   mongoclient:
-    network_mode: bridge
-    container_name: mongoclient
+    container_name: pytheas_mongoclient
     image: "mongoclient/mongoclient"
+    restart: always
     ports:
      - "3000:3000"
     depends_on:
@@ -57,17 +58,15 @@ services:
     links:
       - mongo
 
-  # Front
+  # wepapp
   webapp:
-    container_name: webapp
-    hostname: webapp
-    network_mode: bridge
-
+    container_name: pytheas_webapp
     build: ./
+    network_mode: bridge
+    hostname: webapp
+    restart: always
     ports:
-     - "8080:8080"
-    expose:
-     - "8080"
+     - "5000:8080"
     depends_on:
      - restapp
     links:
