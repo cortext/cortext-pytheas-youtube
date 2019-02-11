@@ -25,12 +25,16 @@
   {% block navbar %}
     {% include 'structures/nav.html' %}
   {% endblock navbar %}
+
+  {{super()}}
+
+  {% block footer %}
+    {% include 'structures/footer.html' %}
+  {% endblock footer %}
 {% endblock content %}
 
 {% block scripts %}
   {{ super() }}
-  <!-- footer here for simplicty-->
-  {% include 'structures/footer.html' %}
   <!-- Datatable CDN -->
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs/jq-3.3.1/dt-1.10.18/datatables.min.js"></script>
   <!-- local -->
