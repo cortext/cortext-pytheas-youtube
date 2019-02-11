@@ -108,6 +108,35 @@ class YouTube():
             logger.errors('Reason of error is : ' + commentThread['error']['errors'][0]['reason'])
             return commentThread['error']
 
+    # Unclassed for moment
+    def cleaning_each(each):
+        if 'videoId' in each['id']:
+            each.update({'videoId': each['id']['videoId']})
+        elif 'playlistId' in each['id']:
+            each.update({'playlistId': each['id']['playlistId']})
+        elif 'channelId' in each['id']:
+            each.update({'channelId': each['id']['channelId']})
+        return each
+        
+    # Unclassed for moment
+    def cleaning_ytb_input(id_video):
+        if 'youtube.com/watch?v=' in id_video:
+            if 'https' in id_video:
+                id_video = id_video.replace(
+                    'https://www.youtube.com/watch?v=', '')
+            else:
+                id_video = id_video.replace(
+                    'http://www.youtube.com/watch?v=', '')
+        elif 'youtube.com/channel/' in id_video:
+            if 'https' in id_video:
+                id_video = id_video.replace(
+                    'https://www.youtube.com/channel/', '')
+            else:
+                id_video = id_video.replace(
+                    'http://www.youtube.com/channel/', '')
+        # elif 'youtube.com/watch?v=' in id_video:
+        return id_video
+
     @staticmethod
     def response(response):
         return response.json()
