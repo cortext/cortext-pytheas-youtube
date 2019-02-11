@@ -89,4 +89,4 @@ def auth():
     current_user = User(mongo_curs)
     current_user.create_or_replace_user_cortext(r_access)
 
-    return redirect(url_for('config'))
+    return redirect(url_for('home'))

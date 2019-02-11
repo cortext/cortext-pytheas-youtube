@@ -95,7 +95,6 @@ except BaseException as error:
 @app.before_request
 def before_request():
     try:
-        app.logger.debug(app.config['REST_URL'])
         # entering api_key manually if exist in conf file
         if app.config['api_key']:
             session['api_key'] = app.config['api_key']
@@ -122,7 +121,7 @@ def before_request():
                     return 
                 elif 'oauth.login' not in request.endpoint:
                     return redirect(url_for('oauth.login'))
-        # else nothing let continue
+        # else nothing let continue  
     except BaseException as e:
         app.logger.debug(e)
 
@@ -132,7 +131,12 @@ def page_not_found(error):
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    user_info = session['profil']
+    if 'api_key' in session:
+        api_key = session['api_key']
+    else:
+        return render_template('home.html', user_info=user_info)
+    return render_template('home.html', user_info=user_info, api_key=api_key)
 
 ##########################################################################
 # Csv (plus need to add json)
@@ -783,8 +787,6 @@ def process_results():
 def manage():
     if request.method == 'GET':
         # get all query fur user
-        app.logger.debug('hey ==> ' + app.config['REST_URL'])
-        app.logger.debug(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
         r = requests.get(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
         result = r.json()
         list_queries = []
@@ -799,7 +801,7 @@ def manage():
             r_captions = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/captions/')
             
             # add count
-            # and for db compatibilty need to 
+            # and for db compatibilty need to
             if 'count_videos' in doc:
                 doc['countVideos'] = doc['count_videos']
             else:

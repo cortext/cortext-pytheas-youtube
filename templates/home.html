@@ -3,13 +3,22 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <h2 class="">Presentation </h2>
-                {% if message %} {{ message }} {% endif %}
+                <h2 class="">Hello {% if user_info %} {{ user_info['username'] }} ! {% endif %} </h2>
+
                 <hr/>
+            
+                {% if api_key is defined and api_key %}
+                    <h3>Your key is setted and ready to download (you can always go to 'config' later) </h3>
+                    {% else %}
+                    <h3><srtong>You need to update your api_key first. Click <a href="./config" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> to go configure it </srtong> </h3>
+                {% endif %}
             </div>
         </div>
-        
-        
+
+        <h2>
+            
+        </h2>
+
         <div class="jumbotron ">
             <div class="row">
                 <div class="col-md-12">
@@ -37,7 +46,7 @@
                         <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
                         <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
                     </div>
-                    <button type="submit" class="btn btn-default center-block">Submit</button>
+                    <button type="submit" class="btn btn-primary center-block">Submit</button>
                 </form>
             </div>
         </div>
