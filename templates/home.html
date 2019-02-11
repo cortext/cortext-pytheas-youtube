@@ -1,76 +1,260 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="container">
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="">Hello {% if user_info %} <strong>{{ user_info['username'] }}</strong> ! {% endif %} </h2>
+
+            <hr/>
+            
+            {% if api_key is defined and api_key %}
+            <h3>Your key is setted and ready to download (you can always go to 'config' later) </h3>
+            {% else %}
+            <h3><strong class="text-danger">You need to update your api_key first. Please go to <a href="./config" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines </strong> </h3>
+            {% endif %}
+        </div>
+    </div>
+
+    <h2>
+
+    </h2>
+
+    <div class="jumbotron">
         <div class="row">
             <div class="col-md-12">
-                <h2 class="">Hello {% if user_info %} {{ user_info['username'] }} ! {% endif %} </h2>
-
-                <hr/>
-            
-                {% if api_key is defined and api_key %}
-                    <h3>Your key is setted and ready to download (you can always go to 'config' later) </h3>
-                    {% else %}
-                    <h3><srtong>You need to update your api_key first. Click <a href="./config" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> to go configure it </srtong> </h3>
-                {% endif %}
+                <h2>What is Pytheas ?</h2>
+                <p>Pytheas a simple webtool helping you to download data from youtube API,</p>
+                <p>Permitting you to manage and export data in json.</p>
             </div>
         </div>
 
-        <h2>
-            
-        </h2>
+        <div class="row">
+        <div class="col-md-offset-1 col-md-10">
+            <form action="/video_info" id="video" method="POST">
+                <div class="form-group">
+                    <h3 ><strong>Try it !</strong></h3>
+                    <h4>Just put an url from youtube and see what it will respond to you : </h4>
 
-        <div class="jumbotron ">
-            <div class="row">
-                <div class="col-md-12">
-                    <h2>What is Pytheas ?</h2>
-                    <p>Pytheas a simple webtool helping you to download data from youtube API,</p>
-                    <p>Permitting you to manage and export data in json.</p>
+                    <input hidden type="text" name='unique_id_video' class="form-control" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
+                    <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+                    <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                    <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                    <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
                 </div>
-            </div>
+                <button type="submit" class="btn btn-primary center-block">Submit</button>
+            </form>
         </div>
-        
-        <div class="row">
-            <div class="col-md-offset-2 col-md-8">
-                <form action="/video_info" id="video" method="POST">
-                    <div class="form-group">
-                        <h3 class=""><strong>Try it !</strong></h3>
-                        <h4>Just put an url from youtube and see what it will respond to you : </h4>
-                        
-                        <input hidden type="text" name='unique_id_video' class="form-control" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
-                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                        <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-                        <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                        <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
-                        <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                        <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                    </div>
-                    <button type="submit" class="btn btn-primary center-block">Submit</button>
-                </form>
-            </div>
-        </div>
-        
-        
-        <div class="row">
-            <div class="col-md-12">
-                <div class="row">
-                    <h3>Know limitations :</h3>
+    </div>
+    </div>
+
+    
+
+
+    <div class="row">
+        <div class="col-md-12">
+
+            <h3>Simplified scope of YouTube data :</h3>
+            <p>
+                This is all information classified by YouTube we can access. Some are irrelevant for SHS or STS studies. Plus for now Pytheas for YouTube only support some of them (before integration).
+            </p>
+
+            <ul>
+                <li data-toggle="collapse" href="#Activities" role="button" aria-expanded="true" aria-controls="Activities">Activities</li>
+                <div class="collapse" id="Activities">
                     <ul>
-                        <li>Youtube results (api & browser) can only provide ~500 results (to get more it need to be outdated every 500 results. see :
-                            <a href="http://stackoverflow.com/questions/27500231/how-can-get-all-results-from-youtube-api-search-api-response">how-can-get-all-results-from-youtube-api-search-api-response</a>
-                        )</li>
-                        <li>Automatic captions seems to cannot be retrieve via API. The author must havec activated CC on his video. It need to get a little tricky with xml version like :
-                            <a href="http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M">http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M</a>
-                            For more see :
-                            <a href="http://stackoverflow.com/questions/23665343/get-closed-caption-cc-for-youtube-video">get-closed-caption-cc-for-youtube-video</a>
-                            or :
-                            <a href="http://stackoverflow.com/questions/14013431/extract-automatic-captions-from-youtube-video">extract-automatic-captions-from-youtube-video</a>
-                        </li>
-                        <li>Comments get only one hierachical level</li>
-                        <li>Search provide playlist incorporated in results as a video</li>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
                     </ul>
                 </div>
-            </div>
+                <li data-toggle="collapse" href="#Captions" role="button" aria-expanded="true" aria-controls="Captions"><strong class="text-danger">Captions</strong></li>
+                <div class="collapse" id="Captions">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>update</li>
+                        <li>download</li>
+                        <li>delete</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#ChannelBanners" role="button" aria-expanded="false" aria-controls="ChannelBanners">ChannelBanners</li>
+                <div class="collapse" id="ChannelBanners">
+                    <ul>
+                        <li>Overview</li>
+                        <li>insert</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Channels" role="button" aria-expanded="false" aria-controls="Channels"><strong class="text-danger">Channels</strong></li>
+                <div class="collapse" id="Channels">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>update</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#ChannelSections" role="button" aria-expanded="false" aria-controls="ChannelSections">ChannelSections</li>
+                <div class="collapse" id="ChannelSections">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>update</li>
+                        <li>delete</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Comments" role="button" aria-expanded="false" aria-controls="Comments"><strong class="text-danger">Comments</strong></li>
+                <div class="collapse" id="Comments">
+                    <ul>
+                    
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>update</li>
+                        <li>markAsSpam</li>
+                        <li>setModerationStatus</li>
+                        <li>delete</li>
+
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#CommentThreads" role="button" aria-expanded="false" aria-CommentThreads="collapseExample"><strong class="text-danger">CommentThreads</strong></li>
+                <div class="collapse" id="CommentThreads">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>update</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#GuideCategories" role="button" aria-expanded="false" aria-controls="GuideCategories">GuideCategories</li>
+                <div class="collapse" id="GuideCategories">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#i18nLanguages" role="button" aria-expanded="false" aria-controls="i18nLanguages"><strong class="text-danger">i18nLanguages</strong></li>
+                <div class="collapse" id="i18nLanguages">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#i18nRegions" role="button" aria-expanded="false" aria-controls="i18nRegions">i18nRegions</li>
+                <div class="collapse" id="i18nRegions">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#PlaylistItems" role="button" aria-expanded="false" aria-controls="PlaylistItems"><strong class="text-danger">PlaylistItems</strong></li>
+                <div class="collapse" id="PlaylistItems">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>update</li>
+                        <li>delete</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Playlists" role="button" aria-expanded="false" aria-controls="Playlists"><strong class="text-danger">Playlists</strong></li>
+                <div class="collapse" id="Playlists">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>update</li>
+                        <li>delete</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Search" role="button" aria-expanded="false" aria-controls="Search"><strong class="text-danger">Search</strong></li>
+                <div class="collapse" id="Search">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Subscriptions" role="button" aria-expanded="false" aria-controls="Subscriptions">Subscriptions</li>
+                <div class="collapse" id="Subscriptions">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>delete</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Thumbnails" role="button" aria-expanded="false" aria-controls="Thumbnails">Thumbnails</li>
+                <div class="collapse" id="Thumbnails">
+                    <ul>
+                        <li>Overview</li>
+                        <li>set</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#VideoAbuseReportReasons" role="button" aria-expanded="false" aria-controls="VideoAbuseReportReasons">VideoAbuseReportReasons</li>
+                <div class="collapse" id="VideoAbuseReportReasons">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#VideoCategories" role="button" aria-expanded="false" aria-controls="VideoCategories">VideoCategories</li>
+                <div class="collapse" id="VideoCategories">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Videos" role="button" aria-expanded="false" aria-controls="Videos"><strong class="text-danger">Videos</strong></li>
+                <div class="collapse" id="Videos">
+                    <ul>
+                        <li>Overview</li>
+                        <li>list</li>
+                        <li>insert</li>
+                        <li>update</li>
+                        <li>rate</li>
+                        <li>getRating</li>
+                        <li>reportAbuse</li>
+                        <li>delete</li>
+                    </ul>
+                </div>
+                <li data-toggle="collapse" href="#Watermarks" role="button" aria-expanded="false" aria-controls="Watermarks">Watermarks</li>
+                <div class="collapse" id="Watermarks">
+                    <ul>
+                        <li>Overview</li>
+                        <li>set</li>
+                        <li>unset</li>
+                    </ul>
+                </div>
+            </ul>
+
+
+
+        </div>
     </div>
-{% endblock  %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <h3>Know limitations :</h3>
+                <ul>
+                    <li>Youtube results (api & browser) can only provide ~500 results (to get more it need to be outdated every 500 results. see :
+                        <a href="http://stackoverflow.com/questions/27500231/how-can-get-all-results-from-youtube-api-search-api-response">how-can-get-all-results-from-youtube-api-search-api-response</a>
+                    )</li>
+                    <li>Automatic captions seems to cannot be retrieve via API. The author must havec activated CC on his video. It need to get a little tricky with xml version like :
+                        <a href="http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M">http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M</a>
+                        For more see :
+                        <a href="http://stackoverflow.com/questions/23665343/get-closed-caption-cc-for-youtube-video">get-closed-caption-cc-for-youtube-video</a>
+                        or :
+                        <a href="http://stackoverflow.com/questions/14013431/extract-automatic-captions-from-youtube-video">extract-automatic-captions-from-youtube-video</a>
+                    </li>
+                    <li>Comments get only one hierachical level</li>
+                    <li>Search provide playlist incorporated in results as a video</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endblock  %}
