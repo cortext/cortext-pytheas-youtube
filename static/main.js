@@ -2,6 +2,11 @@
 
 $(document).ready( function () {
     $('.dataTableView').DataTable();
+
+    $('#myList a').on('click', function (e) {
+      e.preventDefault()
+      $(this).tab('show')
+    })
 } );
 
 $(function() {
@@ -18,33 +23,4 @@ $(function() {
 
         document.body.removeChild(element);
     }
-
-
-
-    // var jsonExport = document.getElementById('json');
-    // console.log(jsonExport);
-    // if (jsonExport === true) {
-    //     jsonExport.onclick = function() {
-    //         var title = document.getElementById('title_data').textContent;
-    //         var code = document.getElementById('code').innerHTML;
-    //         var JsonData = JSON.stringify(code);
-    //         console.log(title);
-
-
-    //         download(title + "_data.json", JsonData);
-
-    //     };    
-    // }
-    
-
-
-    // var table = document.getElementById("forecast-table"); 
-    // var btns = table.getElementsByClassName("btn");
-    // for (var i = 0; i < btns.length; i++) {
-    //     btns[i].addEventListener("click", function() {
-    //         var current = document.getElementsByClassName("active");
-    //         current[0].className = current[0].className.replace(" active", "");
-    //         this.className += " active";
-    //     });
-    // }
 });

@@ -1,7 +1,7 @@
-{%- extends "bootstrap/base.html" %}
+{%- extends "bootstrap4/base.html" %}
 
 {% block title %}Pytheas-Youtube{% endblock %}
-{% import "bootstrap/fixes.html" as fixes %}
+{# {% import "bootstrap4/fixes.html" as fixes %} #}
 {% set title = self.title() %}
 {% set github_cred = 'https://github.com/cortext/cortext-pytheas-youtube' %}
 
@@ -10,14 +10,16 @@
   <link rel="shortcut icon" href="static/favicon.ico">
 
   <!-- Bootstap CDN -->
-  <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr" crossorigin="anonymous">
+  {# <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css" rel="stylesheet" integrity="sha384-h21C2fcDk/eFsW9sC9h0dhokq5pDinLNklTKoxIZRUn3+hvmgQSffLLQ4G4l2eEr" crossorigin="anonymous"> #}
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
+  
   <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   <!-- Datatable CDN -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/jq-3.3.1/dt-1.10.18/datatables.min.css"/>
   <!-- local -->
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
   
-  {{fixes.ie8()}}
+  {# {{fixes.ie8()}} #}
 {% endblock %}
 
 {% block content %}
@@ -35,5 +37,10 @@
   <script type="text/javascript" src="https://cdn.datatables.net/v/bs/jq-3.3.1/dt-1.10.18/datatables.min.js"></script>
   <!-- local -->
   <script type="text/javascript" src="{{ url_for('static', filename='main.js') }}"></script>
+
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+
 {% endblock scripts%}
   

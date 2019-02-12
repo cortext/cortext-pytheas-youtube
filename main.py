@@ -19,7 +19,7 @@ from flask import redirect
 from flask import url_for
 from flask import jsonify
 # Ext lib
-from flask_bootstrap import Bootstrap
+# from flask_bootstrap import Bootstrap
 from furl import furl
 # local modules
 from oauth import oauth
@@ -49,7 +49,7 @@ def create_app():
         app.config['MONGO_URI'] = "mongodb://mongod:"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
         app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
 
-        Bootstrap(app)
+        # Bootstrap(app)
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
         app.config['debug_level'] = conf_data['debug_level']
@@ -101,6 +101,10 @@ def before_request():
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
 
+@app.route('/test', methods=['POST', 'GET'])
+def test():
+    return render_template('list_video_downloader_form.html')
+
 @app.route('/')
 def home():
     user_info = session['profil']
@@ -140,7 +144,7 @@ def channel_info():
             id_channel = request.form.get('unique_id_channel')
             id_channel = YouTube.cleaning_ytb_input(id_channel)
             if 'youtube.com/user/' in id_channel:
-                return render_template('explore/channel_info.html', message='YoutubeAPI cannot retrieve user (different from channel)...')
+                return render_template('explore/channel_info.html', message='YoutubeAPI cannot retrieve /user (different from /channel)')
             part = ', '.join(request.form.getlist('part'))
             api = YouTube(api_key=session['api_key'])
             channel_result = api.get_query(
@@ -185,8 +189,8 @@ def video():
             list_videos = request.form.get('list_videos')
             list_videos = list_videos.splitlines()
             list_videos = [ YouTube.cleaning_ytb_input(x) for x in list_videos]
-
             list_results = {'items': [] }
+            
             for id_video in list_videos:
                 part = ', '.join(request.form.getlist('part'))                
                 video_result = api.get_query('videos', id=id_video, part=part)
