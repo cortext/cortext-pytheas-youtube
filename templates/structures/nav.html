@@ -1,63 +1,46 @@
 {% block navbar %}
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="/">
-                {{ title }}
+<nav  class="navbar navbar-expand-sm bg-dark navbar-dark mb-4 p-4">
+    <!-- Brand -->
+    <a class="navbar-brand " href="/">
+        {{ title }}
+    </a> 
+    <!-- Left -->
+    <ul class="nav navbar-nav mr-auto">
+
+        <li class="nav-item">
+            <a class="nav-link {%- if request.path=='/explore' %} active {% endif %}" href="/explore">Explore</a>
+        </li>
+
+        <!-- Dropdown -->
+        <li class="nav-item">
+            <a class="nav-link {%- if request.path=='/test' %} active {% endif %}" href="/test" >
+                Download list of videos
             </a>
-        </div>
-        <ul class="nav navbar-nav">
-            <li class="dropdown">
-                <a class="navbar-brand dropdown-toggle" data-toggle="dropdown" href="#"> 
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="https://pytheas.cortext.net/">Youtube </a></li>
-                    <li><a href="https://tweets-pytheas.cortext.net/">Tweets </a></li>
-                </ul>
-            </li>
-        </ul>
-        {%- if request.path != "/login" %}
-                <ul class="nav navbar-nav">
-                    <li {%- if request.path=="/explore" %} class="active" {% endif %}><a href="/explore">Explore</a></li>
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Download list of videos
-                          <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li {%- if request.path=="/search" %} class="active" {% endif %}>
-                                <a href="/search">Search </a></li>
-                            <li {%- if request.path=="/channel" %} class="active" {% endif %}>
-                                <a href="/channel">Channel </a></li>
-                            <li {%- if request.path=="/playlist" %} class="active" {% endif %}>
-                                <a href="/playlist">Playlist </a></li>
-                            <li {%- if request.path=="/video" %} class="active" {% endif %}>
-                                <a href="/videos-list">Custom video list </a></li>
-                        </ul>
-                    </li>
-                </ul>
+        </li>
 
-                <ul class="nav navbar-nav">
-                     <li {%- if request.path=="/aggregate" %} class="active" {% endif %}><a href="/aggregate">Aggregate data</a></li>
-                </ul>
+        <li class="nav-item {%- if request.path=='/aggregate' %} active {% endif %}">
+            <a class="nav-link" href="/test2">Aggregate data</a>
+        </li>
+    </ul>
 
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="https://github.com/cortext/cortext-pytheas-youtube/blob/master/doc/user_guide.md">Docs</a></li>
+    <!-- Right -->
+    <ul class="nav navbar-nav navbar-right">
+        <li class="nav-item">
+            <a class="nav-link" href="https://github.com/cortext/cortext-pytheas-youtube/blob/master/doc/user_guide.md">Docs</a>
+        </li>
 
-                    <li {%- if request.path=="/export" %} class="active" {% endif %}>
-                        <a href="/export">Export</a></li>
+        <li class="nav-item {%- if request.path=='/manage' %} active {% endif %}">
+            <a class="nav-link" href="/manage">Manage</a>
+        </li>
 
-                    <li {%- if request.path=="/manage" %} class="active" {% endif %}>
-                        <a href="/manage">Manage</a></li>
+        <li class="nav-item {%- if request.path=='/config' %} active {% endif %}">
+            <a class="nav-link" href="/config">Config</a>
+        </li>
 
-                    <li {%- if request.path=="/config" %} class="active" {% endif %}>
-                        <a href="/config">Config</a></li>
+        <li class="nav-item">
+            <a class="nav-link" href="/reset"><i class="fa fa-times" aria-hidden="true"></i></a>
+        </li>
+    </ul>
 
-                    <li>
-                        <a href="/reset"><i class="fa fa-times" aria-hidden="true"></i></a></li>
-                </ul>            
-        {% endif %}
-    </div>
 </nav>
 {% endblock %}

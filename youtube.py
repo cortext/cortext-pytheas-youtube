@@ -119,7 +119,7 @@ class YouTube():
         return each
         
     # Unclassed for moment
-    def cleaning_ytb_input(id_video):
+    def cleaning_video(id_video):
         if 'youtube.com/watch?v=' in id_video:
             if 'https' in id_video:
                 id_video = id_video.replace(
@@ -127,15 +127,28 @@ class YouTube():
             else:
                 id_video = id_video.replace(
                     'http://www.youtube.com/watch?v=', '')
-        elif 'youtube.com/channel/' in id_video:
-            if 'https' in id_video:
-                id_video = id_video.replace(
+        return id_video
+
+    def cleaning_channel(id_channel_or_user):
+        if 'youtube.com/channel/' in id_channel_or_user:
+            if 'https' in id_channel_or_user:
+                id_channel_or_user = id_channel_or_user.replace(
                     'https://www.youtube.com/channel/', '')
             else:
-                id_video = id_video.replace(
+                id_channel_or_user = id_channel_or_user.replace(
                     'http://www.youtube.com/channel/', '')
-        # elif 'youtube.com/watch?v=' in id_video:
-        return id_video
+        return id_channel_or_user
+
+    def cleaning_playlist(id_playlist):
+        # HERE WIlL have to parse URL or detect id PLYALIST later
+        # if '&list=' in id_playlist:
+        #     if 'https' in id_playlist:
+        #         id_playlist = id_playlist.replace(
+        #             'https://www.youtube.com/channel/', '')
+        #     else:
+        #         id_playlist = id_playlist.replace(
+        #             'http://www.youtube.com/channel/', '')
+        return id_playlist
 
     @staticmethod
     def response(response):

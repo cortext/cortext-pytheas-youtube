@@ -3,7 +3,7 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12">
-            <h2 class="">Hello {% if user_info %} <strong>{{ user_info['username'] }}</strong> ! {% endif %} </h2>
+            <h2 class="">Hello {% if user_info %} <strong>{{ user_info['name'] }}</strong> ! {% endif %} </h2>
 
             <hr/>
             
@@ -15,10 +15,6 @@
         </div>
     </div>
 
-    <h2>
-
-    </h2>
-
     <div class="jumbotron">
         <div class="row">
             <div class="col-md-12">
@@ -29,26 +25,26 @@
         </div>
 
         <div class="row">
-        <div class="col-md-offset-1 col-md-10">
-            <form action="/video_info" id="video" method="POST">
-                <div class="form-group">
-                    <h3 ><strong>Try it !</strong></h3>
-                    <h4>Just put an url from youtube and see what it will respond to you : </h4>
+            <div class="col-md-offset-1 col-md-10">
+                <form action="/video_info" id="video" method="POST">
+                    <div class="form-group">
+                        <h3 ><strong>Try it !</strong></h3>
+                        <h4>Just put an url from youtube and see what it will respond to you : </h4>
 
-                    <input hidden type="text" name='unique_id_video' class="form-control" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
-                    <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                    <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                    <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                    <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-                    <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                    <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
-                    <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                    <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                </div>
-                <button type="submit" class="btn btn-primary center-block">Submit</button>
-            </form>
+                        <input hidden type="text" name='unique_id_video' class="form-control" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
+                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+                        <label hidden class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+                        <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary center-block">Submit</button>
+                </form>
+            </div>
         </div>
-    </div>
     </div>
 
     

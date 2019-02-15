@@ -45,11 +45,9 @@ def create_app():
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
-
         app.config['MONGO_URI'] = "mongodb://mongod:"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
         app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
 
-        # Bootstrap(app)
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
         app.config['debug_level'] = conf_data['debug_level']
@@ -105,6 +103,25 @@ def page_not_found(error):
 def test():
     return render_template('list_video_downloader_form.html')
 
+@app.route('/test2', methods=['POST', 'GET'])
+def test2():
+    list_queries = []
+
+    if request.method == 'GET':
+        result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
+        result = result.json()
+        for doc in result:
+            # add count
+            # and for db compatibilty need to 
+            if 'count_videos' in doc:
+                doc['countVideos'] = doc['count_videos']
+            else:
+                doc['countVideos'] = 'NA'
+            list_queries.append(doc)
+
+        app.logger.debug(list_queries)
+    return render_template('add_data.html', list_queries=list_queries)
+
 @app.route('/')
 def home():
     user_info = session['profil']
@@ -126,7 +143,7 @@ def video_info():
     if request.method == 'POST':
         if 'api_key' in session:
             id_video = request.form.get('unique_id_video')
-            id_video = YouTube.cleaning_ytb_input(id_video)
+            id_video = YouTube.cleaning_video(id_video)
             part = ', '.join(request.form.getlist('part'))
             api = YouTube(api_key=session['api_key'])
             video_result = api.get_query('videos', id=id_video, part=part)
@@ -142,7 +159,7 @@ def channel_info():
     if request.method == 'POST':
         if 'api_key' in session:
             id_channel = request.form.get('unique_id_channel')
-            id_channel = YouTube.cleaning_ytb_input(id_channel)
+            id_channel = YouTube.cleaning_channel(id_channel)
             if 'youtube.com/user/' in id_channel:
                 return render_template('explore/channel_info.html', message='YoutubeAPI cannot retrieve /user (different from /channel)')
             part = ', '.join(request.form.getlist('part'))
@@ -188,9 +205,9 @@ def video():
             session['counter'] = 0
             list_videos = request.form.get('list_videos')
             list_videos = list_videos.splitlines()
-            list_videos = [ YouTube.cleaning_ytb_input(x) for x in list_videos]
+            list_videos = [ YouTube.cleaning_video(x) for x in list_videos]
             list_results = {'items': [] }
-            
+            app.logger.debug(list_results)
             for id_video in list_videos:
                 part = ', '.join(request.form.getlist('part'))                
                 video_result = api.get_query('videos', id=id_video, part=part)
@@ -218,7 +235,7 @@ def playlist():
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('download/playlist.html', message='api key not set')
-        id_playlist = YouTube.cleaning_ytb_input(request.form.get('id'))
+        id_playlist = YouTube.cleaning_playlist(request.form.get('id'))
         session['counter'] = 0
         session['request'] = {
             'part': ', '.join(request.form.getlist('part')),
@@ -251,7 +268,7 @@ def channel():
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('download/channel.html', message='api key not set')
-        id_channel = YouTube.cleaning_ytb_input(request.form.get('id'))
+        id_channel = YouTube.cleaning_channel(request.form.get('id'))
         session['counter'] = 0
         session['request'] = {
             'part': ', '.join(request.form.getlist('part')),
