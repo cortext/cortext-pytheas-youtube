@@ -231,11 +231,12 @@ class Comment():
         self.db = mongo_curs.db
         self.query_id = query_id
 
+    # taken from cloned Captions
     def create_if_not_exist(self, video_id):
         query_id = self.query_id
         try:
-            current_caption = self.db.captions.find_one_or_404(
-                { '$and':[{ 'query_id': query_id }, { 'videoId': video_id }] }
+            current_comment = self.db.comment.find_one_or_404(
+                { '$and':[{ 'query_id': query_id }, { 'id.videoId': video_id }] }
             )
         except BaseException as e:
             self.create_captions(id_video)
@@ -317,7 +318,7 @@ class Caption():
         query_id = self.query_id
         try:
             current_caption = self.db.captions.find_one_or_404(
-                { '$and':[{ 'query_id': query_id }, { 'videoId': video_id }] }
+                { '$and':[{ 'query_id': query_id }, { 'id.videoId': video_id }] }
             )
         except BaseException as e:
             self.create_captions(video_id)
