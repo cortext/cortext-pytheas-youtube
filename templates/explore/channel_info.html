@@ -1,50 +1,45 @@
-{% extends "base.html" %} {% block content %}
-<div class="container">
-    <div class="col-md-8 col-md-offset-2">
-        <h2>Channel-info</h2> 
-        
-          {% if message %} 
-            
-            {{ message }} 
 
-          {% endif %}
-        
-        <hr>
-        <form action="/channel_info" method="POST">
-            <div class="form-group">
-                <h4>Id Channel (or paste url)</h4>
-                <input type="text" name='unique_id_channel' class="form-control" placeholder="UCxpgAMAOmPX_aCIs-yKBPwg">
-                <hr/>
-                <h4>Part</h4>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="id" checked>id</label>
-                <br/>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="status" checked>status</label>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                <br/>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                <br/>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="invideoPromotion" checked>invideoPromotion</label>
-                <label class="checkbox-inline">
-                    <input name='part' type="checkbox" value="brandingSettings" checked>brandingSettings</label>
-                <br>
-                <label class="checkbox-inline text-muted">
-                    <input name='part' type="checkbox" value="auditDetails" disabled>auditDetails</label>
-                <hr/>
-                <button type="submit" class="btn btn-default">Submit</button>
-            </div>
-        </form>
+<form action="/channel_info" method="POST">
+    <div class="form-group">
+        <h4>Id Channel (or paste url)</h4>
+        <input type="text" name='unique_id_channel' class="form-control" placeholder="UCxpgAMAOmPX_aCIs-yKBPwg">
+        <hr/>
+        <h4>Part</h4>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="id" checked>id
+        </label>
+        <br/>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="snippet" checked>snippe
+        </label>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="statistics" checked>statistics
+        </label>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="status" checked>status
+        </label>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="localizations" checked>localizations
+        </label>
+        <br/>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="contentDetails" checked>contentDetails
+        </label>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="topicDetails" checked>topicDetails
+        </label>
+        <br/>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="invideoPromotion" checked>invideoPromotion
+        </label>
+        <label class="checkbox-inline">
+            <input name='part' type="checkbox" value="brandingSettings" checked>brandingSettings
+        </label>
+        <br>
+        <label class="checkbox-inline text-muted">
+            <input name='part' type="checkbox" value="auditDetails" disabled>auditDetails
+        </label>
+        <hr/>
+        <button type="submit" class="btn btn-primary">Submit</button>
     </div>
-</div>
-</div>
-{%- endblock %}
+</form>

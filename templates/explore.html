@@ -32,156 +32,47 @@
                 </ul>
             </div>
         </div>
+
         <div class="col-md-6" id="myGroup">
-            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-                <div class="panel panel-default">
-                    <div class="panel-heading" role="tab" id="headingOne">
-                        <h4 class="panel-title">
-                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                      Video
-                    </a>
-                  </h4>
-                    </div>
-                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-                        <div class="panel-body">
-                            <h4>Video-info</h4>
-                            <form action="/video_info" id="video" method="POST">
-                                <div class="form-group">
-                                    <h5>Id video (or paste url)</h5>
-                                    <input type="text" name='unique_id_video' class="form-control" placeholder="4Jc3zt1GEAs">
-                                    <h5>Part</h5>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="id" checked>id</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="status" checked>status</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="player" checked>player</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                                </div>
-                                <button type="submit" class="btn btn-default center-block">Submit</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel panel-default">
-                    <div class="panel-heading" role="tab" id="headingTwo">
-                        <h4 class="panel-title">
-                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                      Channel
-                    </a>
-                  </h4>
-                    </div>
-                    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
-                        <div class="panel-body">
-                            <h4>Channel-info</h4>
-                            <form action="/channel_info" id="channel" method="POST">
-                                <div class="form-group">
-                                    <h5>Id Channel (or paste url)</h5>
-                                    <input type="text" name='unique_id_channel' class="form-control" placeholder="UCxpgAMAOmPX_aCIs-yKBPwg">
-                                    <h5>Part</h5>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="id" checked>id</label>
-                                    <br/>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="status" checked>status</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                                    <br/>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                                    <br/>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="invideoPromotion" checked>invideoPromotion</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="brandingSettings" checked>brandingSettings</label>
-                                    <br>
-                                    <label class="checkbox-inline text-muted">
-                                        <input name='part' type="checkbox" value="auditDetails" disabled>auditDetails</label>
-                                </div>
-                                <button type="submit" class="btn btn-default center-block">Submit</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel panel-default">
-                    <div class="panel-heading" role="tab" id="headingThree">
-                        <h4 class="panel-title">
-                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                      Playlist
-                    </a>
-                  </h4>
-                    </div>
-                    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
-                        <div class="panel-body">
-                            <h4>Playlist-info</h4>
-                            <form action="/playlist_info" id="playlist" method="POST">
-                                <div class="form-group">
-                                    <h5>Id Playlist (or paste url)</h5>
-                                    <input type="text" name='unique_id_playlist' class="form-control" placeholder="PLTCMYaAONGHVtUG-oZnoa3VJMCRvpkq7k">
-                                    <h5>Part</h5>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="id" checked>id</label>
-                                    <br/>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="status" checked>status</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                                    <br/>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                                    <label class="checkbox-inline">
-                                        <input name='part' type="checkbox" value="player" checked>player</label>
-                                </div>
-                                <button type="submit" class="btn btn-default center-block">Submit</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- <div class="row text-center">
-                <p><small>(Click to change mode)</small></p>
-                <div>
-                    <a class="btn btn-primary" role="button" data-parent="#myGroup" href="#video" aria-expanded="false" data-toggle="collapse" href="#video" role="button" aria-controls="video">
+            <div id="accordion">
+                <div class="card">
+                    <div class="card-header"  data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" id="headingOne">
+                        <h5 class="mb-0">
                             Video
-                        </a>
-                    <a class="btn btn-primary" role="button" data-parent="#myGroup" href="#channel" aria-expanded="false" data-toggle="collapse" href="#channel" role="button" aria-controls="channel">
+                        </h5>
+                    </div>
+
+                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div class="card-body">
+                            {% include 'explore/video_info.html' %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" id="headingTwo">
+                        <h5 class="mb-0">
                             Channel
-                        </a>
-                    <a class="btn btn-primary" role="button" data-parent="#myGroup" href="#playlist" aria-expanded="false" data-toggle="collapse" href="#playlist" role="button" aria-controls="playlist">
+                        </h5>
+                    </div>
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                        <div class="card-body">
+                            {% include 'explore/channel_info.html' %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" id="headingThree">
+                        <h5 class="mb-0">
                             Playlist
-                        </a>
+                        </h5>
+                    </div>
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                        <div class="card-body">
+                            {% include 'explore/playlist_info.html' %}
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="collapse row" id="video">
-                <div class="card card-body">
-                </div>
-            </div>
-            <div class="collapse row" id="channel">
-                <div class="card card-body">
-                </div>
-            </div>
-            <div class="collapse row" id="playlist">
-                <div class="card card-body">
-                    
-                </div>
-            </div> -->
         </div>
     </div>
 </div>
