@@ -118,8 +118,6 @@ def test2():
             else:
                 doc['countVideos'] = 'NA'
             list_queries.append(doc)
-
-        app.logger.debug(list_queries)
     return render_template('add_data.html', list_queries=list_queries)
 
 @app.route('/')
@@ -200,32 +198,51 @@ def playlist_info():
 @app.route('/videos-list', methods=['POST', 'GET'])
 def video():
     if request.method == 'POST':
+        uid = str(uuid4())
         if 'api_key' in session:
             api = YouTube(api_key=session['api_key'])
-            session['counter'] = 0
+            
             list_videos = request.form.get('list_videos')
             list_videos = list_videos.splitlines()
-            list_videos = [ YouTube.cleaning_video(x) for x in list_videos]
+            list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]
+            
             list_results = {'items': [] }
-            app.logger.debug(list_results)
+
             for id_video in list_videos:
                 part = ', '.join(request.form.getlist('part'))                
                 video_result = api.get_query('videos', id=id_video, part=part)
                 list_results['items'].append(video_result['items'][0])
 
-            session['request'] = {
-                'list_videos': list_videos,
-                'name_query': str(request.form.get('name_query')),
-                'part': ', '.join(request.form.getlist('part'))
-            }
-
-            if 'nextPageToken' in list_results:
-                previous_token = list_results['nextPageToken']
-            
-            list_results_string = json.dumps(
-                list_results, sort_keys=True, indent=4, separators=(',', ': ')
+            name_query = str(request.form.get('name_query'))
+            mongo_curs.db.query.insert_one(
+                {
+                    'author_id': session['profil']['id'],
+                    'query_id': uid,
+                    'query': name_query,
+                    'part': part,
+                }
             )
-            return render_template('methods/view_results.html', results=list_results, string=list_results_string,  counter=session['counter'])
+
+            for each in list_results['items']:
+                each.update({'query_id': uid})
+                if 'snippet' in each:
+                    if 'videoId' in each['id']:
+                        each['snippet'].update({'videoId': each['id']['videoId']})
+                    elif 'playlistId' in each['id']:
+                        each['snippet'].update({'playlistId' : each['id']['playlistId']})
+                elif 'videoId' in each['id']:
+                    each.update({'videoId': each['id']['videoId']})
+                elif 'playlistId' in each['id']:
+                    each.update({'playlistId': each['id']['playlistId']})
+                mongo_curs.db.videos.insert_one(each)
+
+            count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+            mongo_curs.db.query.update_one(
+                { 'query_id': uid },
+                { '$set': {'count_videos': count_videos } }
+            )
+
+            return render_template('methods/download_process.html', message='ok it is done')
         else:
             return render_template('methods/view_results.html', message='api key not set')
     return render_template('download/videos_list.html')
@@ -379,7 +396,6 @@ def search():
                 # while len(date_results['items']) > 0 : 
                 #if not 'nextPageToken' in date_results:
                 #if date_results.get('nextPageToken', -1) != -1:
-                #    app.logger.debug('NEXT PAGE TOKEN ==> '+date_results['nextPageToken']) 
                 while 'nextPageToken' in date_results and len(date_results['items']) ==  maxResults :
                 #while 'nextPageToken' in date_results: 
                     date_results = api.get_query(
@@ -475,10 +491,13 @@ def aggregate():
         
     if request.method == 'POST':
         if request.form and request.form.get('optionsRadios'):
+
             ## NEED TO REFACT HERE FOR CAPTIONS DATA...
             query_id = request.form.get('optionsRadios')
             options_api = request.form.getlist('api_part')
             part = ', '.join(request.form.getlist('part'))
+
+
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
             # qui ont un id de type str ou un id video qui existe
@@ -486,7 +505,7 @@ def aggregate():
             results = mongo_curs.db.videos.find(
                 {
                     "$and": [
-                        {"$or" : [ {"id": {"$type": "string"}}, {"videoId": {"$exists": "True"}} ]} ,
+                        {"$or" : [ {"id": {"$type": "string"}}, {"id.videoId": {"$exists": "True"}} ]} ,
                         {"query_id": query_id}
                     ]
                 }
@@ -494,14 +513,17 @@ def aggregate():
 
             list_vid = []
             # need to fix this later
+
             for result in results:
                 if 'videoId' in result:
                     id_video = result['videoId']
                 else:
-                    id_video = result['id']
+                    id_video = result['id']['videoId']
 
                 list_vid.append(id_video)
                 query_id = result['query_id']
+
+                app.logger.debug('HEYY2 ==> ' + id_video)
                 
             if 'captions' in options_api:
                 # WIP
@@ -510,6 +532,7 @@ def aggregate():
 
             if 'comments' in options_api:
                 current_comment_thread = Comment(mongo_curs, query_id)
+                app.logger.debug('LISTT OF ' + str(list_vid))
                 for id_video in list_vid:
                     commentThreads_result = api.get_query(
                         'commentThreads',
@@ -551,37 +574,42 @@ def process_results():
     session['counter'] = 0
     #### /!\ Need to refact functions here ! /!\ ####
     # 3 cases : arbitrary list of vids OR search list OR channel list
-    if 'list_videos' in session['request']:
-        list_results = {'items': [] }
+    # if 'list_videos' in session['request']:
+    #     list_results = {'items': [] }
         
-        for id_video in session['request']['list_videos']:
-            part = session['request']['part']
-            video_result = api.get_query('videos', id=id_video, part=part)
-            list_results['items'].append(video_result['items'][0])
+    #     for id_video in session['request']['list_videos']:
+    #         part = session['request']['part']
+    #         video_result = api.get_query('videos', id=id_video, part=part)
+    #         list_results['items'].append(video_result['items'][0])
 
-        mongo_curs.db.query.insert_one(
-            {
-                'author_id': session['profil']['id'],
-                'query_id': uid,
-                'query': session['request']['name_query'] ,
-                'part': session['request']['part'],
-            }
-        )
+    #     mongo_curs.db.query.insert_one(
+    #         {
+    #             'author_id': session['profil']['id'],
+    #             'query_id': uid,
+    #             'query': session['request']['name_query'] ,
+    #             'part': session['request']['part'],
+    #         }
+    #     )
 
-        for each in list_results['items']:
-            each.update({'query_id': uid})
-            if 'snippet' in each:
-                if 'videoId' in each['id']:
-                    each['snippet'].update({'videoId': each['id']['videoId']})
-                elif 'playlistId' in each['id']:
-                    each['snippet'].update({'playlistId' : each['id']['playlistId']})
-            elif 'videoId' in each['id']:
-                each.update({'videoId': each['id']['videoId']})
-            elif 'playlistId' in each['id']:
-                each.update({'playlistId': each['id']['playlistId']})
-            mongo_curs.db.videos.insert_one(each)
+    #     for each in list_results['items']:
+    #         each.update({'query_id': uid})
+    #         if 'snippet' in each:
+    #             if 'videoId' in each['id']:
+    #                 each['snippet'].update({'videoId': each['id']['videoId']})
+    #             elif 'playlistId' in each['id']:
+    #                 each['snippet'].update({'playlistId' : each['id']['playlistId']})
+    #         elif 'videoId' in each['id']:
+    #             each.update({'videoId': each['id']['videoId']})
+    #         elif 'playlistId' in each['id']:
+    #             each.update({'playlistId': each['id']['playlistId']})
+    #         mongo_curs.db.videos.insert_one(each)
 
-    elif 'q' in session['request'] :
+    #     return render_template('methods/download_process.html', message='ok it is done')
+
+
+
+
+    if 'q' in session['request'] :
         # build request based on session
         search_results = api.get_query(
             'search',
@@ -647,6 +675,13 @@ def process_results():
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
+        return render_template('methods/download_process.html', message='ok it is done')
+
+
+
+
+
+
     elif 'channelId' in session['request']:
         # build request based on session
         channel_results = api.get_query(
@@ -704,6 +739,15 @@ def process_results():
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
+        return render_template('methods/download_process.html', message='ok it is done')
+
+
+
+
+
+
+
+
     elif 'playlistId' in session['request']:
         # build request based on session
         playlist_results = api.get_query(
@@ -760,6 +804,8 @@ def process_results():
                 each.update({'query_id': uid})
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
+        return render_template('methods/download_process.html', message='ok it is done')
+
 
     return render_template('methods/download_process.html', message='ok it is done')
 
