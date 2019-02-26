@@ -294,6 +294,21 @@ class Comment():
 
         return
 
+    # taken from cloned Captions
+    def count_comments(self, query_id):
+        query_id = self.query_id
+
+        try:
+            current_comment = self.db.comment.find_one_or_404(
+                { '$and':[{ 'query_id': query_id }, { 'videoId': video_id }] }
+            )
+        except:
+            self.create_captions(id_video)
+            logger.error(
+                'error need more investigate'
+            )
+        return
+
 ##########################################################################
 # Captions
 # rename in aggregate class (because of list of videos)

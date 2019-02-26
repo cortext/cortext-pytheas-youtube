@@ -11,22 +11,21 @@
             <a class="nav-link {%- if request.path=='/explore' %} active {% endif %}" href="/explore">Explore</a>
         </li>
 
-        <!-- Dropdown -->
         <li class="nav-item">
-            <a class="nav-link {%- if request.path=='/test' %} active {% endif %}" href="/test" >
-                Download list of videos
+            <a class="nav-link {%- if request.path=='/test' %} active {% endif %}" href="/get-data" >
+                Download videos list
             </a>
         </li>
 
-        <li class="nav-item {%- if request.path=='/aggregate' %} active {% endif %}">
-            <a class="nav-link" href="/test2">Aggregate data</a>
+        <li class="nav-item {%- if request.path=='/complete-data' %} active {% endif %}">
+            <a class="nav-link" href="/test2">Complete with data</a>
         </li>
     </ul>
 
     <!-- Right -->
     <ul class="nav navbar-nav navbar-right">
         <li class="nav-item">
-            <a class="nav-link" href="https://github.com/cortext/cortext-pytheas-youtube/blob/master/doc/user_guide.md">Docs</a>
+            <a class="nav-link" href="https://github.com/cortext/cortext-pytheas-youtube/blob/master/doc/user_guide.md">Doc</a>
         </li>
 
         <li class="nav-item {%- if request.path=='/manage' %} active {% endif %}">

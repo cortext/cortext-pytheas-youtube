@@ -34,7 +34,6 @@ from youtube import Video
 from code_country import language_code
 # from celery import Celery
 
-
 def create_app():
     with open('conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
@@ -99,12 +98,12 @@ def before_request():
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
 
-@app.route('/test', methods=['POST', 'GET'])
-def test():
-    return render_template('list_video_downloader_form.html')
+@app.route('/get-data', methods=['POST', 'GET'])
+def get_data():
+    return render_template('get_data.html', language_code=language_code)
 
-@app.route('/test2', methods=['POST', 'GET'])
-def test2():
+@app.route('/complete-data', methods=['POST', 'GET'])
+def complete_data():
     list_queries = []
 
     if request.method == 'GET':
@@ -116,9 +115,9 @@ def test2():
             if 'count_videos' in doc:
                 doc['countVideos'] = doc['count_videos']
             else:
-                doc['countVideos'] = 'NA'
+                doc['countVideos'] = '0'
             list_queries.append(doc)
-    return render_template('add_data.html', list_queries=list_queries)
+    return render_template('complete_data.html', list_queries=list_queries)
 
 @app.route('/')
 def home():
@@ -195,7 +194,7 @@ def playlist_info():
 ##########################################################################
 # Download
 ##########################################################################
-@app.route('/videos-list', methods=['POST', 'GET'])
+@app.route('/videos-list', methods=['POST'])
 def video():
     if request.method == 'POST':
         uid = str(uuid4())
@@ -419,13 +418,7 @@ def search():
 
                 # finally increment next after day
                 r_after += dt.timedelta(days=1) 
-
-            # add metrics for query in json
-            count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-            mongo_curs.db.query.update_one(
-                { 'query_id': uid },
-                { '$set': {'count_videos': count_videos } }
-            ) 
+ 
             return redirect(url_for('manage'))
 
         # to integrate later to get global dated search (not one day/one day) 
@@ -547,6 +540,12 @@ def aggregate():
                             part='id, replies, snippet',
                             pageToken=commentThreads_result['nextPageToken'])
                         current_comment_thread.create_comment_for_each(commentThreads_result)
+
+                count_comments = int(mongo_curs.db.comments.find({'query_id': uid}).count())
+                mongo_curs.db.query.update_one(
+                    { 'query_id': uid },
+                    { '$set': {'count_comments': count_comments } }
+                )
             
             if 'metrics' in options_api:
                 # Here we will just add 'statistics' part from youtube to our videos set
@@ -560,6 +559,8 @@ def aggregate():
                     #call add_stats to update()
                     current_query.add_stats_for_each_entry(video_result, ressource_id)
 
+
+
             return render_template('methods/download_process.html', message='ok it is done')
 
     return render_template('aggregate.html', stats=stats)
@@ -572,42 +573,6 @@ def process_results():
     uid = str(uuid4())
     api = YouTube(api_key=session['api_key'])
     session['counter'] = 0
-    #### /!\ Need to refact functions here ! /!\ ####
-    # 3 cases : arbitrary list of vids OR search list OR channel list
-    # if 'list_videos' in session['request']:
-    #     list_results = {'items': [] }
-        
-    #     for id_video in session['request']['list_videos']:
-    #         part = session['request']['part']
-    #         video_result = api.get_query('videos', id=id_video, part=part)
-    #         list_results['items'].append(video_result['items'][0])
-
-    #     mongo_curs.db.query.insert_one(
-    #         {
-    #             'author_id': session['profil']['id'],
-    #             'query_id': uid,
-    #             'query': session['request']['name_query'] ,
-    #             'part': session['request']['part'],
-    #         }
-    #     )
-
-    #     for each in list_results['items']:
-    #         each.update({'query_id': uid})
-    #         if 'snippet' in each:
-    #             if 'videoId' in each['id']:
-    #                 each['snippet'].update({'videoId': each['id']['videoId']})
-    #             elif 'playlistId' in each['id']:
-    #                 each['snippet'].update({'playlistId' : each['id']['playlistId']})
-    #         elif 'videoId' in each['id']:
-    #             each.update({'videoId': each['id']['videoId']})
-    #         elif 'playlistId' in each['id']:
-    #             each.update({'playlistId': each['id']['playlistId']})
-    #         mongo_curs.db.videos.insert_one(each)
-
-    #     return render_template('methods/download_process.html', message='ok it is done')
-
-
-
 
     if 'q' in session['request'] :
         # build request based on session
@@ -677,11 +642,6 @@ def process_results():
 
         return render_template('methods/download_process.html', message='ok it is done')
 
-
-
-
-
-
     elif 'channelId' in session['request']:
         # build request based on session
         channel_results = api.get_query(
@@ -724,6 +684,7 @@ def process_results():
                 maxResults=maxResults,
                 pageToken=channel_results['nextPageToken']
             )
+
             if not channel_results['items']:
                 # add metrics for query in json
                 count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
@@ -740,12 +701,6 @@ def process_results():
                 mongo_curs.db.videos.insert_one(each)
 
         return render_template('methods/download_process.html', message='ok it is done')
-
-
-
-
-
-
 
 
     elif 'playlistId' in session['request']:
@@ -820,35 +775,27 @@ def manage():
         r = requests.get(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
         result = r.json()
         list_queries = []
-        total_videos_count = 0
-        total_comments_count = 0
-        total_captions_count = 0
 
         for doc in result:
-            # add basic stat (nb vid) for admin
-            r_videos   = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/videos/')
-            r_comments = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/comments/')
-            r_captions = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/' + doc['query_id'] + '/captions/')
-            
-            # add count
-            # and for db compatibilty need to
+            # verify if count
             if 'count_videos' in doc:
                 doc['countVideos'] = doc['count_videos']
             else:
-                doc['countVideos'] = 'NA'
-            doc['countComments'] = len(r_comments.json())
-            doc['countCaptions'] = len(r_captions.json())
-            total_videos_count += len(r_videos.json())
-            total_comments_count += len(r_comments.json())
-            total_captions_count += len(r_captions.json())
+                doc['countVideos'] = 'NC'
+            
+            if 'count_comments' in doc:
+                doc['countComments'] = doc['count_comments']
+            else:
+                doc['countComments'] = 'NC'
+
+            if 'count_captions' in doc:
+                doc['countCaptions'] = doc['count_captions']
+            else:
+                doc['countCaptions'] = 'NC'
             list_queries.append(doc)
 
         # send all as json, template will manage it
         stats = {
-            'query_totalCount': len(r.json()),
-            'countVideos': total_videos_count,
-            'countComments': total_comments_count,
-            'countCaptions': total_captions_count,
             'list_queries': list_queries
         }
 
@@ -884,36 +831,6 @@ def view_data_by_type(query_id, data_type):
     url = app.config['REST_URL']+ session['profil']['id'] +'/queries/' + query_id + '/' + data_type + '/'
     r = requests.get(url)
     return render_template('view.html', list_queries=r.json())
-
-##########################################################################
-## Export
-# call mongo db to make list
-# FOR NOW ONLY downloads methods are located in @rest modules
-##########################################################################
-@app.route('/export', methods=['POST', 'GET'])
-def export():
-    if request.method == 'GET':
-        r = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
-        result = r.json()
-        list_queries = []
-
-        for doc in result:
-            r_videos = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/videos/' )
-            r_comments = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/comments/' )
-            r_captions = requests.get(app.config['REST_URL']+ session['profil']['id'] + '/queries/' + doc['query_id'] +'/captions/' )
-            
-            # add count
-            # and for db compatibilty need to 
-            if 'count_videos' in doc:
-                doc['countVideos'] = doc['count_videos']
-            else:
-                doc['countVideos'] = 'NA'
-            doc['countComments'] = len(r_comments.json())
-            doc['countCaptions'] = len(r_captions.json())
-            
-            list_queries.append(doc)
-
-    return render_template('export.html', list_queries=list_queries)
 
 ##########################################################################
 # Download videos, comments set
