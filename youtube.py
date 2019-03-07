@@ -82,13 +82,47 @@ class YouTube():
         return search_results
 
     # same
-    def get_channel(api_key, session):
-        channel_results = YouTube(api_key).get_query(
+    def get_channel(self, mongo_curs, param):
+        query_id = param['query_id']
+        query_name = param['query']
+        id_channel = param['id_channel']
+        part = param['part']
+        maxResults = param['maxResults']
+        
+        api = YouTube(self.api_key)
+        channel_results = api.get_query(
             'search',
-            channelId=session['channelId'],
-            part=session['part'],
-            maxResults=session['maxResults']
+            channelId=id_channel,
+            part=param['part'],
+            maxResults=param['maxResults']
         )
+        # insert videos
+        for each in channel_results['items']:
+            each.update({'query_id'   : query_id,
+                         'query' : query_name})
+            each = YouTube.cleaning_each(each)
+            mongo_curs.db.videos.insert_one(each)
+
+        ## Loop and save
+        while 'nextPageToken' in channel_results:
+            channel_results = api.get_query(
+                'search',
+                channelId=id_channel,
+                part=param['part'],
+                maxResults=param['maxResults'],
+                pageToken=channel_results['nextPageToken']
+            )
+
+            for each in channel_results['items']:
+                each.update({'query_id'   : query_id,
+                             'query' : query_name})
+                each = YouTube.cleaning_each(each)
+                mongo_curs.db.videos.insert_one(each)
+
+            # check if not last result 
+            if not channel_results['items']:
+                break
+
         return channel_results
 
     # same 

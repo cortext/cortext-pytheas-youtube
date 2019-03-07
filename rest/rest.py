@@ -111,7 +111,7 @@ def get_one_video():
 # all queries 
 @rest.route('/queries/', methods=['GET'])
 def all_queries_list():
-    result = mongo_curs.db.query.find({})
+    result = mongo_curs.db.queries.find({})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     rest.logger.info(
@@ -154,7 +154,7 @@ def all_captions_list():
 # all queries by user
 @rest.route('/<user_id>/queries/', methods=['GET'])
 def queries_list(user_id):
-    result = mongo_curs.db.query.find({'author_id': user_id})
+    result = mongo_curs.db.queries.find({'author_id': user_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     rest.logger.info(
@@ -164,7 +164,7 @@ def queries_list(user_id):
 # one query by user
 @rest.route('/<user_id>/queries/<query_id>', methods=['GET'])
 def query_search(user_id, query_id):
-    result = mongo_curs.db.query.find_one_or_404({'query_id': query_id})
+    result = mongo_curs.db.queries.find_one_or_404({'query_id': query_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     rest.logger.info(
@@ -249,7 +249,7 @@ def caption_search(user_id, caption_id):
 # all queries by user
 # @rest.route('/<user_id>/queries/', methods=['DELETE'])
 # def queries_list(user_id):
-#     result = mongo_curs.db.query.find({'author_id': user_id})
+#     result = mongo_curs.db.queries.find({'author_id': user_id})
 #     json_res = json_util.dumps(
 #         result, sort_keys=True, indent=2, separators=(',', ': '))
 #     logger.info(

@@ -98,6 +98,10 @@ def before_request():
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
 
+@app.errorhandler(405)
+def page_not_found(error):
+    return render_template('structures/error.html', error=error)
+
 @app.route('/get-data', methods=['POST', 'GET'])
 def get_data():
     return render_template('get_data.html', language_code=language_code)
@@ -213,7 +217,7 @@ def video():
                 list_results['items'].append(video_result['items'][0])
 
             name_query = str(request.form.get('name_query'))
-            mongo_curs.db.query.insert_one(
+            mongo_curs.db.queries.insert_one(
                 {
                     'author_id': session['profil']['id'],
                     'query_id': uid,
@@ -222,13 +226,16 @@ def video():
                 }
             )
 
+            # this is because not same organizing inside youtube class
             for each in list_results['items']:
                 each.update({'query_id': uid})
-                if 'snippet' in each:
+                if 'id' in each:
+                    each.update({'videoId': each['id']})
+                elif 'snippet' in each:
                     if 'videoId' in each['id']:
-                        each['snippet'].update({'videoId': each['id']['videoId']})
+                        each.update({'videoId': each['id']['videoId']})
                     elif 'playlistId' in each['id']:
-                        each['snippet'].update({'playlistId' : each['id']['playlistId']})
+                        each.update({'playlistId' : each['id']['playlistId']})
                 elif 'videoId' in each['id']:
                     each.update({'videoId': each['id']['videoId']})
                 elif 'playlistId' in each['id']:
@@ -236,7 +243,7 @@ def video():
                 mongo_curs.db.videos.insert_one(each)
 
             count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-            mongo_curs.db.query.update_one(
+            mongo_curs.db.queries.update_one(
                 { 'query_id': uid },
                 { '$set': {'count_videos': count_videos } }
             )
@@ -279,40 +286,54 @@ def playlist():
         return render_template('methods/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
     return render_template('download/playlist.html')
 
-@app.route('/channel', methods=['POST', 'GET'])
+@app.route('/channel', methods=['POST'])
 def channel():
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('download/channel.html', message='api key not set')
-        id_channel = YouTube.cleaning_channel(request.form.get('id'))
-        session['counter'] = 0
-        session['request'] = {
-            'part': ', '.join(request.form.getlist('part')),
-            'channelId': id_channel,
-            # 'forUsername': ', '.join(request.form.getlist('forUsername')),
-            # 'categoryId': request.form.get('categoryId'),
-            'maxResults': maxResults
+        query_id = str(uuid4())
+        list_channel = request.form.getlist('list_url')        
+        query_name = str(request.form.get('query_name'))
+        part = ', '.join(request.form.getlist('part'))
+        param = {
+            'part': part,
+            'maxResults': maxResults,
+            'query_id' : query_id,
+            'query': query_name
         }
 
-        channel_results = YouTube.get_channel(
-            session['api_key'], session['request'])
-        results_string = json.dumps(
-            channel_results, sort_keys=True, indent=4, separators=(',', ': '))
+        for id_channel in list_channel:
+            # list_videos = list_videos.splitlines()
+            # list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]    
+            app.logger.debug('BEFORE' + str(id_channel))
+            id_channel = YouTube.cleaning_channel(id_channel)
+            app.logger.debug('AFTER' + str(id_channel))
 
-        return render_template('methods/view_results.html', results=channel_results, string=results_string, counter=session['counter'])
+            param.update({'id_channel' : id_channel})
+            # insert query
+            mongo_curs.db.queries.insert_one(
+                {   
+                    'author_id': session['profil']['id'],
+                    'query_id': query_id,
+                    'query': query_name,
+                    'channel_id': id_channel,
+                    'part': part,
+                    'maxResults': maxResults,
+                }
+            )
+            
+            # call request
+            api = YouTube(api_key=session['api_key'])
+            channel_results = api.get_channel(mongo_curs, param)
+            
+            # add metrics for query in json
+            count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
+            mongo_curs.db.queries.update_one(
+                { 'query_id': query_id },
+                { '$set': {'count_videos': count_videos } }
+            )
 
-    # Go to next page
-    elif request.method == 'GET' and request.args.get('nextPageToken'):
-        session['counter'] += 1
-        pageToken = request.args.get('nextPageToken')
-        session['pageToken'] = pageToken
-        channel_results = YouTube.get_channel(
-            session['api_key'], session['request'])
-        results_string = json.dumps(
-            channel_results, sort_keys=True, indent=2, separators=(',', ': ')
-        )
-        return render_template('methods/view_results.html', results=channel_results, string=results_string, counter=session['counter'])
-    return render_template('download/channel.html', language_code=language_code)
+        return redirect(url_for('manage'))
 
 @app.route('/search', methods=['POST', 'GET'])
 def search():
@@ -345,7 +366,7 @@ def search():
 
             # insert query in mongo
             uid = str(uuid4())
-            mongo_curs.db.query.insert_one(
+            mongo_curs.db.queries.insert_one(
                 {
                     'query_id': uid,
                     'author_id':session['profil']['id'],
@@ -516,8 +537,6 @@ def aggregate():
                 list_vid.append(id_video)
                 query_id = result['query_id']
 
-                app.logger.debug('HEYY2 ==> ' + id_video)
-                
             if 'captions' in options_api:
                 # WIP
                 current_captions = Caption(mongo_curs, query_id)
@@ -525,7 +544,7 @@ def aggregate():
 
             if 'comments' in options_api:
                 current_comment_thread = Comment(mongo_curs, query_id)
-                app.logger.debug('LISTT OF ' + str(list_vid))
+
                 for id_video in list_vid:
                     commentThreads_result = api.get_query(
                         'commentThreads',
@@ -541,16 +560,18 @@ def aggregate():
                             pageToken=commentThreads_result['nextPageToken'])
                         current_comment_thread.create_comment_for_each(commentThreads_result)
 
-                count_comments = int(mongo_curs.db.comments.find({'query_id': uid}).count())
-                mongo_curs.db.query.update_one(
-                    { 'query_id': uid },
-                    { '$set': {'count_comments': count_comments } }
-                )
+                    count_comments = int(mongo_curs.db.comments.find({'query_id': query_id}).count())
+                    mongo_curs.db.queries.update_one(
+                        { 'query_id': query_id },
+                        { '$set': {'count_comments': count_comments } }
+                    )
             
-            if 'metrics' in options_api:
+            if 'statistics' in options_api:
                 # Here we will just add 'statistics' part from youtube to our videos set
                 # also we have to work with unique object id instead of id_video to avoid duplicate etc.
                 ressources_id = [item['_id'] for item in results]
+                app.logger.debug(str(results))
+
                 current_query = Video(mongo_curs)
                 for ressource_id in ressources_id:
                     # after ressources id taking videoId
@@ -586,7 +607,7 @@ def process_results():
         )
 
         # insert query
-        mongo_curs.db.query.insert_one(
+        mongo_curs.db.queries.insert_one(
             {
                 'author_id':session['profil']['id'],
                 'query_id': uid,
@@ -628,7 +649,7 @@ def process_results():
             if not search_results['items']:
                 # add metrics for query in json
                 count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-                mongo_curs.db.query.update_one(
+                mongo_curs.db.queries.update_one(
                     { 'query_id': uid },
                     { '$set': {'count_videos': count_videos } }
                 )
@@ -651,7 +672,7 @@ def process_results():
             maxResults=maxResults
         )
         # insert query
-        mongo_curs.db.query.insert_one(
+        mongo_curs.db.queries.insert_one(
             {   
                 'author_id':session['profil']['id'],
                 'query_id': uid,
@@ -688,7 +709,7 @@ def process_results():
             if not channel_results['items']:
                 # add metrics for query in json
                 count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-                mongo_curs.db.query.update_one(
+                mongo_curs.db.queries.update_one(
                     { 'query_id': uid },
                     { '$set': {'count_videos': count_videos } }
                 )
@@ -712,7 +733,7 @@ def process_results():
             maxResults=maxResults
         )
         # insert query
-        mongo_curs.db.query.insert_one(
+        mongo_curs.db.queries.insert_one(
             {   
                 'author_id':session['profil']['id'],
                 'query_id': uid,
@@ -722,6 +743,7 @@ def process_results():
             }
         )
         # insert videos
+        app.logger.debug('HOLLLAAA   ==>  ' + str(playlist_results))
         for each in playlist_results['items']:
             each.update({'query_id': uid})
             if 'snippet' in each:
@@ -748,7 +770,7 @@ def process_results():
             if not playlist_results['items']:
                 # add metrics for query in json
                 count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-                mongo_curs.db.query.update_one(
+                mongo_curs.db.queries.update_one(
                     { 'query_id': uid },
                     { '$set': {'count_videos': count_videos } }
                 )
@@ -809,7 +831,7 @@ def delete(query_id):
     # using json_util from dumping querying (see later)
     from bson import json_util
 
-    query = mongo_curs.db.query.find_one({'query_id': query_id})
+    query = mongo_curs.db.queries.find_one({'query_id': query_id})
     from_query = json.dumps(query, default=json_util.default)
     from_query = json.loads(from_query)
     
