@@ -1,44 +1,23 @@
-{% extends "base.html" %} {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h2>Author/Channel</h2>
-            <hr/>
-            <h3>Download data from channel of youtube</h3>
-            {% if message %} {{ message }} {% endif %}
-        </div>
-    </div>
-    
-    <div class="row">
-        <h4>Channel ID</h4>
-    </div>
+{% block content %}
 
-    <div class="row">
-        <div class="col-md-6">
-            <p>
-                Channel ID (refer to youtube documentation)
-            </p>
-            <p>
-                <a class="center-block btn btn-primary" href="https://developers.google.com/youtube/v3/docs/channels/list">youtube docs channels</a>
-            </p>
-        </div>
+<h4>Name your query</h4>
+<input type="text" class="form-control" name="query_name">
 
-        <div class="col-md-6">
-            <form action="/channel" method="POST">
-                <div class="form-group">
-                    <h4>id or url channel</h4>
-                    
-                    <h4>Multiple Channels</h4>
-                    <textarea rows="6" name='id' class="form-control" placeholder=""></textarea>
-
-                    <h4>Part</h4>
-                    <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                    <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                    
-                    <button type="submit" class="btn btn-default">Submit</button>
-                </div>
-            </form>
-        </div>
+<h4>id or url channel</h4>                            
+<div class="input-group mb-3">
+    <input type="text" class="form-control userinput" placeholder="add an item..." aria-label="Add an item" aria-describedby="basic-addon2">
+    <div class="input-group-append">
+        <button class="btn btn-outline-info enterUrl" type="button">Add</button>
     </div>
 </div>
+
+<ul class="list-group listUrl" name="list_url">
+</ul>
+
+<h4>Part</h4>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="snippet">snippet</label>
+
+<button type="submit" class="btn btn-primary">Submit</button>
+
 {% endblock %}

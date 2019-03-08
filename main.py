@@ -102,6 +102,12 @@ def page_not_found(error):
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
 
+
+
+
+
+
+
 @app.route('/get-data', methods=['POST', 'GET'])
 def get_data():
     return render_template('get_data.html', language_code=language_code)
@@ -122,6 +128,13 @@ def complete_data():
                 doc['countVideos'] = '0'
             list_queries.append(doc)
     return render_template('complete_data.html', list_queries=list_queries)
+
+
+
+
+
+
+
 
 @app.route('/')
 def home():
@@ -253,38 +266,50 @@ def video():
             return render_template('methods/view_results.html', message='api key not set')
     return render_template('download/videos_list.html')
 
-@app.route('/playlist', methods=['POST', 'GET'])
+@app.route('/playlist', methods=['POST'])
 def playlist():
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('download/playlist.html', message='api key not set')
-        id_playlist = YouTube.cleaning_playlist(request.form.get('id'))
-        session['counter'] = 0
-        session['request'] = {
-            'part': ', '.join(request.form.getlist('part')),
-            'playlistId': id_playlist,
-            'maxResults': maxResults
+
+        query_id = str(uuid4())
+        list_playlist = request.form.getlist('list_url')        
+        query_name = str(request.form.get('query_name'))
+        part = ', '.join(request.form.getlist('part'))
+        param = {
+            'part': part,
+            'maxResults': maxResults,
+            'query_id' : query_id,
+            'query': query_name
         }
 
-        playlist_results = YouTube.get_playlist(
-            session['api_key'], session['request'])
-        results_string = json.dumps(
-            playlist_results, sort_keys=True, indent=4, separators=(',', ': '))
-
-        return render_template('methods/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
-
-    # Go to next page
-    elif request.method == 'GET' and request.args.get('nextPageToken'):
-        session['counter'] += 1
-        pageToken = request.args.get('nextPageToken')
-        session['pageToken'] = pageToken
-        playlist_results = YouTube.get_playlist(
-            session['api_key'], session['request'])
-        results_string = json.dumps(
-            playlist_results, sort_keys=True, indent=2, separators=(',', ': ')
+        # insert query
+        mongo_curs.db.queries.insert_one(
+            {   
+                'author_id': session['profil']['id'],
+                'query_id': query_id,
+                'query': query_name,
+                'playlist_id': list_playlist,
+                'part': part,
+                'maxResults': maxResults,
+            }
         )
-        return render_template('methods/view_results.html', results=playlist_results, string=results_string, counter=session['counter'])
-    return render_template('download/playlist.html')
+
+        for playlist_id in list_playlist:
+            param.update({'playlist_id' : playlist_id})
+            
+            # call request
+            api = YouTube(api_key=session['api_key'])
+            playlist_results = api.get_playlist(mongo_curs, param)
+            
+        # add metrics for query in json
+        count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
+        mongo_curs.db.queries.update_one(
+            { 'query_id': query_id },
+            { '$set': {'count_videos': count_videos } }
+        )
+
+        return redirect(url_for('manage'))
 
 @app.route('/channel', methods=['POST'])
 def channel():
@@ -302,36 +327,32 @@ def channel():
             'query': query_name
         }
 
-        for id_channel in list_channel:
-            # list_videos = list_videos.splitlines()
-            # list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]    
-            app.logger.debug('BEFORE' + str(id_channel))
-            id_channel = YouTube.cleaning_channel(id_channel)
-            app.logger.debug('AFTER' + str(id_channel))
+        # insert query
+        mongo_curs.db.queries.insert_one(
+            {   
+                'author_id': session['profil']['id'],
+                'query_id': query_id,
+                'query': query_name,
+                'channel_id': list_channel,
+                'part': part,
+                'maxResults': maxResults,
+            }
+        )
 
-            param.update({'id_channel' : id_channel})
-            # insert query
-            mongo_curs.db.queries.insert_one(
-                {   
-                    'author_id': session['profil']['id'],
-                    'query_id': query_id,
-                    'query': query_name,
-                    'channel_id': id_channel,
-                    'part': part,
-                    'maxResults': maxResults,
-                }
-            )
-            
+        for channel_id in list_channel:
+            channel_id = YouTube.cleaning_channel(channel_id)
+            param.update({'channel_id' : channel_id})
+
             # call request
             api = YouTube(api_key=session['api_key'])
             channel_results = api.get_channel(mongo_curs, param)
             
-            # add metrics for query in json
-            count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
-            mongo_curs.db.queries.update_one(
-                { 'query_id': query_id },
-                { '$set': {'count_videos': count_videos } }
-            )
+        # add metrics for query in json
+        count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
+        mongo_curs.db.queries.update_one(
+            { 'query_id': query_id },
+            { '$set': {'count_videos': count_videos } }
+        )
 
         return redirect(url_for('manage'))
 
@@ -662,128 +683,6 @@ def process_results():
                 mongo_curs.db.videos.insert_one(each)
 
         return render_template('methods/download_process.html', message='ok it is done')
-
-    elif 'channelId' in session['request']:
-        # build request based on session
-        channel_results = api.get_query(
-            'search',
-            channelId=session['request']['channelId'],
-            part=session['request']['part'],
-            maxResults=maxResults
-        )
-        # insert query
-        mongo_curs.db.queries.insert_one(
-            {   
-                'author_id':session['profil']['id'],
-                'query_id': uid,
-                'channel_id': session['request']['channelId'],
-                'part': session['request']['part'],
-                'maxResults': maxResults,
-            }
-        )
-        # insert videos
-        for each in channel_results['items']:
-            each.update({'query_id': uid})
-            if 'snippet' in each:
-                if 'videoId' in each['id']:
-                    each['snippet'].update({'videoId': each['id']['videoId']})
-                elif 'playlistId' in each['id']:
-                    each['snippet'].update({'playlistId' : each['id']['playlistId']})
-            elif 'videoId' in each['id']:
-                each.update({'videoId': each['id']['videoId']})
-            elif 'playlistId' in each['id']:
-                each.update({'playlistId': each['id']['playlistId']})
-            mongo_curs.db.videos.insert_one(each)
-        ## Loop and save
-        while 'nextPageToken' in channel_results:
-            session['counter'] += 1
-            name_file = str(session['counter']) + '.json'
-            channel_results = api.get_query(
-                'search',
-                channelId=session['request']['channelId'],
-                part=session['request']['part'],
-                maxResults=maxResults,
-                pageToken=channel_results['nextPageToken']
-            )
-
-            if not channel_results['items']:
-                # add metrics for query in json
-                count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-                mongo_curs.db.queries.update_one(
-                    { 'query_id': uid },
-                    { '$set': {'count_videos': count_videos } }
-                )
-                return render_template('methods/download_process.html', message='ok it is done')
-
-            # insert video-info
-            for each in channel_results['items']:
-                each.update({'query_id': uid})
-                each = YouTube.cleaning_each(each)
-                mongo_curs.db.videos.insert_one(each)
-
-        return render_template('methods/download_process.html', message='ok it is done')
-
-
-    elif 'playlistId' in session['request']:
-        # build request based on session
-        playlist_results = api.get_query(
-            'search',
-            playlistId=session['request']['playlistId'],
-            part=session['request']['part'],
-            maxResults=maxResults
-        )
-        # insert query
-        mongo_curs.db.queries.insert_one(
-            {   
-                'author_id':session['profil']['id'],
-                'query_id': uid,
-                'playlist_id': session['request']['playlistId'],
-                'part': session['request']['part'],
-                'maxResults': maxResults,
-            }
-        )
-        # insert videos
-        app.logger.debug('HOLLLAAA   ==>  ' + str(playlist_results))
-        for each in playlist_results['items']:
-            each.update({'query_id': uid})
-            if 'snippet' in each:
-                if 'videoId' in each['contentDetails']:
-                    each['snippet'].update({'videoId': each['contentDetails']['videoId']})
-                elif 'playlistId' in each['contentDetails']:
-                    each['snippet'].update({'playlistId' : each['contentDetails']['playlistId']})
-            elif 'videoId' in each['contentDetails']:
-                each.update({'videoId': each['contentDetails']['videoId']})
-            elif 'playlistId' in each['contentDetails']:
-                each.update({'playlistId': each['contentDetails']['playlistId']})
-            mongo_curs.db.videos.insert_one(each)
-        ## Loop and save
-        while 'nextPageToken' in playlist_results:
-            session['counter'] += 1
-            name_file = str(session['counter']) + '.json'
-            playlist_results = api.get_query(
-                'search',
-                playlistId=session['request']['playlistId'],
-                part=session['request']['part'],
-                maxResults=maxResults,
-                pageToken=playlist_results['nextPageToken']
-            )
-            if not playlist_results['items']:
-                # add metrics for query in json
-                count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-                mongo_curs.db.queries.update_one(
-                    { 'query_id': uid },
-                    { '$set': {'count_videos': count_videos } }
-                )
-                return render_template('methods/download_process.html', message='ok it is done')
-
-            # insert video-info
-            for each in playlist_results['items']:
-                each.update({'query_id': uid})
-                each = YouTube.cleaning_each(each)
-                mongo_curs.db.videos.insert_one(each)
-        return render_template('methods/download_process.html', message='ok it is done')
-
-
     return render_template('methods/download_process.html', message='ok it is done')
 
 
@@ -836,7 +735,7 @@ def delete(query_id):
     from_query = json.loads(from_query)
     
     # erase all from query
-    for table in ['captions', 'comments', 'videos', 'query']: 
+    for table in ['captions', 'comments', 'videos', 'queries']: 
         mongo_curs.db[table].remove({'query_id': query_id})
 
     return redirect(url_for('manage'))
@@ -909,6 +808,8 @@ def config():
 
     return render_template('config.html', session_data=json_formated, message=api_key_validate)
 
+
+
 ##########################################################################
 # Reset session
 ##########################################################################
@@ -916,6 +817,9 @@ def config():
 def reset():
     session.clear()
     return redirect(url_for('oauth.login'))
+
+
+
 
 ##########################################################################
 # Start

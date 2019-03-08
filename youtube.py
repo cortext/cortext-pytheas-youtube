@@ -81,20 +81,20 @@ class YouTube():
         )
         return search_results
 
-    # same
+    
     def get_channel(self, mongo_curs, param):
         query_id = param['query_id']
         query_name = param['query']
-        id_channel = param['id_channel']
+        channel_id = param['channel_id']
         part = param['part']
         maxResults = param['maxResults']
         
         api = YouTube(self.api_key)
         channel_results = api.get_query(
             'search',
-            channelId=id_channel,
-            part=param['part'],
-            maxResults=param['maxResults']
+            channelId=channel_id,
+            part=part,
+            maxResults=maxResults
         )
         # insert videos
         for each in channel_results['items']:
@@ -107,9 +107,9 @@ class YouTube():
         while 'nextPageToken' in channel_results:
             channel_results = api.get_query(
                 'search',
-                channelId=id_channel,
-                part=param['part'],
-                maxResults=param['maxResults'],
+                channelId=channel_id,
+                part=part,
+                maxResults=maxResults,
                 pageToken=channel_results['nextPageToken']
             )
 
@@ -125,15 +125,49 @@ class YouTube():
 
         return channel_results
 
-    # same 
-    def get_playlist(api_key, session):
-        playlist_results = YouTube(api_key).get_query(
+    # same as get_playlist (could be merged later maybe)
+    def get_playlist(self, mongo_curs, param):
+        query_id = param['query_id']
+        query_name = param['query']
+        playlist_id = param['playlist_id']
+        part = param['part']
+        maxResults = param['maxResults']
+        
+        api = YouTube(self.api_key)
+        playlist_results = api.get_query(
             'playlistItems',
-            playlistId=session['playlistId'],
-            part=session['part'],
-            maxResults=session['maxResults']
+            playlistId=playlist_id,
+            part=part,
+            maxResults=maxResults
         )
+
+        for each in playlist_results['items']:
+            each.update({'query_id'   : query_id,
+                         'query' : query_name})
+            each = YouTube.cleaning_each(each)
+            mongo_curs.db.videos.insert_one(each)
+
+        while 'nextPageToken' in playlist_results:
+            playlist_results = api.get_query(
+                'playlistItems',
+                playlistId=playlist_id,
+                part=part,
+                maxResults=maxResults,
+                pageToken=playlist_results['nextPageToken']
+            )
+
+            for each in playlist_results['items']:
+                each.update({'query_id': uid,
+                             'query' : query_name})
+                each = YouTube.cleaning_each(each)
+                mongo_curs.db.videos.insert_one(each)
+
+            if not playlist_results['items']:
+                break
+
         return playlist_results
+
+
 
     def verify_error(api_key, result_query):
         if not 'error' in result_query:
