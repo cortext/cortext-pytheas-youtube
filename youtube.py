@@ -167,6 +167,46 @@ class YouTube():
 
         return playlist_results
 
+    # def get_related_videos(self, mongo_curs, param):
+    #     query_id = param['query_id']
+    #     query_name = param['query']
+    #     playlist_id = param['playlist_id']
+    #     part = param['part']
+    #     maxResults = param['maxResults']
+        
+    #     api = YouTube(self.api_key)
+    #     playlist_results = api.get_query(
+    #         'playlistItems',
+    #         playlistId=playlist_id,
+    #         part=part,
+    #         maxResults=maxResults
+    #     )
+
+    #     for each in playlist_results['items']:
+    #         each.update({'query_id'   : query_id,
+    #                      'query' : query_name})
+    #         each = YouTube.cleaning_each(each)
+    #         mongo_curs.db.videos.insert_one(each)
+
+    #     while 'nextPageToken' in playlist_results:
+    #         playlist_results = api.get_query(
+    #             'playlistItems',
+    #             playlistId=playlist_id,
+    #             part=part,
+    #             maxResults=maxResults,
+    #             pageToken=playlist_results['nextPageToken']
+    #         )
+
+    #         for each in playlist_results['items']:
+    #             each.update({'query_id': uid,
+    #                          'query' : query_name})
+    #             each = YouTube.cleaning_each(each)
+    #             mongo_curs.db.videos.insert_one(each)
+
+    #         if not playlist_results['items']:
+    #             break
+
+    #     return playlist_results
 
 
     def verify_error(api_key, result_query):

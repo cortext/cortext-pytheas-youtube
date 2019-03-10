@@ -533,6 +533,8 @@ def aggregate():
             part = ', '.join(request.form.getlist('part'))
 
 
+            app.logger.debug(str(options_api))
+
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
             # qui ont un id de type str ou un id video qui existe
