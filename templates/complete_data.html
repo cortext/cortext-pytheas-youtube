@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2>Enrich your video data</h2>
+      <hr/>
+    </div>
+  </div>
+  <form action="/aggregate" id="data_table" method="POST">
+
+    <div class="row ">
+      <div class="col-12">
+        <h3>What other parts of Youtube would you associate to your videos set ?</h3>
+        <p>For each video of a dataset what other part do you want ?</p>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="api_part" value="comments">
+          <label class="form-check-label" >Comments</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="api_part" value="captions">
+          <label class="form-check-label" >Captions</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="api_part" value="statistics" disabled>
+          <label class="form-check-label" disabled>Statistics</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" name="api_part" value="related">
+          <label class="form-check-label" disabled>Related Videos</label>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-12">
+        <h3>What other data would you associate ?</h3>
+        <p>Here you will choose which set would you want for :</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        
+        <div class="form-check">
+             <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">query_id</th>
+                        <th scope="col">query</th>
+                        <th scope="col">channel_id</th>
+                        <th scope="col">playlist_id</th>
+                        <th scope="col">count_videos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for query in list_queries %}
+                        <tr scope="row">
+                          <td>
+                            <input class="form-check-input mx-auto" type="radio" name="optionsRadios" value="{{ query['query_id'] }}">
+                          </td>
+                          {% if query['query'] is defined %} 
+                          <td>{{ query['query'] }}</td> 
+                          {% endif %}
+
+                          <td>{{ query['channel_id'] }}</td>
+                          <td>{{ query['playlist_id'] }}</td>
+                          <td>{{ query['count_videos'] }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+              </div>  
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Download from youtube</button>
+
+  </form>
+
+</div>
+{%- endblock %}
