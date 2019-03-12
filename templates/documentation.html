@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+{% block content %}</p>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Documentation</h2>
+      <hr/>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <h3>Need any help ?</h3>
+    </div>
+
+
+    <div class="col-12 mb-4">
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+          <a href="#what">What is with Pytheas for youtube ?</a>
+        </li>
+        <li class="list-group-item">
+          <a href="#how">How to do with Pytheas for youtube ?</a>
+        </li>
+        <li class="list-group-item">
+          <a href="#api_key">How to get an API key from Youtube ? </a>
+        </li>
+        <li class="list-group-item">
+          <a href="#methodologie">Our methodology</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row mb-4" id="what">
+    <div class="col-12">
+      <h3>What is Pytheas for Youtube ?</h3>
+      <p>Pytheas est une interface web en ligne conçue pour  simplifier et enrichir le téléchargement de données liés a youtube.</p>
+      <p>Pytheas est lié à <strong>l'API youtube Data V3</strong>, fournis par Google, qui donne accès aux données suivantes : vidéos, chaines d'auteurs, playlist, commentaires, sous-titres, etc.</p>
+    </div>
+  </div>
+
+  <div class="row mb-4" id="how">
+    <div class="col-12">
+      <h3> How to do with Pytheas for youtube ?</h3>
+      <p>With the use of a <a href="http://pytheas.cortext.net/manage" rel="nofollow"><strong>free key provided by Google</strong></a> you will be <strong>able to explore, gather and exporting data responded by Youtube</strong>.</p>
+      <p>Like <strong>videos/channel/playlist</strong> ; Possibly <strong>horodated by a search query</strong>. Including <strong>comments and subtitles</strong> if exists. Dowbloading them as <strong>Json</strong>.</p>
+    </div>
+  </div>
+
+
+    <div class="row mb-4" id="api_key">
+      <div class="col-12">
+        <h3>Obtention d'une clé API Youtube Data V3 via Google</h3>
+        <p>
+          <a href="https://console.developers.google.com/apis" rel="nofollow">https://console.developers.google.com/apis</a>
+        </p>
+        <p>
+          <a href="/home/nicolas/Workspace/CORTEXT/cortext-pytheas-youtube/templates/img/console_dev.png" target="_blank" rel="noopener noreferrer">
+            <img src="/home/nicolas/Workspace/CORTEXT/cortext-pytheas-youtube/templates/img/console_dev.png" alt="Image of Yaktocat" style="max-width:100%;">
+          </a>
+        </p>
+        <p>Un set complet d'API, fournis par les services de Google</p>
+        <p>Possible d'activer via son compte google, l'acces aux API Youtube : il existe 3 API pour Youtube, celle qui nous interesse :
+          <strong>Youtube DATA API v3</strong>
+        </p>
+        <p>
+          <a href="https://console.developers.google.com/apis/library/youtube.googleapis.com?q=youtube%20data&amp;id=125bab65-cfb6-4f25-9826-4dcc309bc508&amp;project=api-project-154609&amp;folder&amp;organizationId" rel="nofollow">https://console.developers.google.com/apis/library/youtube.googleapis.com?q=youtube%20data&amp;id=125bab65-cfb6-4f25-9826-4dcc309bc508&amp;project=api-project-154609&amp;folder&amp;organizationId</a>
+        </p>
+        <p>
+          <a href="/home/nicolas/Workspace/CORTEXT/cortext-pytheas-youtube/templates/img/select_api.png" target="_blank" rel="noopener noreferrer"><img src="/home/nicolas/Workspace/CORTEXT/cortext-pytheas-youtube/templates/img/select_api.png" alt="Image of Yaktocat" style="max-width:100%;"></a>
+        </p>
+        <p>Une fois activée, il nous faut recuperer, une <em><strong>clé api</strong></em>. Celle-ci va nous permettre de nous authentifier aupres de Google, pour pouvoir acceder aux données via Pytheas.</p>
+        <p>
+          <a href="/home/nicolas/Workspace/CORTEXT/cortext-pytheas-youtube/templates/img/config.png" target="_blank" rel="noopener noreferrer">
+            <img src="/home/nicolas/Workspace/CORTEXT/cortext-pytheas-youtube/templates/img/config.png" alt="Image of Yaktocat" style="max-width:100%;">
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <div class="row mb-4" id="methodologie">
+      <div class="col-12">
+        <h3>Methodologie générale</h3>
+        <ol>
+          <li>On télécharge un ensemble de vidéos selon certains paramètre (chaine, search, playlist ou list custom)
+          "Download list of videos"</li>
+          <li>Une fois l'ensemble de vidéos téléchargés on peut aggreger certaines données complentaires choisis (commentaires, sous-titres)
+          "Aggregate data"</li>
+          <li>On télécharge nos sets de données en JSON
+          "Manage data"</li>
+        </ol>
+      </div>
+
+        <div class="col-12">
+          <h3>Exploration</h3>
+          <p><a href="https://pytheas.cortext.net/explore" rel="nofollow">https://pytheas.cortext.net/explore</a></p>
+          <p>Permettre simplement la vue en données que nous  montre Google, pour :</p>
+          <ul>
+            <li>une vidéo</li>
+            <li>un chaine</li>
+            <li>une playlist</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-12">
+          <h3>Méthode et requetes de récoltes</h3>
+          <p>Une <strong>requête</strong> dans pytheas correspond à un ensemble de vidéos delimités selon critères.</p>
+          <h3>
+            <a id="user-content-par-moteur-de-recherche-youtube" class="anchor" href="#par-moteur-de-recherche-youtube" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>par moteur de recherche youtube</h3>
+            <p><a href="https://pytheas.cortext.net/search" rel="nofollow">https://pytheas.cortext.net/search</a></p>
+            <p>Utilisation du moteur de recherche de youtube.</p>
+            <p>Par defaut entre 500 et 1000 videos (dont une pertinence forte pour les 500 première seulement). Correspond à la copie du moteur de recherche youtube.</p>
+            <p>Necessite une langue.</p>
+            <ul>
+              <li>recherche horodaté
+              La recherche horodaté permet de repeter une requete du moteur de recherche de youtube en le calibrant sur une journée. Cela permet ainsi d'etendre considerablement les sets recoltés au pris de la baisse en pertinence.</li>
+            </ul>
+          </div>
+        </div>
+
+        
+          <div class="col-12">
+            <h3>par chaines</h3>
+            <p><a href="https://pytheas.cortext.net/channel" rel="nofollow">https://pytheas.cortext.net/channel</a></p>
+            <p>Recherche de vidéos par chaine youtube.</p>
+          </div>
+
+          <div class="col-12">
+            <h3>par playlist</h3>
+            <p><a href="https://pytheas.cortext.net/playlist" rel="nofollow">https://pytheas.cortext.net/playlist</a></p>
+            <p>Recherche de vidéos par chaine playlist.</p>
+
+            <h3>par liste de vidéos arbitraires</h3>
+            <p><a href="https://pytheas.cortext.net/videos-list" rel="nofollow">https://pytheas.cortext.net/videos-list</a></p>
+            <p>Egalement possible de récolté en fonction de listes de vidéos données arbitrairement.</p>
+          </div>
+
+
+          <div class="row mb-4">
+          <div class="col-12">
+            <h3>Recoltes de données</h3>
+            <h4>liste de vidéos</h4>
+            <p>1 vidéos appartient à une requête</p>
+            <p>(peut être = 1)</p>
+            <h4>liste de commentaires associés à un set de liste de vidéos</h4>
+            <p>1 commentaires est toujours liée à une vidéo.</p>
+            <h4>liste de sous-titres associés à un set de liste de vidéos</h4>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-12">
+            <h3>Exportation des données</h3>
+            <p><a href="http://pytheas.cortext.net/manage" rel="nofollow">http://pytheas.cortext.net/manage</a>
+            JSON</p>
+          </div>
+        </div>
+
+
+
+
+
+<div class="row mb-4">
+    <div class="col-md-12">
+      <h3>Simplified scope of YouTube data :</h3>
+      <p>
+        This is all information classified by YouTube we can access. Some are irrelevant for SHS or STS studies. Plus for now Pytheas for YouTube only support some of them (before integration).
+      </p>
+
+      <ul class="list-unstyled">
+        <li data-toggle="collapse" href="#Activities" role="button" aria-expanded="true" aria-controls="Activities"><span class="caret"></span> Activities</li>
+        <div class="collapse" id="Activities">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Captions" role="button" aria-expanded="true" aria-controls="Captions"><strong class="text-danger">Captions</strong></li>
+        <div class="collapse" id="Captions">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>update</li>
+            <li>download</li>
+            <li>delete</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#ChannelBanners" role="button" aria-expanded="false" aria-controls="ChannelBanners">ChannelBanners</li>
+        <div class="collapse" id="ChannelBanners">
+          <ul>
+            <li>Overview</li>
+            <li>insert</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Channels" role="button" aria-expanded="false" aria-controls="Channels"><strong class="text-danger">Channels</strong></li>
+        <div class="collapse" id="Channels">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>update</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#ChannelSections" role="button" aria-expanded="false" aria-controls="ChannelSections">ChannelSections</li>
+        <div class="collapse" id="ChannelSections">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>update</li>
+            <li>delete</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Comments" role="button" aria-expanded="false" aria-controls="Comments"><strong class="text-danger">Comments</strong></li>
+        <div class="collapse" id="Comments">
+          <ul>
+
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>update</li>
+            <li>markAsSpam</li>
+            <li>setModerationStatus</li>
+            <li>delete</li>
+
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#CommentThreads" role="button" aria-expanded="false" aria-CommentThreads="collapseExample"><strong class="text-danger">CommentThreads</strong></li>
+        <div class="collapse" id="CommentThreads">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>update</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#GuideCategories" role="button" aria-expanded="false" aria-controls="GuideCategories">GuideCategories</li>
+        <div class="collapse" id="GuideCategories">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#i18nLanguages" role="button" aria-expanded="false" aria-controls="i18nLanguages"><strong class="text-danger">i18nLanguages</strong></li>
+        <div class="collapse" id="i18nLanguages">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#i18nRegions" role="button" aria-expanded="false" aria-controls="i18nRegions">i18nRegions</li>
+        <div class="collapse" id="i18nRegions">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#PlaylistItems" role="button" aria-expanded="false" aria-controls="PlaylistItems"><strong class="text-danger">PlaylistItems</strong></li>
+        <div class="collapse" id="PlaylistItems">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>update</li>
+            <li>delete</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Playlists" role="button" aria-expanded="false" aria-controls="Playlists"><strong class="text-danger">Playlists</strong></li>
+        <div class="collapse" id="Playlists">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>update</li>
+            <li>delete</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Search" role="button" aria-expanded="false" aria-controls="Search"><strong class="text-danger">Search</strong></li>
+        <div class="collapse" id="Search">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Subscriptions" role="button" aria-expanded="false" aria-controls="Subscriptions">Subscriptions</li>
+        <div class="collapse" id="Subscriptions">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>delete</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Thumbnails" role="button" aria-expanded="false" aria-controls="Thumbnails">Thumbnails</li>
+        <div class="collapse" id="Thumbnails">
+          <ul>
+            <li>Overview</li>
+            <li>set</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#VideoAbuseReportReasons" role="button" aria-expanded="false" aria-controls="VideoAbuseReportReasons">VideoAbuseReportReasons</li>
+        <div class="collapse" id="VideoAbuseReportReasons">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#VideoCategories" role="button" aria-expanded="false" aria-controls="VideoCategories">VideoCategories</li>
+        <div class="collapse" id="VideoCategories">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Videos" role="button" aria-expanded="false" aria-controls="Videos"><strong class="text-danger">Videos</strong></li>
+        <div class="collapse" id="Videos">
+          <ul>
+            <li>Overview</li>
+            <li>list</li>
+            <li>insert</li>
+            <li>update</li>
+            <li>rate</li>
+            <li>getRating</li>
+            <li>reportAbuse</li>
+            <li>delete</li>
+          </ul>
+        </div>
+        <li data-toggle="collapse" href="#Watermarks" role="button" aria-expanded="false" aria-controls="Watermarks">Watermarks</li>
+        <div class="collapse" id="Watermarks">
+          <ul>
+            <li>Overview</li>
+            <li>set</li>
+            <li>unset</li>
+          </ul>
+        </div>
+      </ul>
+
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="row">
+        <h3>Know limitations :</h3>
+        <ul>
+          <li>Youtube results (api & browser) can only provide ~500 results (to get more it need to be outdated every 500 results. see :
+            <a href="http://stackoverflow.com/questions/27500231/how-can-get-all-results-from-youtube-api-search-api-response">how-can-get-all-results-from-youtube-api-search-api-response</a>
+          )</li>
+          <li>Automatic captions seems to cannot be retrieve via API. The author must havec activated CC on his video. It need to get a little tricky with xml version like :
+            <a href="http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M">http://video.google.com/timedtext?lang=en&v=hSnB7zGW15M</a>
+            For more see :
+            <a href="http://stackoverflow.com/questions/23665343/get-closed-caption-cc-for-youtube-video">get-closed-caption-cc-for-youtube-video</a>
+            or :
+            <a href="http://stackoverflow.com/questions/14013431/extract-automatic-captions-from-youtube-video">extract-automatic-captions-from-youtube-video</a>
+          </li>
+          <li>Comments get only one hierachical level</li>
+          <li>Search provide playlist incorporated in results as a video</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+        </div>
+        {% endblock %}
