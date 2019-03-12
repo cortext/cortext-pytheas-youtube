@@ -94,47 +94,10 @@ def before_request():
     except BaseException as e:
         app.logger.debug(e)
 
-@app.errorhandler(404)
+
+@app.errorhandler(Exception)
 def page_not_found(error):
     return render_template('structures/error.html', error=error)
-
-@app.errorhandler(405)
-def page_not_found(error):
-    return render_template('structures/error.html', error=error)
-
-
-
-
-
-
-
-@app.route('/get-data', methods=['POST', 'GET'])
-def get_data():
-    return render_template('get_data.html', language_code=language_code)
-
-@app.route('/complete-data', methods=['POST', 'GET'])
-def complete_data():
-    list_queries = []
-
-    if request.method == 'GET':
-        result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
-        result = result.json()
-        for doc in result:
-            # add count
-            # and for db compatibilty need to 
-            if 'count_videos' in doc:
-                doc['countVideos'] = doc['count_videos']
-            else:
-                doc['countVideos'] = '0'
-            list_queries.append(doc)
-    return render_template('complete_data.html', list_queries=list_queries)
-
-
-
-
-
-
-
 
 @app.route('/')
 def home():
@@ -211,6 +174,10 @@ def playlist_info():
 ##########################################################################
 # Download
 ##########################################################################
+@app.route('/get-data', methods=['POST', 'GET'])
+def get_data():
+    return render_template('get_data.html', language_code=language_code)
+
 @app.route('/videos-list', methods=['POST'])
 def video():
     if request.method == 'POST':
@@ -506,6 +473,24 @@ def search():
 ##########################################################################
 # Aggregate
 ##########################################################################
+@app.route('/complete-data', methods=['POST', 'GET'])
+def complete_data():
+    list_queries = []
+
+    if request.method == 'GET':
+        result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
+        result = result.json()
+        for doc in result:
+            # add count
+            # and for db compatibilty need to 
+            if 'count_videos' in doc:
+                doc['countVideos'] = doc['count_videos']
+            else:
+                doc['countVideos'] = '0'
+            list_queries.append(doc)
+    return render_template('complete_data.html', list_queries=list_queries)
+
+
 @app.route('/aggregate', methods=['POST', 'GET'])
 def aggregate():
     stats = {    
@@ -687,6 +672,13 @@ def process_results():
         return render_template('methods/download_process.html', message='ok it is done')
     return render_template('methods/download_process.html', message='ok it is done')
 
+##########################################################################
+# Manage
+##########################################################################
+@app.route('/documentation', methods=['GET'])
+def documentation():
+    return render_template('documentation.html')
+
 
 ##########################################################################
 # Manage
@@ -798,17 +790,21 @@ def download_videos_by_type(query_id, query_type):
 def config():
     json_formated = json.dumps(session['profil'], indent=2) 
 
+
+
     if not 'api_key' in session:
        api_key_validate = 'You need an API KEY from youtube'
     else:
        api_key_validate = session['api_key']
+
+    app.logger.debug(api_key_validate)
 
     if request.method == 'POST':
         if request.form.get('api_key'):
             session['api_key'] = request.form.get('api_key')
             return redirect(url_for('home'))
 
-    return render_template('config.html', session_data=json_formated, message=api_key_validate)
+    return render_template('config.html', session_data=session['profil'], message=api_key_validate)
 
 
 

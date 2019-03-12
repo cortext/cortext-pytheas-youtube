@@ -1,60 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h2>Configuration</h2>
-                {{ api_key_validate }}
-                <hr/>
-                {% if message %} {{ message }} {% endif %}
-            </div>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Configuration</h2>
+            <hr/>
+            <p>{{ message }}</p>
         </div>
+    </div>
 
-        <div class="row">
+    <div class="row">
+        <div class="col-md-12">
             <h4>Api.key</h4>
         </div>
+    </div>
 
-        <div class='row'>
-            <div class="col-md-6">
-                {% if api_key_validate == 'You need an API KEY from youtube'%}
-                    <p>
-                        First of all you will need to <strong>get an API key from Google Console Devellopers</strong>.
-                    </p>
-                    <p>
-                         More specifically from the <strong>youtube Data API v3</strong>. Its totally free. You will just need to activate it and come back with a little key.
-                    </p>
-                    <p>
-                        You can get it here : <a href="https://console.developers.google.com/apis">
-                            https://console.developers.google.com/apis
-                        </a>
-                    </p>
-                {% endif %} 
-            </div>
-            <div class="col-md-6">
-                <form action="/config" method="POST">
-                    <div class="col-md-10">
-                        <input type="text" name='api_key' class="form-control" pattern="[a-zA-Z0-9_]{39}" placeholder="AIzaSyCff6PMNeR49MAZyJps64QpXxxx77XXxxx">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit"  class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-            </div>
+    <div class='row mb-4'>
+        <div class="col-md-6">
+            <p>First of all you will need to <strong>get an API key from Google Console Devellopers</strong>.</p>
+            <p>More specifically from the youtube Data API v3. Its <strong>totally free</strong>. You will just need to activate it and come back with a little key.</p>
+            <p>You can get it here : 
+                <a href="https://console.developers.google.com/apis">https://console.developers.google.com/apis</a>
+            </p>
+
+            <p>Also you can haev a look on our user guide : 
+                <a href="/documentation#api_key">How to get an API key from Youtube ? </a>
+            </p>
+
+        </div>
+        <div class="col-md-6">
+            <form action="/config" method="POST">
+                <div class="col-md-10">
+                    <input type="text" name='api_key' class="form-control" pattern="[a-zA-Z0-9_]{39}" placeholder="AIzaSyCff6PMNeR49MAZyJps64QpXxxx77XXxxx">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit"  class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class='row'>
+        <div class="col-md-12">
+            <h4>User account info</h4>
+        </div>
+    </div>
+
+    <div class='row mb-4'>
+
+        <div class="col-md-12">
+            <p><strong>Name</strong> : {{ session_data['name'] }}</p>
         </div>
 
-
-        <div class='row'>
-            <h4>User info</h4>
+        <div class="col-md-12">
+            <p><strong>Email</strong> : {{ session_data['email'] }}</p>
         </div>
 
-        <div class='row'>
-            <div class="col-md-6">
-                Your cortext manager account information.
-            </div>
+        <div class="col-md-12">
+            <p><strong>Username</strong> : {{ session_data['username'] }}</p>
+        </div>
 
-            <div class="col-md-6">
-                <pre>{{ session_data }}</pre>
-            </div>
+        <div class="col-md-12">
+            <p><strong>Institution</strong> : {{ session_data['institution'] }}</p>
+        </div>
+
+        <div class="col-md-12">
+            <p><strong>Registred on Cortext since</strong> : {{ session_data['last_connexion'] }}</p>
+        </div>
+
     </div>
 </div>
 {% endblock %}
