@@ -46,7 +46,7 @@ def create_app():
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
         app.config['MONGO_URI'] = "mongodb://mongod:"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
         app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
-
+        app.config['api_key_testé'] = conf_data['api_key_test']
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
         app.config['debug_level'] = conf_data['debug_level']
@@ -97,6 +97,8 @@ def before_request():
 
 @app.errorhandler(Exception)
 def page_not_found(error):
+    # if app.config['debug_level'] == 'True':
+    #     return 
     return render_template('structures/error.html', error=error)
 
 @app.route('/')
@@ -118,17 +120,24 @@ def browse():
 @app.route('/video_info', methods=['POST'])
 def video_info():
     if request.method == 'POST':
-        if 'api_key' in session:
-            id_video = request.form.get('unique_id_video')
-            id_video = YouTube.cleaning_video(id_video)
-            part = ', '.join(request.form.getlist('part'))
-            api = YouTube(api_key=session['api_key'])
-            video_result = api.get_query('videos', id=id_video, part=part)
-            video_result_string = json.dumps(
-                video_result, sort_keys=True, indent=2, separators=(',', ': '))
-            return render_template('methods/view_results.html', result=video_result, string=video_result_string)
+        # specific for 'try it' on /
+        # since it is my own api_key used for now...
+        app.logger.debug(request.form.get('api_key_test'))
+        if request.form.get('api_key_test') is not None:
+            api_key = app.config['api_key_test']
+        elif 'api_key' in session:
+            api_key = session['api_key']
         else:
             return render_template('explore.html', message='api key not set')
+
+        id_video = request.form.get('unique_id_video')
+        id_video = YouTube.cleaning_video(id_video)
+        part = ', '.join(request.form.getlist('part'))
+        api = YouTube(api_key=api_key)
+        video_result = api.get_query('videos', id=id_video, part=part)
+        video_result_string = json.dumps(
+            video_result, sort_keys=True, indent=2, separators=(',', ': '))
+        return render_template('methods/view_results.html', result=video_result, string=video_result_string)
     return render_template('explore.html')
 
 @app.route('/channel_info', methods=['POST'])
