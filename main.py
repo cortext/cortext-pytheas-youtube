@@ -46,7 +46,7 @@ def create_app():
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
         app.config['MONGO_URI'] = "mongodb://mongod:"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
         app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
-        app.config['api_key_testé'] = conf_data['api_key_test']
+        app.config['api_key_test'] = conf_data['api_key_test']
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
         app.config['debug_level'] = conf_data['debug_level']
@@ -95,11 +95,11 @@ def before_request():
         app.logger.debug(e)
 
 
-@app.errorhandler(Exception)
-def page_not_found(error):
-    # if app.config['debug_level'] == 'True':
-    #     return 
-    return render_template('structures/error.html', error=error)
+# @app.errorhandler(Exception)
+# def page_not_found(error):
+#     # if app.config['debug_level'] == 'True':
+#     #     return 
+#     return render_template('structures/error.html', error=error)
 
 @app.route('/')
 def home():
@@ -122,13 +122,15 @@ def video_info():
     if request.method == 'POST':
         # specific for 'try it' on /
         # since it is my own api_key used for now...
-        app.logger.debug(request.form.get('api_key_test'))
         if request.form.get('api_key_test') is not None:
             api_key = app.config['api_key_test']
         elif 'api_key' in session:
             api_key = session['api_key']
         else:
-            return render_template('explore.html', message='api key not set')
+            return render_template('explore.html', message="""
+                <h4><strong class="text-danger">You can try Pytheas but to go further you will need to get an api_key from Google services
+                <br>Please go to <a href="./configuration" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines</strong></h4>
+                """)
 
         id_video = request.form.get('unique_id_video')
         id_video = YouTube.cleaning_video(id_video)
@@ -181,7 +183,7 @@ def playlist_info():
 
 
 ##########################################################################
-# Download
+# start Download
 ##########################################################################
 @app.route('/get-data', methods=['POST', 'GET'])
 def get_data():
@@ -237,7 +239,7 @@ def video():
                 { '$set': {'count_videos': count_videos } }
             )
 
-            return render_template('methods/download_process.html', message='ok it is done')
+            return redirect(url_for('manage'))
         else:
             return render_template('methods/view_results.html', message='api key not set')
     return render_template('download/videos_list.html')
@@ -599,7 +601,7 @@ def aggregate():
 
 
 
-            return render_template('methods/download_process.html', message='ok it is done')
+            return redirect(url_for('manage'))
 
     return render_template('aggregate.html', stats=stats)
 
@@ -670,7 +672,7 @@ def process_results():
                     { 'query_id': uid },
                     { '$set': {'count_videos': count_videos } }
                 )
-                return render_template('methods/download_process.html', message='ok it is done')
+                return redirect(url_for('manage'))
 
             # insert video-info
             for each in search_results['items']:
@@ -678,16 +680,15 @@ def process_results():
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
-        return render_template('methods/download_process.html', message='ok it is done')
-    return render_template('methods/download_process.html', message='ok it is done')
+        return redirect(url_for('manage'))
+    return redirect(url_for('manage'))
 
 ##########################################################################
-# Manage
+# Documentation
 ##########################################################################
 @app.route('/documentation', methods=['GET'])
 def documentation():
     return render_template('documentation.html')
-
 
 ##########################################################################
 # Manage
@@ -768,38 +769,33 @@ def download_videos_by_type(query_id, query_type):
     # find name of query for filename download
     r_name = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id)
     query = r_name.json()
+    query_name = str(query['query'])
 
-    # prepare filename
-    if 'query' in query:
-        if not 'order' in query: 
-            query_name = str(query['query'])
-        else:
-            query_name = '_'.join([query['query'], query['language'], query['order']])
-    elif 'channel_id' in query:
-        query_name = query['channel_id']
-    
-    query_name = str(query_name.encode('utf8'))
-    query_type_filename = (str(query_type))
-    
     # get results
     r = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
     query_result = r.json()
-    json_res = json_util.dumps(query_result, sort_keys=True, indent=2, separators=(',', ': '))
 
-    # send back 
-    response = jsonify(json.loads(json_res))
-    response.headers['Content-Disposition'] = 'attachment;filename=' + \
-        query_name + '_'+ query_type +'.json'
+    import re
+    query_name = re.sub('[^A-Za-z0-9]+', '_', query_name)
+    app.logger.debug(query_name)
+    filename = {'Content-Disposition':'attachment;filename=' + query_name + '.json'}
+
+    # send back response
+    response = app.response_class(
+        response=json.dumps(query_result),
+        status=200,
+        mimetype='application/json',
+        headers=filename
+    )
     return response
 
+    
 ##########################################################################
 # Config
 ##########################################################################
 @app.route('/config', methods=['POST', 'GET'])
 def config():
     json_formated = json.dumps(session['profil'], indent=2) 
-
-
 
     if not 'api_key' in session:
        api_key_validate = 'You need an API KEY from youtube'

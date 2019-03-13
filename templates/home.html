@@ -8,31 +8,31 @@
       <hr/>
 
       {% if api_key is defined and api_key %}
-      <h3>Your key is set and ready to download (you can always go to 'config' later) </h3>
+      <h3>Your key is set and ready to download (you can always go to 'configuration' later) </h3>
       {% else %}
-      <h3><strong class="text-danger">You need to update your api_key first. Please go to <a href="./config" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines </strong> </h3>
+      <h4><strong class="text-danger">You can try Pytheas but to go further you will need to get an api_key from Google services
+        <br>Please go to <a href="./configuration" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines</strong></h4>
       {% endif %}
     </div>
   </div>
 
   <div class="jumbotron">
     <div class="row">
-      <div class="col-md-12">
+      <div class="col-12">
         <h2>What is Pytheas ?</h2>
-        <p>Pytheas a simple webtool helping you to download data from youtube API,</p>
-        <p>Permitting you to manage and export data in json.</p>
+        <p>Pytheas a simple webtool helping you to download data from youtube API, permitting you to manage and export data in json.</p>
       </div>
     </div>
 
     <div class="row">
-      <div class="col-md-offset-1 col-md-10">
+      <div class="col-md-offset-1 col-10">
         <form action="/video_info" id="video" method="POST">
           <div class="form-group">
             <h3 ><strong>Try it !</strong></h3>
             <h4>Just put an url from youtube and see what it will respond to you : </h4>
 
             <input type="text" name='unique_id_video' class="form-control form-control-lg" placeholder="ex: http://www.youtube.com/watch?v=SBGIDa-tGXE">
-            <input type="hidden" name="api_key_test" value="">
+            <input type="hidden" name="api_key_test">
 
             <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
             <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>

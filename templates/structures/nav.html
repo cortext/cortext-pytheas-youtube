@@ -8,15 +8,15 @@
     <ul class="nav navbar-nav mr-auto">
 
         <li class="nav-item">
-            <a class="nav-link {%- if request.path=='/explore' %} active {% endif %}" href="/explore">Explore</a>
+            <a class="nav-link {%- if request.path=='/explore' %} active {% endif %}" href="/explore">1. Explore</a>
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {%- if request.path=='/get-data' %} active {% endif %}" href="/get-data" >Download</a>
+            <a class="nav-link {%- if request.path=='/get-data' %} active {% endif %}" href="/get-data" >2. Download</a>
         </li>
 
         <li class="nav-item {%- if request.path=='/complete-data' %} active {% endif %}">
-            <a class="nav-link" href="/complete-data">Enrich</a>
+            <a class="nav-link" href="/complete-data">3. Enrich</a>
         </li>
     </ul>
 
