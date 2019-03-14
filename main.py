@@ -95,11 +95,11 @@ def before_request():
         app.logger.debug(e)
 
 
-# @app.errorhandler(Exception)
-# def page_not_found(error):
-#     # if app.config['debug_level'] == 'True':
-#     #     return 
-#     return render_template('structures/error.html', error=error)
+@app.errorhandler(Exception)
+def page_not_found(error):
+    if app.config['debug_level'] == 'True':
+        return  
+    return render_template('structures/error.html', error=error)
 
 @app.route('/')
 def home():
