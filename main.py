@@ -129,7 +129,7 @@ def video_info():
         else:
             return render_template('explore.html', message="""
                 <h4><strong class="text-danger">You can try Pytheas but to go further you will need to get an api_key from Google services
-                <br>Please go to <a href="./configuration" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines</strong></h4>
+                <br>Please go to <a href="./config" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines</strong></h4>
                 """)
 
         id_video = request.form.get('unique_id_video')
@@ -147,13 +147,22 @@ def channel_info():
     if request.method == 'POST':
         if 'api_key' in session:
             id_channel = request.form.get('unique_id_channel')
-            id_channel = YouTube.cleaning_channel(id_channel)
-            if 'youtube.com/user/' in id_channel:
-                return render_template('explore/channel_info.html', message='YoutubeAPI cannot retrieve /user (different from /channel)')
+            id_username = request.form.get('unique_user_channel')
             part = ', '.join(request.form.getlist('part'))
             api = YouTube(api_key=session['api_key'])
-            channel_result = api.get_query(
-                'channels', id=id_channel, part=part)
+
+            if 'youtube.com/channel/' in id_channel:
+                id_channel = YouTube.cleaning_channel(id_channel)
+                channel_result = api.get_query(
+                'channels',  id=id_channel, part=part)
+            elif id_username != '':
+                id_username = YouTube.cleaning_channel(id_username)
+                channel_result = api.get_query(
+                    'channels', forUsername=id_username, part=part)
+            else:
+                channel_result = api.get_query(
+                'channels',  id=id_channel, part=part)
+
             channel_result_string = json.dumps(
                 channel_result, sort_keys=True, indent=2, separators=(',', ': '))
             return render_template('methods/view_results.html', result=channel_result, string=channel_result_string)
@@ -239,16 +248,15 @@ def video():
                 { '$set': {'count_videos': count_videos } }
             )
 
-            return redirect(url_for('manage'))
         else:
-            return render_template('methods/view_results.html', message='api key not set')
-    return render_template('download/videos_list.html')
+            return render_template('explore.html', message='api key not set')
+    return redirect(url_for('manage'))
 
 @app.route('/playlist', methods=['POST'])
 def playlist():
     if request.method == 'POST':
         if not 'api_key' in session:
-            return render_template('download/playlist.html', message='api key not set')
+            return render_template('explore.html', message='api key not set')
 
         query_id = str(uuid4())
         list_playlist = request.form.getlist('list_url')        
@@ -293,7 +301,7 @@ def playlist():
 def channel():
     if request.method == 'POST':
         if not 'api_key' in session:
-            return render_template('download/channel.html', message='api key not set')
+            return render_template('explore.html', message='api key not set')
         query_id = str(uuid4())
         list_channel = request.form.getlist('list_url')        
         query_name = str(request.form.get('query_name'))
@@ -405,18 +413,22 @@ def search():
 
                 # check if ['items'] exist and not empty 
                 # https://thispointer.com/python-how-to-check-if-a-key-exists-in-dictionary/
-                if date_results.get('items', -1) != -1:
+                #if date_results.get('items', -1) != -1:
                     # insert videos in db
-                    for each in date_results['items']:
-                        each.update({'query_id': uid})
-                        each = YouTube.cleaning_each(each)
-                        mongo_curs.db.videos.insert_one(each)
+                
+                for each in date_results['items']:
+                    each.update({'query_id': uid})
+                    each = YouTube.cleaning_each(each)
+                    mongo_curs.db.videos.insert_one(each)
 
                 # while len(date_results['items']) > 0 : 
                 #if not 'nextPageToken' in date_results:
                 #if date_results.get('nextPageToken', -1) != -1:
-                while 'nextPageToken' in date_results and len(date_results['items']) ==  maxResults :
-                #while 'nextPageToken' in date_results: 
+                #while 'nextPageToken' in date_results:
+                app.logger.debug( ' LEN ITEMSSSS ::::::=>' + str(len(date_results['items']))) 
+                # if not 'nextPageToken' in date_results:
+                #     while 'nextPageToken' in date_results:
+                while 'nextPageToken' in date_results and len(date_results['items']) != 0:
                     date_results = api.get_query(
                         'search',
                         q = session['request']['q'],
@@ -426,18 +438,24 @@ def search():
                         order = session['request']['order'],
                         publishedAfter = session['request']['publishedAfter'],
                         publishedBefore = session['request']['publishedBefore'],
-                        PageToken = date_results['nextPageToken']
+                        pageToken = date_results['nextPageToken']
                         )
                     # insert video-info except if last result
                     # only if "items" not empty 
-                    if date_results.get('items', -1) != -1:
-                        for each in date_results['items']:
-                            each.update({'query_id': uid})
-                            each = YouTube.cleaning_each(each) 
-                            mongo_curs.db.videos.insert_one(each)
+                    #if date_results.get('items', -1) != -1:
+                    for each in date_results['items']:
+                        each.update({'query_id': uid})
+                        each = YouTube.cleaning_each(each) 
+                        mongo_curs.db.videos.insert_one(each)
 
                 # finally increment next after day
-                r_after += dt.timedelta(days=1) 
+                r_after += dt.timedelta(days=1)
+
+            count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+            mongo_curs.db.queries.update_one(
+                { 'query_id': uid },
+                { '$set': {'count_videos': count_videos } }
+            )
  
             return redirect(url_for('manage'))
 

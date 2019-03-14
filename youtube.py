@@ -238,13 +238,28 @@ class YouTube():
         return id_video
 
     def cleaning_channel(id_channel_or_user):
-        if 'youtube.com/channel/' in id_channel_or_user:
+        try:
             if 'https' in id_channel_or_user:
                 id_channel_or_user = id_channel_or_user.replace(
-                    'https://www.youtube.com/channel/', '')
-            else:
+                    'https://www.youtube.com', '')
+            elif 'http':
                 id_channel_or_user = id_channel_or_user.replace(
-                    'http://www.youtube.com/channel/', '')
+                    'http://www.youtube.com', '')
+
+            if '/channel/' in id_channel_or_user:
+                id_channel_or_user = id_channel_or_user.replace(
+                    '/channel/', '')
+
+            if '/c/' in id_channel_or_user:
+                id_channel_or_user = id_channel_or_user.replace(
+                    '/c/', '')
+
+            if '/user/' in id_channel_or_user:
+                id_channel_or_user = id_channel_or_user.replace(
+                    '/user/', '')
+        except Exception as e:
+            logger.debug('Unexpected error on cleaning_channel :' + str(e))           
+
         return id_channel_or_user
 
     def cleaning_playlist(id_playlist):
