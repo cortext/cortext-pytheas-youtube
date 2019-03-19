@@ -1,16 +1,28 @@
 {% block content %}
 
-<h4>Name your query</h4>
-<input type="text" class="form-control" name="query_name">
-
-<h4>id or url channel</h4>                            
-<div class="input-group mb-3">
-    <input type="text" class="form-control userinput" placeholder="add an item..." aria-label="Add an item" aria-describedby="basic-addon2">
-    <div class="input-group-append">
-        <button class="btn btn-outline-info enterUrl" type="button">Add</button>
-    </div>
+<div class="mb-4">
+    <h4>Name your query</h4>
+    <input type="text" class="form-control" name="query_name">
 </div>
 
+<h4>Username</h4>
+<div class="input-group-append">
+    <input type="text" name='unique_user_channel' class="form-control userinput" placeholder="UCzOJc_QhY8GSkXBof2nYUNw or ARTEplus7">
+    <button class="btn btn-outline-info enterUrl" type="button">Add</button>
+</div>
+
+<h4>ID channel</h4>
+<div class="input-group-append">
+    <input type="text" name='unique_id_channel' class="form-control userinput" placeholder="UCzOJc_QhY8GSkXBof2nYUNw or ARTEplus7">
+    <button class="btn btn-outline-info enterUrl" type="button">Add</button>
+</div>
+
+<!-- <h4>Username channel</h4>
+<div class="input-group-append">
+    <input type="text" name='unique_id_channel' class="form-control userinput" placeholder="ARTEplus7">
+    <button class="btn btn-outline-info enterUrl" type="button">Add</button>
+</div>
+ -->
 <ul class="list-group listUrl" name="list_url">
 </ul>
 

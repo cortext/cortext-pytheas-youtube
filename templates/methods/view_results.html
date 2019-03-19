@@ -77,7 +77,6 @@
       {% endif %}
       {% endfor %}
 
-
       {% for r in result['items'] %}
       {% if r['localizations'] %}
       <div class="card">
@@ -91,16 +90,18 @@
         <div id="localizations" class="collapse" aria-labelledby="headingLocalizations" data-parent="#accordionExample">
           <div class="card-body">
             {% for k, v in r['localizations'].items() %}
-            <p><strong>{{k}}</strong> : {{v}}</p>
+            <p><strong>{{k}}</strong> : </p>
+            <ul>
+              {% for lang in v %} 
+                <li>{{lang}} : {{v[lang]}}  </li>
+              {%endfor %}
+            </ul>
             {% endfor %}
-
-            
           </div>
         </div>
       </div>
       {% endif %}
       {% endfor %}
-
 
       {% for r in result['items'] %}
       {% if r['statistics'] %}
@@ -118,7 +119,6 @@
             {% for k, v in r['statistics'].items() %}
             <p><strong>{{k}}</strong> : {{v}}</p>
             {% endfor %}
-
             {% endfor %}
           </div>
         </div>
@@ -171,6 +171,54 @@
       </div>
       {% endif %}
       {% endfor %}
+
+      {% for r in result['items'] %}
+      {% if r['brandingSettings'] %}
+      <div class="card">
+        <div class="card-header" id="headingContentDetails">
+          <h2 class="mb-0">
+            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#brandingSettings" aria-expanded="false" aria-controls="brandingSettings">
+              brandingSettings
+            </button>
+          </h2>
+        </div>
+        <div id="brandingSettings" class="collapse" aria-labelledby="headingContentDetails" data-parent="#accordionExample">
+          <div class="card-body">
+            {% for r in result['items'] %}
+            {% for k, v in r['brandingSettings'].items() %}
+            <p><strong>{{k}}</strong> : {{v}}</p>
+            {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+
+
+      {% for r in result['items'] %}
+      {% if r['invideoPromotion'] %}
+      <div class="card">
+        <div class="card-header" id="headingContentDetails">
+          <h2 class="mb-0">
+            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#invideoPromotion" aria-expanded="false" aria-controls="invideoPromotion">
+              invideoPromotion
+            </button>
+          </h2>
+        </div>
+        <div id="invideoPromotion" class="collapse" aria-labelledby="headingContentDetails" data-parent="#accordionExample">
+          <div class="card-body">
+            {% for r in result['items'] %}
+            {% for k, v in r['invideoPromotion'].items() %}
+            <p><strong>{{k}}</strong> : {{v}}</p>
+            {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+
 
     </div>
 

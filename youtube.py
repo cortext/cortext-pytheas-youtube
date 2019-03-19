@@ -82,19 +82,31 @@ class YouTube():
         return search_results
 
     
-    def get_channel(self, mongo_curs, param):
+    def get_channel_videos(self, mongo_curs, param):
+        # taking paramaters pre-formated in Youtube style
         query_id = param['query_id']
         query_name = param['query']
-        channel_id = param['channel_id']
-        part = param['part']
-        maxResults = param['maxResults']
-        
+        # channel_id = param['channelId']
+        # part = param['part']
+        # maxResults = param['maxResults']
+        # forUsername = param['forUsername']
+
+        # if 'channel_id' in param :
+        #     del param['channel_id'] 
+        # elif 'forUsername' in param :
+        #     del param['forUsername'] 
+
         api = YouTube(self.api_key)
+        logger.info(param)
+        logger.debug(param)
+    
+
         channel_results = api.get_query(
             'search',
-            channelId=channel_id,
-            part=part,
-            maxResults=maxResults
+            **param
+            # channelId=channel_id,
+            # part=part,
+            # maxResults=maxResults
         )
         # insert videos
         for each in channel_results['items']:
@@ -107,9 +119,7 @@ class YouTube():
         while 'nextPageToken' in channel_results:
             channel_results = api.get_query(
                 'search',
-                channelId=channel_id,
-                part=part,
-                maxResults=maxResults,
+                **param,
                 pageToken=channel_results['nextPageToken']
             )
 
@@ -157,7 +167,7 @@ class YouTube():
             )
 
             for each in playlist_results['items']:
-                each.update({'query_id': uid,
+                each.update({'query_id': query_id,
                              'query' : query_name})
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)

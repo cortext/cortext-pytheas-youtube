@@ -95,11 +95,12 @@ def before_request():
         app.logger.debug(e)
 
 
-@app.errorhandler(Exception)
-def page_not_found(error):
-    if app.config['debug_level'] == 'True':
-        return  
-    return render_template('structures/error.html', error=error)
+if app.config['debug_level'] == 'False':
+    @app.errorhandler(Exception)
+    def page_not_found(error):
+        app.logger.debug(error)
+        return render_template('structures/error.html', error=error)
+
 
 @app.route('/')
 def home():
@@ -309,9 +310,9 @@ def channel():
         param = {
             'part': part,
             'maxResults': maxResults,
-            'query_id' : query_id,
+            'query_id': query_id,
             'query': query_name
-        }
+        }   
 
         # insert query
         mongo_curs.db.queries.insert_one(
@@ -325,13 +326,32 @@ def channel():
             }
         )
 
+        app.logger.debug(list_channel)
         for channel_id in list_channel:
-            channel_id = YouTube.cleaning_channel(channel_id)
-            param.update({'channel_id' : channel_id})
+            app.logger.debug(channel_id)
+            # tricks to detect username or channel id
+            # need to refact with cleaning_channel methods (also used in /explore)
 
+            if '/channel/' in channel_id:
+                channel_id = YouTube.cleaning_channel(channel_id)
+                app.logger.debug('channel////////')
+                param.update({'channelId' : channel_id})
+
+
+            if '/c/' in channel_id:
+                app.logger.debug('c///////')
+                channel_id = YouTube.cleaning_channel(channel_id)
+                param.update({'forUsername' : channel_id})
+
+            if '/user/' in channel_id:
+                app.logger.debug('user//////')
+                channel_id = YouTube.cleaning_channel(channel_id)
+                param.update({'forUsername' : channel_id})
+            
+            app.logger.debug(param)
             # call request
             api = YouTube(api_key=session['api_key'])
-            channel_results = api.get_channel(mongo_curs, param)
+            channel_results = api.get_channel_videos(mongo_curs, param)
             
         # add metrics for query in json
         count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
