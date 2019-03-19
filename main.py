@@ -326,9 +326,13 @@ def channel():
             }
         )
 
-        app.logger.debug(list_channel)
         for channel_id in list_channel:
-            app.logger.debug(channel_id)
+            param = {
+                'part': part,
+                'maxResults': maxResults,
+                'query_id': query_id,
+                'query': query_name
+            }  
             # tricks to detect username or channel id
             # need to refact with cleaning_channel methods (also used in /explore)
 
@@ -336,7 +340,6 @@ def channel():
                 channel_id = YouTube.cleaning_channel(channel_id)
                 app.logger.debug('channel////////')
                 param.update({'channelId' : channel_id})
-
 
             if '/c/' in channel_id:
                 app.logger.debug('c///////')
@@ -589,6 +592,7 @@ def aggregate():
                 if 'videoId' in result:
                     id_video = result['videoId']
                 else:
+                    app.logger.debug(result)
                     id_video = result['id']['videoId']
 
                 list_vid.append(id_video)

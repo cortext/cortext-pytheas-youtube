@@ -86,27 +86,24 @@ class YouTube():
         # taking paramaters pre-formated in Youtube style
         query_id = param['query_id']
         query_name = param['query']
-        # channel_id = param['channelId']
-        # part = param['part']
-        # maxResults = param['maxResults']
-        # forUsername = param['forUsername']
-
-        # if 'channel_id' in param :
-        #     del param['channel_id'] 
-        # elif 'forUsername' in param :
-        #     del param['forUsername'] 
-
         api = YouTube(self.api_key)
-        logger.info(param)
+        
+        if 'forUsername' in param :
+            find_channel_id = api.get_query(
+                'channels',
+                **param
+            )
+            param['channelId'] = find_channel_id['items'][0]['id'] 
+            del param['forUsername']
+
+        del param['query']
+        del param['query_id']
+
         logger.debug(param)
-    
 
         channel_results = api.get_query(
             'search',
             **param
-            # channelId=channel_id,
-            # part=part,
-            # maxResults=maxResults
         )
         # insert videos
         for each in channel_results['items']:
