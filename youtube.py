@@ -34,12 +34,14 @@ class YouTube():
     #api_base_url = 'https://www.googleapis.com/youtube/v3/'
     #part = None
 
-    def __init__(self, api_key, access_token=None, api_url=None ,part=None):
+    def __init__(self, api_key, access_token=None, api_url=None, part=None, type_part=None):
         self.api_key = api_key
         self.access_token = access_token
         self.api_base_url = 'https://www.googleapis.com/youtube/v3/'
         if part:
             self.part = part
+        if type_part:
+            self.type_part = type_part
         if api_url:
             self.api_url = api_url
 
@@ -64,6 +66,9 @@ class YouTube():
             kwargs['key'] = self.api_key
         if 'part' not in kwargs:
             kwargs['part'] = self.part
+        # need integration of dynamic part choose
+        # if 'type_part' in kwargs:
+        #     kwargs['type'] = self.type_part
         kwargs = json.dumps(kwargs)
         kwargs = json.loads(kwargs)
         return self.try_request(kwargs, endpoint)
@@ -99,12 +104,11 @@ class YouTube():
         del param['query']
         del param['query_id']
 
-        logger.debug(param)
-
         channel_results = api.get_query(
             'search',
             **param
         )
+
         # insert videos
         for each in channel_results['items']:
             each.update({'query_id'   : query_id,

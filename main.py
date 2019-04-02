@@ -307,12 +307,9 @@ def channel():
         list_channel = request.form.getlist('list_url')        
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
-        param = {
-            'part': part,
-            'maxResults': maxResults,
-            'query_id': query_id,
-            'query': query_name
-        }   
+
+
+        app.logger.debug(str(list_channel))
 
         # insert query
         mongo_curs.db.queries.insert_one(
@@ -331,27 +328,13 @@ def channel():
                 'part': part,
                 'maxResults': maxResults,
                 'query_id': query_id,
-                'query': query_name
+                'query': query_name,
+                'type': 'video',
             }  
             # tricks to detect username or channel id
             # need to refact with cleaning_channel methods (also used in /explore)
 
-            if '/channel/' in channel_id:
-                channel_id = YouTube.cleaning_channel(channel_id)
-                app.logger.debug('channel////////')
-                param.update({'channelId' : channel_id})
-
-            if '/c/' in channel_id:
-                app.logger.debug('c///////')
-                channel_id = YouTube.cleaning_channel(channel_id)
-                param.update({'forUsername' : channel_id})
-
-            if '/user/' in channel_id:
-                app.logger.debug('user//////')
-                channel_id = YouTube.cleaning_channel(channel_id)
-                param.update({'forUsername' : channel_id})
-            
-            app.logger.debug(param)
+            param.update({'channelId' : channel_id})
             # call request
             api = YouTube(api_key=session['api_key'])
             channel_results = api.get_channel_videos(mongo_curs, param)
