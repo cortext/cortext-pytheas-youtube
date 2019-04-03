@@ -30,7 +30,7 @@ $(document).ready( function () {
 
                 var inputEl = document.createElement('input');
                 inputEl.type = 'checkbox';
-                inputEl.name = 'list_url';
+                inputEl.name = 'list_url_username';
                 inputEl.value = input.value;
                 inputEl.checked = true;
 
@@ -59,7 +59,7 @@ $(document).ready( function () {
 
                 var inputEl = document.createElement('input');
                 inputEl.type = 'checkbox';
-                inputEl.name = 'list_url';
+                inputEl.name = 'list_url_id';
                 inputEl.value = input.value;
                 inputEl.checked = true;
 

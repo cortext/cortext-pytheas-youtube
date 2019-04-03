@@ -197,6 +197,8 @@ def playlist_info():
 ##########################################################################
 @app.route('/get-data', methods=['POST', 'GET'])
 def get_data():
+    # landing page who will redirect respectively to each of 
+    # /videos-list /playlist /channel and /search
     return render_template('get_data.html', language_code=language_code)
 
 @app.route('/videos-list', methods=['POST'])
@@ -304,13 +306,16 @@ def channel():
         if not 'api_key' in session:
             return render_template('explore.html', message='api key not set')
         query_id = str(uuid4())
-        list_channel = request.form.getlist('list_url')        
+        
+        list_channel_username = [YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_username') ]
+        list_channel_id = [YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_id') ]
+        list_channel = list_channel_username + list_channel_id
+        
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
 
-
-        app.logger.debug(str(list_channel))
-
+        app.logger.debug('HEY !!' +  str(request.form))
+        
         # insert query
         mongo_curs.db.queries.insert_one(
             {   
@@ -323,23 +328,47 @@ def channel():
             }
         )
 
-        for channel_id in list_channel:
-            param = {
-                'part': part,
-                'maxResults': maxResults,
-                'query_id': query_id,
-                'query': query_name,
-                'type': 'video',
-            }  
-            # tricks to detect username or channel id
-            # need to refact with cleaning_channel methods (also used in /explore)
+        # tricks to detect username or channel id
+        # need to refact with cleaning_channel methods (also used in /explore)    
+        api = YouTube(api_key=session['api_key'])
+        param = {
+            'part': part,
+            'maxResults': maxResults,
+            'query_id': query_id,
+            'query': query_name
+        }
 
-            param.update({'channelId' : channel_id})
-            # call request
-            api = YouTube(api_key=session['api_key'])
-            channel_results = api.get_channel_videos(mongo_curs, param)
+
+
+        # looking for ID of an username
+        for channel_username in list_channel_username:
+            param_lighted = param.copy()
+            param_lighted.update({ 'forUsername' : channel_username})
+            app.logger.debug('HERE IS APP ' + str(param))
+            del param_lighted['query']
+            del param_lighted['query_id']
+            app.logger.debug('HERE IS APP ' + str(param))
+            find_channel_id = api.get_query(
+                'channels',
+                **param_lighted
+            )
+            app.logger.debug('HERE IS APP ' + str(param))
+            supposed_channel_id = find_channel_id['items'][0]['id']
+            app.logger.debug('HERE IS APP ' + str(param))
+            if supposed_channel_id:
+                app.logger.debug('HERE IS APP ' + str(param))
+                param.update({ 'channelId' : supposed_channel_id})
+                param.update({ 'type': 'video' })
+                app.logger.debug('HERE IS APP ' + str(param))
+                channel_results_username = api.get_channel_videos(mongo_curs, param)
+        
+        # then for ID
+        for channel_id in list_channel_id:
+            param.update({ 'channelId' : channel_id})
+            param.update({ 'type': 'video' })
+            channel_results_id = api.get_channel_videos(mongo_curs, param)
             
-        # add metrics for query in json
+        # finally add metrics for query in json
         count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
         mongo_curs.db.queries.update_one(
             { 'query_id': query_id },
@@ -416,24 +445,12 @@ def search():
                     order=session['request']['order'],
                     publishedAfter=session['request']['publishedAfter'],
                     publishedBefore=session['request']['publishedBefore'])
-
-                # check if ['items'] exist and not empty 
-                # https://thispointer.com/python-how-to-check-if-a-key-exists-in-dictionary/
-                #if date_results.get('items', -1) != -1:
-                    # insert videos in db
-                
+                # saving
                 for each in date_results['items']:
                     each.update({'query_id': uid})
                     each = YouTube.cleaning_each(each)
                     mongo_curs.db.videos.insert_one(each)
-
-                # while len(date_results['items']) > 0 : 
-                #if not 'nextPageToken' in date_results:
-                #if date_results.get('nextPageToken', -1) != -1:
-                #while 'nextPageToken' in date_results:
-                app.logger.debug( ' LEN ITEMSSSS ::::::=>' + str(len(date_results['items']))) 
-                # if not 'nextPageToken' in date_results:
-                #     while 'nextPageToken' in date_results:
+                # loop
                 while 'nextPageToken' in date_results and len(date_results['items']) != 0:
                     date_results = api.get_query(
                         'search',
@@ -448,7 +465,6 @@ def search():
                         )
                     # insert video-info except if last result
                     # only if "items" not empty 
-                    #if date_results.get('items', -1) != -1:
                     for each in date_results['items']:
                         each.update({'query_id': uid})
                         each = YouTube.cleaning_each(each) 
@@ -559,14 +575,12 @@ def aggregate():
             api = YouTube(api_key=api_key)
             # qui ont un id de type str ou un id video qui existe
             # ET un id query
-            results = mongo_curs.db.videos.find(
-                {
-                    "$and": [
-                        {"$or" : [ {"id": {"$type": "string"}}, {"id.videoId": {"$exists": "True"}} ]} ,
-                        {"query_id": query_id}
-                    ]
-                }
-            )
+            results = mongo_curs.db.videos.find({
+                "$and": [
+                    {"$or" : [ {"id": {"$type": "string"}}, {"id.videoId": {"$exists": "True"}} ]} ,
+                    {"query_id": query_id}
+                ]
+            })
 
             list_vid = []
             # need to fix this later
@@ -751,9 +765,7 @@ def manage():
 
     return render_template('manage.html', stats=stats)
 
-##########################################################################
 # Delete dataset
-##########################################################################
 @app.route('/delete/<query_id>', methods=['GET'])
 def delete(query_id):
     # using json_util from dumping querying (see later)
@@ -769,11 +781,8 @@ def delete(query_id):
 
     return redirect(url_for('manage'))
 
-##########################################################################
 ## View in-db human readable
-# request by type_data and query_id to rest urls 
-# then rendering html template
-##########################################################################
+# request by type_data and query_id to rest urls then rendering html template
 @app.route('/view-<data_type>/<query_id>', methods=['POST','GET'])
 def view_data_by_type(query_id, data_type):
     if data_type not in ['videos', 'comments', 'captions']:
@@ -782,9 +791,7 @@ def view_data_by_type(query_id, data_type):
     r = requests.get(url)
     return render_template('view.html', list_queries=r.json())
 
-##########################################################################
 # Download videos, comments set
-##########################################################################
 @app.route('/download/<query_type>/<query_id>', methods=['GET'])
 def download_videos_by_type(query_id, query_type):
     if query_type not in ['videos', 'comments', 'captions']:
@@ -836,8 +843,6 @@ def config():
 
     return render_template('config.html', session_data=session['profil'], message=api_key_validate)
 
-
-
 ##########################################################################
 # Reset session
 ##########################################################################
@@ -845,9 +850,6 @@ def config():
 def reset():
     session.clear()
     return redirect(url_for('oauth.login'))
-
-
-
 
 ##########################################################################
 # Start

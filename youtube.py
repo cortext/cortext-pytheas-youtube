@@ -91,22 +91,15 @@ class YouTube():
         # taking paramaters pre-formated in Youtube style
         query_id = param['query_id']
         query_name = param['query']
-        api = YouTube(self.api_key)
+        param_lighted = param.copy()
+        del param_lighted['query']
+        del param_lighted['query_id']
         
-        if 'forUsername' in param :
-            find_channel_id = api.get_query(
-                'channels',
-                **param
-            )
-            param['channelId'] = find_channel_id['items'][0]['id'] 
-            del param['forUsername']
-
-        del param['query']
-        del param['query_id']
-
+        
+        api = YouTube(self.api_key)
         channel_results = api.get_query(
             'search',
-            **param
+            **param_lighted
         )
 
         # insert videos
@@ -120,7 +113,7 @@ class YouTube():
         while 'nextPageToken' in channel_results:
             channel_results = api.get_query(
                 'search',
-                **param,
+                **param_lighted,
                 pageToken=channel_results['nextPageToken']
             )
 
@@ -228,6 +221,7 @@ class YouTube():
             return commentThread['error']
 
     # Unclassed for moment
+    # is for clean data from Youtube
     def cleaning_each(each):
         if 'videoId' in each['id']:
             each.update({'videoId': each['id']['videoId']})
@@ -248,6 +242,7 @@ class YouTube():
                     'http://www.youtube.com/watch?v=', '')
         return id_video
 
+    # cleaning_channel is for cleaning input url from user usage
     def cleaning_channel(id_channel_or_user):
         try:
             if 'https' in id_channel_or_user:
