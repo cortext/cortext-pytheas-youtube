@@ -94,40 +94,51 @@ class YouTube():
         param_lighted = param.copy()
         del param_lighted['query']
         del param_lighted['query_id']
-        
-        
+
         api = YouTube(self.api_key)
-        channel_results = api.get_query(
-            'search',
+
+        channel_playlistId = api.get_query(
+            'channels',
             **param_lighted
         )
 
-        # insert videos
-        for each in channel_results['items']:
-            each.update({'query_id'   : query_id,
-                         'query' : query_name})
-            each = YouTube.cleaning_each(each)
-            mongo_curs.db.videos.insert_one(each)
+        param_lighted['part'] = param_lighted['part'].replace(', statistics', '')
+        for items in channel_playlistId['items']:
 
-        ## Loop and save
-        while 'nextPageToken' in channel_results:
+            del param_lighted['id']
+            param_lighted.update({'playlistId' : items['contentDetails']['relatedPlaylists']['uploads']})
+
             channel_results = api.get_query(
-                'search',
-                **param_lighted,
-                pageToken=channel_results['nextPageToken']
+                'playlistItems',
+                **param_lighted
             )
 
+            # insert videos
             for each in channel_results['items']:
                 each.update({'query_id'   : query_id,
                              'query' : query_name})
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
-            # check if not last result 
-            if not channel_results['items']:
-                break
+            ## Loop and save
+            while 'nextPageToken' in channel_results:
+                channel_results = api.get_query(
+                    'playlistItems',
+                    **param_lighted,
+                    pageToken=channel_results['nextPageToken']
+                )
 
-        return channel_results
+                for each in channel_results['items']:
+                    each.update({'query_id'   : query_id,
+                                 'query' : query_name})
+                    each = YouTube.cleaning_each(each)
+                    mongo_curs.db.videos.insert_one(each)
+
+                # check if not last result 
+                if not channel_results['items']:
+                    break
+
+        return
 
     # same as get_playlist (could be merged later maybe)
     def get_playlist(self, mongo_curs, param):
@@ -415,7 +426,7 @@ class Comment():
                             'is_top_level_comment': 'false'
                         }
                         self.db.comments.insert_one(CommentIntegrated)
-            logger.debug('total nb comment for this request = ' + str(nb_comment))
+            #logger.debug('total nb comment for this request = ' + str(nb_comment))
 
         else:
             logger.error(commentThread['error'])

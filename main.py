@@ -313,8 +313,6 @@ def channel():
         
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
-
-        app.logger.debug('HEY !!' +  str(request.form))
         
         # insert query
         mongo_curs.db.queries.insert_one(
@@ -335,38 +333,32 @@ def channel():
             'part': part,
             'maxResults': maxResults,
             'query_id': query_id,
-            'query': query_name
+            'query': query_name,
         }
-
-
 
         # looking for ID of an username
         for channel_username in list_channel_username:
             param_lighted = param.copy()
             param_lighted.update({ 'forUsername' : channel_username})
-            app.logger.debug('HERE IS APP ' + str(param))
+            
             del param_lighted['query']
             del param_lighted['query_id']
-            app.logger.debug('HERE IS APP ' + str(param))
+            
             find_channel_id = api.get_query(
                 'channels',
                 **param_lighted
             )
-            app.logger.debug('HERE IS APP ' + str(param))
+            
             supposed_channel_id = find_channel_id['items'][0]['id']
-            app.logger.debug('HERE IS APP ' + str(param))
+            
             if supposed_channel_id:
-                app.logger.debug('HERE IS APP ' + str(param))
-                param.update({ 'channelId' : supposed_channel_id})
-                param.update({ 'type': 'video' })
-                app.logger.debug('HERE IS APP ' + str(param))
-                channel_results_username = api.get_channel_videos(mongo_curs, param)
+                param.update({ 'id' : supposed_channel_id})
+                api.get_channel_videos(mongo_curs, param)
         
         # then for ID
         for channel_id in list_channel_id:
-            param.update({ 'channelId' : channel_id})
-            param.update({ 'type': 'video' })
-            channel_results_id = api.get_channel_videos(mongo_curs, param)
+            param.update({ 'id' : channel_id})
+            api.get_channel_videos(mongo_curs, param)
             
         # finally add metrics for query in json
         count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
@@ -568,9 +560,6 @@ def aggregate():
             options_api = request.form.getlist('api_part')
             part = ', '.join(request.form.getlist('part'))
 
-
-            app.logger.debug(str(options_api))
-
             api_key = session['api_key']
             api = YouTube(api_key=api_key)
             # qui ont un id de type str ou un id video qui existe
@@ -589,7 +578,6 @@ def aggregate():
                 if 'videoId' in result:
                     id_video = result['videoId']
                 else:
-                    app.logger.debug(result)
                     id_video = result['id']['videoId']
 
                 list_vid.append(id_video)
@@ -628,8 +616,7 @@ def aggregate():
                 # Here we will just add 'statistics' part from youtube to our videos set
                 # also we have to work with unique object id instead of id_video to avoid duplicate etc.
                 ressources_id = [item['_id'] for item in results]
-                app.logger.debug(str(results))
-
+                
                 current_query = Video(mongo_curs)
                 for ressource_id in ressources_id:
                     # after ressources id taking videoId
@@ -809,8 +796,9 @@ def download_videos_by_type(query_id, query_type):
 
     import re
     query_name = re.sub('[^A-Za-z0-9]+', '_', query_name)
-    app.logger.debug(query_name)
-    filename = {'Content-Disposition':'attachment;filename=' + query_name + '.json'}
+    query_type = re.sub('[^A-Za-z0-9]+', '_', query_type)
+    filename = query_name + '_' + query_type + '.json'
+    filename = {'Content-Disposition':'attachment;filename=' + filename}
 
     # send back response
     response = app.response_class(
@@ -833,8 +821,6 @@ def config():
        api_key_validate = 'You need an API KEY from youtube'
     else:
        api_key_validate = session['api_key']
-
-    app.logger.debug(api_key_validate)
 
     if request.method == 'POST':
         if request.form.get('api_key'):
