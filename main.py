@@ -371,11 +371,17 @@ def channel():
 
 @app.route('/search', methods=['POST', 'GET'])
 def search():
+    # to integrate later to get global dated search (not only one day/one day) 
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('download/search.html', message='api key not set')
-        session['counter'] = 0
-        api = YouTube(session['api_key'])
+        uid = str(uuid4())
+        api = YouTube(api_key=session['api_key'])
+        user_id = session['profil']['id']
+        query =  str(request.form.get('query'))
+        part =  str(request.form.get('part')),
+        order =  str(request.form.get('order'))
+        language =  str(request.form.get('language'))
 
         # IF DATE = ONE SEARCH BY DAY
         if request.form.get('advanced'):
@@ -387,36 +393,25 @@ def search():
             d_end = datetime.datetime.strptime(
                 ed_point, "%Y-%m-%dT%H:%M:%SZ")
 
-            # add in session
-            session['request'] = {
-                'q': request.form.get('query'),
-                'part': ', '.join(request.form.getlist('part')),
-                'language': request.form.get('language'),
-                'maxResults': maxResults,
-                'order': request.form.get('order'),
-                'publishedAfter': st_point,
-                'publishedBefore': ed_point
-            }
-
             # insert query in mongo
             uid = str(uuid4())
             mongo_curs.db.queries.insert_one(
                 {
                     'query_id': uid,
-                    'author_id':session['profil']['id'],
-                    'query': session['request']['q'],
-                    'part': session['request']['part'],
-                    'language': session['request']['language'],
+                    'author_id':user_id,
+                    'query': query,
+                    'part':part,
+                    'language': language,
                     'maxResults': maxResults,
-                    'order': session['request']['order'],
-                    'date_start': session['request']['publishedAfter'],
-                    'date_end': session['request']['publishedBefore']
+                    'order': order,
+                    'date_start': st_point,
+                    'date_end': ed_point
                 }
             )
 
             # Parse date time from form
-            r_before = time.parse(session['request']['publishedBefore'])
-            r_after = time.parse(session['request']['publishedAfter'])
+            r_before = time.parse(st_point)
+            r_after = time.parse(ed_point)
             delta = r_before - r_after
             delta_days = delta.days + 1
 
@@ -424,19 +419,19 @@ def search():
             for n in range(delta.days + 1):
                 # increment one day later to get a one-day period
                 r_after_next = r_after + dt.timedelta(days=1)
-                session['request']['publishedAfter'] = r_after.isoformat()
-                session['request']['publishedBefore'] = r_after_next.isoformat()
+                st_point = r_after.isoformat()
+                ed_point = r_after_next.isoformat()
 
                 # Querying
                 date_results = api.get_query(
                     'search',
-                    q=session['request']['q'],
-                    part=session['request']['part'],
-                    language=session['request']['language'],
+                    q=query,
+                    part=part,
+                    language=language,
                     maxResults=maxResults,
-                    order=session['request']['order'],
-                    publishedAfter=session['request']['publishedAfter'],
-                    publishedBefore=session['request']['publishedBefore'])
+                    order=order,
+                    publishedAfter= st_point,
+                    publishedBefore= ed_point)
                 # saving
                 for each in date_results['items']:
                     each.update({'query_id': uid})
@@ -446,13 +441,13 @@ def search():
                 while 'nextPageToken' in date_results and len(date_results['items']) != 0:
                     date_results = api.get_query(
                         'search',
-                        q = session['request']['q'],
-                        part = session['request']['part'],
-                        language = session['request']['language'],
+                        q = query,
+                        part = part,
+                        language = language,
                         maxResults = maxResults,
-                        order = session['request']['order'],
-                        publishedAfter = session['request']['publishedAfter'],
-                        publishedBefore = session['request']['publishedBefore'],
+                        order = order,
+                        publishedAfter = st_point,
+                        publishedBefore = ed_point,
                         pageToken = date_results['nextPageToken']
                         )
                     # insert video-info except if last result
@@ -470,47 +465,73 @@ def search():
                 { 'query_id': uid },
                 { '$set': {'count_videos': count_videos } }
             )
- 
+             
             return redirect(url_for('manage'))
 
-        # to integrate later to get global dated search (not one day/one day) 
-        # elif
-        #     #  request
-        #     date_results = api.get_query(
-        #         'search',
-        #         q=session['request']['q'],
-        #         part=session['request']['part'],
-        #         language=session['request']['language'],
-        #         maxResults=maxResults,
-        #         order=session['request']['order'],
-        #         publishedAfter=session['request']['publishedAfter'],
-        #         publishedBefore=session['request']['publishedBefore']) 
         else:
-            session['request'] = {
-                'q': request.form.get('query'),
-                'part': ', '.join(request.form.getlist('part')),
-                'language': request.form.get('language'),
-                'maxResults': maxResults,
-                'order': request.form.get('order')
-            }
-            search_results = YouTube.get_search(
-                session['api_key'], session['request'])
-            previous_token = search_results['nextPageToken']
-            search_results_string = json.dumps(
-                search_results, sort_keys=True, indent=4, separators=(',', ': '))
+            search_results = api.get_query(
+                'search',
+                q = query,
+                part = part,
+                language = order,
+                maxResults=maxResults,
+                order = language
+            )
 
-            return render_template('methods/view_results.html', results=search_results, string=search_results_string, counter=session['counter'], prev=previous_token)
-    # Go to next page
-    elif request.method == 'GET' and request.args.get('nextPageToken'):
-        session['counter'] += 1
-        pageToken = request.args.get('nextPageToken')
-        search_results = YouTube.get_search(
-            session['api_key'], session['request'])
-        search_results_string = json.dumps(
-            search_results, sort_keys=True, indent=2, separators=(',', ': '))
-        return render_template('methods/view_results.html', results=search_results, string=search_results_string, counter=session['counter'], prev=pageToken)
-    return render_template('download/search.html', language_code=language_code)
+            # insert query
+            mongo_curs.db.queries.insert_one(
+                {
+                    'author_id': user_id,
+                    'query_id': uid,
+                    'query': query,
+                    'part': part,
+                    'language': order,
+                    'maxResults': maxResults,
+                    'order': language,
+                }
+            )
+            # insert videos
+            for each in search_results['items']:
+                each.update({'query_id': uid})
+                # thing is search query can provide video, an playlist id...
+                if 'snippet' in each:
+                    if 'videoId' in each['id']:
+                        each['snippet'].update({'videoId': each['id']['videoId']})
+                    elif 'playlistId' in each['id']:
+                        each['snippet'].update({'playlistId' : each['id']['playlistId']})
+                elif 'videoId' in each['id']:
+                    each.update({'videoId': each['id']['videoId']})
+                elif 'playlistId' in each['id']:
+                    each.update({'playlistId': each['id']['playlistId']})
+                mongo_curs.db.videos.insert_one(each)
 
+            ## Loop and save
+            while 'nextPageToken' in search_results:
+                search_results = api.get_query(
+                    'search',
+                    q=query,
+                    part=part,
+                    language=order,
+                    maxResults=maxResults,
+                    order=language,
+                    pageToken=search_results['nextPageToken']
+                )
+                if not search_results['items']:
+                    # add metrics for query in json
+                    count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+                    mongo_curs.db.queries.update_one(
+                        { 'query_id': uid },
+                        { '$set': {'count_videos': count_videos } }
+                    )
+                    return redirect(url_for('manage'))
+
+                # insert video-info
+                for each in search_results['items']:
+                    each.update({'query_id': uid})
+                    each = YouTube.cleaning_each(each)
+                    mongo_curs.db.videos.insert_one(each)
+
+            return redirect(url_for('manage'))
 
 
 ##########################################################################
@@ -625,89 +646,10 @@ def aggregate():
                     #call add_stats to update()
                     current_query.add_stats_for_each_entry(video_result, ressource_id)
 
-
-
             return redirect(url_for('manage'))
 
     return render_template('aggregate.html', stats=stats)
 
-##########################################################################
-# processing results uesd by /search and /aggregate
-##########################################################################
-@app.route('/process_results')
-def process_results():
-    uid = str(uuid4())
-    api = YouTube(api_key=session['api_key'])
-    session['counter'] = 0
-
-    if 'q' in session['request'] :
-        # build request based on session
-        search_results = api.get_query(
-            'search',
-            q=session['request']['q'],
-            part=session['request']['part'],
-            language=session['request']['language'],
-            maxResults=maxResults,
-            order=session['request']['order']
-        )
-
-        # insert query
-        mongo_curs.db.queries.insert_one(
-            {
-                'author_id':session['profil']['id'],
-                'query_id': uid,
-                'query': session['request']['q'],
-                'part': session['request']['part'],
-                'language': session['request']['language'],
-                'maxResults': maxResults,
-                'order': session['request']['order'],
-            }
-        )
-        # insert videos
-        for each in search_results['items']:
-            each.update({'query_id': uid})
-            # thing is search query can provide video, an playlist id...
-            if 'snippet' in each:
-                if 'videoId' in each['id']:
-                    each['snippet'].update({'videoId': each['id']['videoId']})
-                elif 'playlistId' in each['id']:
-                    each['snippet'].update({'playlistId' : each['id']['playlistId']})
-            elif 'videoId' in each['id']:
-                each.update({'videoId': each['id']['videoId']})
-            elif 'playlistId' in each['id']:
-                each.update({'playlistId': each['id']['playlistId']})
-            mongo_curs.db.videos.insert_one(each)
-
-        ## Loop and save
-        while 'nextPageToken' in search_results:
-            session['counter'] += 1
-            name_file = str(session['counter']) + '.json'
-            search_results = api.get_query(
-                'search',
-                q=session['request']['q'],
-                part=session['request']['part'],
-                language=session['request']['language'],
-                maxResults=maxResults,
-                order=session['request']['order'],
-                pageToken=search_results['nextPageToken']
-            )
-            if not search_results['items']:
-                # add metrics for query in json
-                count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-                mongo_curs.db.queries.update_one(
-                    { 'query_id': uid },
-                    { '$set': {'count_videos': count_videos } }
-                )
-                return redirect(url_for('manage'))
-
-            # insert video-info
-            for each in search_results['items']:
-                each.update({'query_id': uid})
-                each = YouTube.cleaning_each(each)
-                mongo_curs.db.videos.insert_one(each)
-
-        return redirect(url_for('manage'))
-    return redirect(url_for('manage'))
 
 ##########################################################################
 # Documentation
