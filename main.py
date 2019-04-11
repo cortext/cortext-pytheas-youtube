@@ -193,12 +193,15 @@ def playlist_info():
 
 
 ##########################################################################
-# start Download
+# Get List of vids
+# landing page who will redirect respectively to each of 
+# /videos-list 
+# /playlist 
+# /channel 
+# /search
 ##########################################################################
 @app.route('/get-data', methods=['POST', 'GET'])
 def get_data():
-    # landing page who will redirect respectively to each of 
-    # /videos-list /playlist /channel and /search
     return render_template('get_data.html', language_code=language_code)
 
 @app.route('/videos-list', methods=['POST'])
@@ -379,9 +382,9 @@ def search():
         api = YouTube(api_key=session['api_key'])
         user_id = session['profil']['id']
         query =  str(request.form.get('query'))
-        part =  str(request.form.get('part')),
-        order =  str(request.form.get('order'))
-        language =  str(request.form.get('language'))
+        part = ','.join(request.form.getlist('part'))
+        order = str(request.form.get('order'))
+        language = str(request.form.get('language'))
 
         # IF DATE = ONE SEARCH BY DAY
         if request.form.get('advanced'):
@@ -395,24 +398,35 @@ def search():
 
             # insert query in mongo
             uid = str(uuid4())
-            mongo_curs.db.queries.insert_one(
-                {
+            user_info = {
+                    'query_id': uid,
+                    'author_id':user_id,
+                    'query': query, 
+            }
+            youtube_data = {
                     'query_id': uid,
                     'author_id':user_id,
                     'query': query,
+                    'q': query,
                     'part':part,
                     'language': language,
                     'maxResults': maxResults,
                     'order': order,
                     'date_start': st_point,
                     'date_end': ed_point
-                }
+            }
+            mongo_curs.db.queries.insert_one(
+                youtube_data
             )
-
+            [ youtube_data.pop(x) for x in ['query_id', 'author_id', 'query', 'date_start', 'date_end'] ]
+            
+            if language == 'None':
+                youtube_data.pop('language')
+            
             # Parse date time from form
             r_before = time.parse(st_point)
             r_after = time.parse(ed_point)
-            delta = r_before - r_after
+            delta = r_after - r_before
             delta_days = delta.days + 1
 
             # # Then iterate for each days
@@ -423,33 +437,42 @@ def search():
                 ed_point = r_after_next.isoformat()
 
                 # Querying
-                date_results = api.get_query(
-                    'search',
-                    q=query,
-                    part=part,
-                    language=language,
-                    maxResults=maxResults,
-                    order=order,
-                    publishedAfter= st_point,
-                    publishedBefore= ed_point)
+                youtube_data['publishedAfter'] = st_point
+                youtube_data['publishedBefore'] = ed_point
+                date_results = api.get_chrono_search(youtube_data)
+                
                 # saving
                 for each in date_results['items']:
-                    each.update({'query_id': uid})
+                    each.update(user_info)
                     each = YouTube.cleaning_each(each)
                     mongo_curs.db.videos.insert_one(each)
                 # loop
                 while 'nextPageToken' in date_results and len(date_results['items']) != 0:
-                    date_results = api.get_query(
-                        'search',
-                        q = query,
-                        part = part,
-                        language = language,
-                        maxResults = maxResults,
-                        order = order,
-                        publishedAfter = st_point,
-                        publishedBefore = ed_point,
-                        pageToken = date_results['nextPageToken']
+                    youtube_data['pageToken'] = date_results['nextPageToken']
+                    if language == 'None':
+                        date_results = api.get_query(
+                            'search',
+                            q = query,
+                            part = part,
+                            relevenceLanguage = language,
+                            maxResults = maxResults,
+                            order = order,
+                            publishedAfter = st_point,
+                            publishedBefore = ed_point,
+                            pageToken = date_results['nextPageToken']
                         )
+                    else:
+                        date_results = api.get_query(
+                            'search',
+                            q = query,
+                            part = part,
+                            maxResults = maxResults,
+                            order = order,
+                            publishedAfter = st_point,
+                            publishedBefore = ed_point,
+                            pageToken = date_results['nextPageToken']
+                        )
+
                     # insert video-info except if last result
                     # only if "items" not empty 
                     for each in date_results['items']:
@@ -473,9 +496,9 @@ def search():
                 'search',
                 q = query,
                 part = part,
-                language = order,
+                language = language,
                 maxResults=maxResults,
-                order = language
+                order = order
             )
 
             # insert query
@@ -485,9 +508,9 @@ def search():
                     'query_id': uid,
                     'query': query,
                     'part': part,
-                    'language': order,
+                    'language': language,
                     'maxResults': maxResults,
-                    'order': language,
+                    'order': order,
                 }
             )
             # insert videos
@@ -511,9 +534,9 @@ def search():
                     'search',
                     q=query,
                     part=part,
-                    language=order,
+                    language=language,
                     maxResults=maxResults,
-                    order=language,
+                    order=order,
                     pageToken=search_results['nextPageToken']
                 )
                 if not search_results['items']:
@@ -554,12 +577,9 @@ def complete_data():
             list_queries.append(doc)
     return render_template('complete_data.html', list_queries=list_queries)
 
-
 @app.route('/aggregate', methods=['POST', 'GET'])
 def aggregate():
-    stats = {    
-            'list_queries': [],
-        }
+    stats = { 'list_queries': [], }
 
     if request.method == 'GET':
         result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
@@ -598,6 +618,8 @@ def aggregate():
             for result in results:
                 if 'videoId' in result:
                     id_video = result['videoId']
+                elif result['kind'] == 'youtube#playlistItem':
+                    id_video = result['snippet']['resourceId']['videoId']
                 else:
                     id_video = result['id']['videoId']
 
@@ -633,6 +655,19 @@ def aggregate():
                         { '$set': {'count_comments': count_comments } }
                     )
             
+            if 'relatedVideos' in options_api:
+                # # Here we will add a list for each videos
+                ressources_id = [item['_id'] for item in results]
+                current_query = Video(mongo_curs)
+                
+                for ressource_id in ressources_id:
+                    # after ressources id taking videoId
+                    get_video_by_id = 'current_query.get_one_video(ressource_id)'
+                #     #video_result = api.get_query('videos', id=get_video_by_id['videoId'], part='statistics')
+                #     #call add_stats to update()
+                #     #current_query.add_stats_for_each_entry(video_result, ressource_id)
+
+
             if 'statistics' in options_api:
                 # Here we will just add 'statistics' part from youtube to our videos set
                 # also we have to work with unique object id instead of id_video to avoid duplicate etc.
@@ -750,7 +785,6 @@ def download_videos_by_type(query_id, query_type):
         headers=filename
     )
     return response
-
     
 ##########################################################################
 # Config

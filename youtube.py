@@ -75,17 +75,49 @@ class YouTube():
 
     # not used anymore for now but later...
     # have to invert between generic and complex methods who have to be repetaed often
-    def get_search(api_key, session):
-        search_results = YouTube(api_key).get_query(
-            'search',
-            q=session['q'],
-            part=session['part'],
-            relevanceLanguage=session['language'],
-            maxResults=session['maxResults'],
-            order=session['order']
-        )
+    def get_search(self, query_data):
+        if 'language' in query_data :
+            search_results = YouTube(self.api_key).get_query(
+                'search',
+                q=query_data['q'],
+                part=query_data['part'],
+                relevanceLanguage=query_data['language'],
+                maxResults=query_data['maxResults'],
+                order=query_data['order']
+            )
+        else:
+            search_results = YouTube(self.api_key).get_query(
+                'search',
+                q=query_data['q'],
+                part=query_data['part'],
+                maxResults=query_data['maxResults'],
+                order=query_data['order']
+            )
         return search_results
 
+    def get_chrono_search(self, query_data):
+        if 'language' in query_data :
+            search_results = YouTube(self.api_key).get_query(
+                'search',
+                q=query_data['q'],
+                part=query_data['part'],
+                relevanceLanguage='',
+                maxResults=query_data['maxResults'],
+                publishedAfter = query_data['publishedBefore'],
+                publishedBefore = query_data['publishedAfter'],
+                order=query_data['order'],
+            )
+        else:
+            search_results = YouTube(self.api_key).get_query(
+                'search',
+                q=query_data['q'],
+                part=query_data['part'],
+                maxResults=query_data['maxResults'],
+                publishedAfter = query_data['publishedBefore'],
+                publishedBefore = query_data['publishedAfter'],
+                order=query_data['order'],
+            )
+        return search_results
     
     def get_channel_videos(self, mongo_curs, param):
         # taking paramaters pre-formated in Youtube style
