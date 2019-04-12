@@ -422,6 +422,7 @@ def search():
             
             if language == 'None':
                 youtube_data.pop('language')
+                language = ''
             
             # Parse date time from form
             r_before = time.parse(st_point)
@@ -429,18 +430,25 @@ def search():
             delta = r_after - r_before
             delta_days = delta.days + 1
 
+            app.logger.debug(str(delta_days))
+
             # # Then iterate for each days
             for n in range(delta.days + 1):
+                app.logger.debug(str(n))
                 # increment one day later to get a one-day period
                 r_after_next = r_after + dt.timedelta(days=1)
                 st_point = r_after.isoformat()
                 ed_point = r_after_next.isoformat()
-
-                # Querying
                 youtube_data['publishedAfter'] = st_point
                 youtube_data['publishedBefore'] = ed_point
-                date_results = api.get_chrono_search(youtube_data)
                 
+                app.logger.debug(str(st_point))
+                app.logger.debug(str(ed_point))
+
+                # Querying
+                date_results = api.get_chrono_search(youtube_data)
+                app.logger.debug('count is : ' + str(len(date_results['items'])))
+                app.logger.debug(str(date_results['nextPageToken']))
                 # saving
                 for each in date_results['items']:
                     each.update(user_info)
@@ -456,9 +464,9 @@ def search():
                             part = part,
                             relevenceLanguage = language,
                             maxResults = maxResults,
-                            order = order,
-                            publishedAfter = st_point,
-                            publishedBefore = ed_point,
+                            order = 'date',
+                            publishedAfter = ed_point,
+                            publishedBefore = st_point,
                             pageToken = date_results['nextPageToken']
                         )
                     else:
@@ -467,9 +475,9 @@ def search():
                             q = query,
                             part = part,
                             maxResults = maxResults,
-                            order = order,
-                            publishedAfter = st_point,
-                            publishedBefore = ed_point,
+                            order = 'date',
+                            publishedAfter = ed_point,
+                            publishedBefore = st_point,
                             pageToken = date_results['nextPageToken']
                         )
 

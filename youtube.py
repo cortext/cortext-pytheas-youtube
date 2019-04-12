@@ -101,11 +101,11 @@ class YouTube():
                 'search',
                 q=query_data['q'],
                 part=query_data['part'],
-                relevanceLanguage='',
+                relevanceLanguage=query_data['language'],
                 maxResults=query_data['maxResults'],
-                publishedAfter = query_data['publishedBefore'],
-                publishedBefore = query_data['publishedAfter'],
-                order=query_data['order'],
+                publishedAfter = query_data['publishedAfter'],
+                publishedBefore = query_data['publishedBefore'],
+                order='date',
             )
         else:
             search_results = YouTube(self.api_key).get_query(
@@ -115,7 +115,7 @@ class YouTube():
                 maxResults=query_data['maxResults'],
                 publishedAfter = query_data['publishedBefore'],
                 publishedBefore = query_data['publishedAfter'],
-                order=query_data['order'],
+                order='date',
             )
         return search_results
     
