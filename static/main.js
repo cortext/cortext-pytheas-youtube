@@ -11,9 +11,39 @@ $(document).ready( function () {
 
 
     // WARNING ALL OF THESE IS AWFULL...
-    // catch multiselect
-    var multiSelect = document.getElementsByClassName('multiSelect');
+    var buttonPlaylist = document.getElementsByClassName("enterUrlPlaylist")[0];
+    buttonPlaylist.addEventListener("click", function(el) {
+        if (buttonPlaylist.offsetWidth > 0 && buttonPlaylist.offsetHeight > 0) {
+            console.log('visible !');
 
+            var input = document.getElementById("userinputPlaylist");
+            var listUrlId = document.getElementById("listUrlIdPlaylist");
+
+            var li = document.createElement("li");
+            li.className = 'list-group-item';
+
+            var inputEl = document.createElement('input');
+            inputEl.type = 'checkbox';
+            inputEl.name = 'list_url_id';
+            inputEl.value = input.value;
+            inputEl.checked = true;
+
+            var label = document.createElement('label');
+            label.textContent = input.value;
+
+            li.appendChild(inputEl);
+            li.appendChild(label);
+            li.setAttribute('dtype', 'playlistId');
+
+
+            console.log(listUrlId);
+            listUrlId.appendChild(li);
+        }
+    });
+
+
+    // catch multiselect for channel
+    var multiSelect = document.getElementsByClassName('multiSelect');
     Object.keys(multiSelect).forEach(function(el) {
         // tricky tips to get one button (same class/only one visible)
         var buttonUsername = multiSelect[el].getElementsByClassName("enterUrl")[0];
@@ -38,7 +68,7 @@ $(document).ready( function () {
                 label.textContent = input.value;
 
                 li.appendChild(inputEl);
-                li.appendChild(label);
+                li.appendChild(label);el
                 li.setAttribute('dtype', 'username');
 
 
