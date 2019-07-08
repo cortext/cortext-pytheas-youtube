@@ -214,13 +214,16 @@ def video():
             list_videos = request.form.get('list_videos')
             list_videos = list_videos.splitlines()
             list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]
-            
             list_results = {'items': [] }
 
             for id_video in list_videos:
                 part = ', '.join(request.form.getlist('part'))                
                 video_result = api.get_query('videos', id=id_video, part=part)
-                list_results['items'].append(video_result['items'][0])
+                print(video_result)
+                try:
+                    list_results['items'].append(video_result['items'][0])
+                except:
+                    continue
 
             name_query = str(request.form.get('name_query'))
             mongo_curs.db.queries.insert_one(
@@ -425,12 +428,12 @@ def search():
                 language = ''
             
             # Parse date time from form
-            r_before = time.parse(st_point)
-            r_after = time.parse(ed_point)
-            delta = r_after - r_before
+            r_before = time.parse(ed_point)
+            r_after = time.parse(st_point)
+            delta = r_before - r_after
             delta_days = delta.days + 1
 
-            app.logger.debug(str(delta_days))
+            app.logger.debug('# DELTA DAYS = ' + str(delta_days))
 
             # # Then iterate for each days
             for n in range(delta.days + 1):
@@ -439,8 +442,9 @@ def search():
                 r_after_next = r_after + dt.timedelta(days=1)
                 st_point = r_after.isoformat()
                 ed_point = r_after_next.isoformat()
+
                 youtube_data['publishedAfter'] = st_point
-                youtube_data['publishedBefore'] = ed_point
+                youtube_data['publishedBefore'] = ed_point 
                 
                 app.logger.debug(str(st_point))
                 app.logger.debug(str(ed_point))
@@ -448,7 +452,7 @@ def search():
                 # Querying
                 date_results = api.get_chrono_search(youtube_data)
                 app.logger.debug('count is : ' + str(len(date_results['items'])))
-                app.logger.debug(str(date_results['nextPageToken']))
+
                 # saving
                 for each in date_results['items']:
                     each.update(user_info)
@@ -622,7 +626,6 @@ def aggregate():
 
             list_vid = []
             # need to fix this later
-
             for result in results:
                 if 'videoId' in result:
                     id_video = result['videoId']
@@ -637,7 +640,8 @@ def aggregate():
             if 'captions' in options_api:
                 # WIP
                 current_captions = Caption(mongo_curs, query_id)
-                current_captions.create_if_not_exist(id_video)
+                for id_video in list_vid:
+                    current_captions.create_if_not_exist(id_video)
 
             if 'comments' in options_api:
                 current_comment_thread = Comment(mongo_curs, query_id)

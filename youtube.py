@@ -113,8 +113,8 @@ class YouTube():
                 q=query_data['q'],
                 part=query_data['part'],
                 maxResults=query_data['maxResults'],
-                publishedAfter = query_data['publishedBefore'],
-                publishedBefore = query_data['publishedAfter'],
+                publishedAfter = query_data['publishedAfter'],
+                publishedBefore = query_data['publishedBefore'],
                 order='date',
             )
         return search_results
