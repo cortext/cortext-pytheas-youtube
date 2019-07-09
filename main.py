@@ -642,6 +642,11 @@ def aggregate():
                 current_captions = Caption(mongo_curs, query_id)
                 for id_video in list_vid:
                     current_captions.create_if_not_exist(id_video)
+                count_captions = int(mongo_curs.db.captions.find({'query_id': query_id}).count())
+                mongo_curs.db.queries.update_one(
+                    { 'query_id': query_id },
+                    { '$set': {'count_captions': count_captions } }
+                )
 
             if 'comments' in options_api:
                 current_comment_thread = Comment(mongo_curs, query_id)
