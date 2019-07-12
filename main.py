@@ -317,6 +317,14 @@ def channel():
         list_channel_id = [YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_id') ]
         list_channel = list_channel_username + list_channel_id
         
+
+        # app.logger.debug(request.form.getlist('testo'))
+        # app.logger.debug(request.form.get('testo'))
+
+        list_channel_id = request.form.get('testo')
+        app.logger.debug(type(list_channel_id))
+        list_channel_id = list_channel_id.splitlines()
+
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
         
@@ -638,7 +646,6 @@ def aggregate():
                 query_id = result['query_id']
 
             if 'captions' in options_api:
-                # WIP
                 current_captions = Caption(mongo_curs, query_id)
                 for id_video in list_vid:
                     current_captions.create_if_not_exist(id_video)
@@ -657,6 +664,7 @@ def aggregate():
                         videoId=id_video,
                         part='id, replies, snippet')
                     current_comment_thread.create_comment_for_each(commentThreads_result)
+                    
                     ## Loop and save while there is content
                     while 'nextPageToken' in commentThreads_result:
                         commentThreads_result = api.get_query(
@@ -673,30 +681,32 @@ def aggregate():
                     )
             
             if 'relatedVideos' in options_api:
-                # # Here we will add a list for each videos
-                ressources_id = [item['_id'] for item in results]
-                current_query = Video(mongo_curs)
+                current_relatedVideos = relatedVideos(mongo_curs, query_id)
+                for id_video in list_vid:
+                    current_relatedVideos.create_if_not_exist(id_video)
+                # dirty but mark it as added
+                mongo_curs.db.queries.update_one(
+                    { 'query_id': query_id },
+                    { '$set': {'related_added': True } }
+                )
                 
-                for ressource_id in ressources_id:
-                    # after ressources id taking videoId
-                    get_video_by_id = 'current_query.get_one_video(ressource_id)'
-                #     #video_result = api.get_query('videos', id=get_video_by_id['videoId'], part='statistics')
-                #     #call add_stats to update()
-                #     #current_query.add_stats_for_each_entry(video_result, ressource_id)
-
-
             if 'statistics' in options_api:
                 # Here we will just add 'statistics' part from youtube to our videos set
                 # also we have to work with unique object id instead of id_video to avoid duplicate etc.
-                ressources_id = [item['_id'] for item in results]
                 
                 current_query = Video(mongo_curs)
-                for ressource_id in ressources_id:
+                for id_video in list_vid:
                     # after ressources id taking videoId
-                    get_video_by_id = current_query.get_one_video(ressource_id)
-                    video_result = api.get_query('videos', id=get_video_by_id['videoId'], part='statistics')
-                    #call add_stats to update()
-                    current_query.add_stats_for_each_entry(video_result, ressource_id)
+                    get_video_by_id = current_query.get_one_video(id_video)
+                    video_result = api.get_query('videos', id=id_video, part='id,statistics')
+                    app.logger.debug('GROSOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  : {}'.format(video_result))
+                    # call add_stats to update()
+                    current_query.add_stats_for_each_entry(video_result, id_video)
+                    
+                mongo_curs.db.queries.update_one(
+                    { 'query_id': query_id },
+                    { '$set': {'metrics_added': True } }
+                )
 
             return redirect(url_for('manage'))
 

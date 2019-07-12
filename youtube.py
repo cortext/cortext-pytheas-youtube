@@ -128,7 +128,6 @@ class YouTube():
         del param_lighted['query_id']
 
         api = YouTube(self.api_key)
-
         channel_playlistId = api.get_query(
             'channels',
             **param_lighted
@@ -214,48 +213,6 @@ class YouTube():
 
         return playlist_results
 
-    # def get_related_videos(self, mongo_curs, param):
-    #     query_id = param['query_id']
-    #     query_name = param['query']
-    #     playlist_id = param['playlist_id']
-    #     part = param['part']
-    #     maxResults = param['maxResults']
-        
-    #     api = YouTube(self.api_key)
-    #     playlist_results = api.get_query(
-    #         'playlistItems',
-    #         playlistId=playlist_id,
-    #         part=part,
-    #         maxResults=maxResults
-    #     )
-
-    #     for each in playlist_results['items']:
-    #         each.update({'query_id'   : query_id,
-    #                      'query' : query_name})
-    #         each = YouTube.cleaning_each(each)
-    #         mongo_curs.db.videos.insert_one(each)
-
-    #     while 'nextPageToken' in playlist_results:
-    #         playlist_results = api.get_query(
-    #             'playlistItems',
-    #             playlistId=playlist_id,
-    #             part=part,
-    #             maxResults=maxResults,
-    #             pageToken=playlist_results['nextPageToken']
-    #         )
-
-    #         for each in playlist_results['items']:
-    #             each.update({'query_id': uid,
-    #                          'query' : query_name})
-    #             each = YouTube.cleaning_each(each)
-    #             mongo_curs.db.videos.insert_one(each)
-
-    #         if not playlist_results['items']:
-    #             break
-
-    #     return playlist_results
-
-
     def verify_error(api_key, result_query):
         if not 'error' in result_query:
             return result_query
@@ -307,7 +264,7 @@ class YouTube():
                 id_channel_or_user = id_channel_or_user.replace(
                     '/user/', '')
         except Exception as e:
-            logger.debug('Unexpected error on cleaning_channel :' + str(e))           
+            logger.debug('Unexpected error on cleaning_channel :' + str(e))
 
         return id_channel_or_user
 
@@ -362,9 +319,11 @@ class Video():
     # future update methode
     def add_stats_for_each_entry(self, video_result, ressource_id):
         if len(video_result['items']) != 0 :
-            res_req = self.db.videos.update(
+            self.db.videos.update(
                 {   
-                    '_id' : ressource_id 
+                    'id' : {
+                        'videoId': ressource_id
+                    } 
                 },{ 
                     '$set': {
                         'statistics': video_result['items'][0]['statistics']
@@ -372,8 +331,8 @@ class Video():
                 }, upsert=False
             )
         else:
-            print('ELSE')
-        return print('add_stats_for_each_entry is done !')
+            logger.debug('ELSE')
+        return 
 
     # def update(self, dataUser):
     #     user_update = self.db.users.update_one(
@@ -458,8 +417,6 @@ class Comment():
                             'is_top_level_comment': 'false'
                         }
                         self.db.comments.insert_one(CommentIntegrated)
-            #logger.debug('total nb comment for this request = ' + str(nb_comment))
-
         else:
             logger.error(commentThread['error'])
             logger.error('reason of error is : ' + commentThread['error']['errors'][0]['reason'])
@@ -479,6 +436,49 @@ class Comment():
             logger.error(
                 'error need more investigate'
             )
+        return
+
+
+##########################################################################
+# Related Videos
+##########################################################################
+class RelatedVideos():   
+    def __init__(self, mongo_curs, query_id):
+        self.db = mongo_curs.db
+        self.query_id = query_id
+
+    def create_relatedVideos(self, video_id):
+        self.db.relatedVideos.insert_one({
+            'query_id' : self.query_id,
+            'relatedToVideoId' : video_id,
+            'part' : 'id,snippet',
+            'type' : 'video',
+        })
+
+    def create_if_not_exist(self, video_id):
+        query_id = self.query_id
+        search_results = YouTube(self.api_key).get_query(
+                'search',
+                part='id,snippet',
+                maxResults=50,
+                relatedToVideoId=video_id,
+                type='video',
+            )
+
+        for x in search_results['items']:
+            logger.debug(
+                str('FIKNJKBNJKFNDJKNFJKNKNFNDJKN') + str(x) + str(type(x))
+            ) 
+
+        try:
+            current_relatedVideos = self.db.relatedVideos.find_one_or_404(
+                { '$and':[{ 'query_id': query_id }, { 'relatedToVideoId': video_id }] }
+            )
+        except BaseException as e:
+            self.create_relatedVideos(video_id)
+            logger.warning(
+                str('relatedVideos not found or error. Log is here : ') + str(e) + str(type(e))
+            ) 
         return
 
 ##########################################################################
