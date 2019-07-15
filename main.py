@@ -760,6 +760,7 @@ def manage():
     return render_template('manage.html', stats=stats)
 
 # Delete dataset
+# should be partially moved to /rest
 @app.route('/delete/<query_id>', methods=['GET'])
 def delete(query_id):
     # using json_util from dumping querying (see later)
@@ -774,6 +775,30 @@ def delete(query_id):
         mongo_curs.db[table].remove({'query_id': query_id})
 
     return redirect(url_for('manage'))
+
+@app.route('/extract_channel/<query_id>', methods=['GET'])
+def extract_channel(query_id):
+    # find name of query for filename download
+    r_name = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id)
+    query = r_name.json()
+    query_name = re.sub('[^A-Za-z0-9]+', '_', str(query['query']))
+    filename = query_name + '_unique_channel'
+
+    # extract channel mongo query
+    query_result = mongo_curs.db['videos'].distinct("snippet.channelId", {'query_id': query_id})
+
+    # zip
+    # have to switch to "with opens()" forms because more safe closing file style
+    in_memory = BytesIO()
+    zf = zipfile.ZipFile(in_memory, mode="w", compression=zipfile.ZIP_DEFLATED)
+    zf.writestr(filename + '.json', json.dumps(query_result))
+    zf.close()
+    in_memory.seek(0)
+    data = in_memory.read()
+
+    return Response(data,
+            mimetype='application/zip',
+            headers={'Content-Disposition':'attachment;filename='+filename+'.zip'})
 
 ## View in-db human readable
 # request by type_data and query_id to rest urls then rendering html template
@@ -805,6 +830,7 @@ def download_videos_by_type(query_id, query_type):
     query_type = re.sub('[^A-Za-z0-9]+', '_', query_type)
     filename = query_name + '_' + query_type
     
+    # zip
     # have to switch to "with opens()" forms because more safe closing file style
     in_memory = BytesIO()
     zf = zipfile.ZipFile(in_memory, mode="w", compression=zipfile.ZIP_DEFLATED)
