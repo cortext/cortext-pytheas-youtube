@@ -1,5 +1,6 @@
 {% extends "base.html" %} {% block content %}
 <div class="container">
+    
     <div class="row">
         <div class="col-md-12">
             <h2>Manage results</h2>
@@ -10,85 +11,306 @@
     
     <div class='row'>
         <div class="col-12 my-4">
-            <h3>Your queries</h3>
+            <h4>Nota</h4>
+            <p><i class="fa fa-eye" aria-hidden="true"></i> : click on the eyes icon to explore a dataset</p>
+            <p><i class="fa fa-download" aria-hidden="true"></i> : click on the download icon to download file</p>
         </div>
     </div>
 
+
+    <div class="row">
+        <div class="col-12 my-4">
+            <h4>Queries type</h4>
+            <p>Your data are sorted by type. Choose one</p>
+        </div>
+
+        <div class="accordion col-12 my-4" id="accordionExample">
+          <div class="card">
+            <div class="card-header" id="headingSearch">
+              <h2 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseSearch" aria-expanded="true" aria-controls="collapseSearch">
+                  Search queries
+                </button>
+              </h2>
+            </div>
+
+            <div id="collapseSearch" class="collapse " aria-labelledby="headingSearch" data-parent="#accordionExample">
+              <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr id="headCol">
+                            <th>query name</th>
+                            <th>order</th>
+                            <th>part</th>
+                            <th>language</th>
+                            <th>date_start/date_end</th>
+                            <th>videos</th>
+                            <th>comments</th>
+                            <th>captions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
+                        <tr>
+                            <td>{{query['query']}}</td>
+                            <!-- -->
+                            <td>{{query['order']}}</td>
+                            <td>{{query['part']}}</td>
+                            <td class="text-center">{{query['language']}}</td>
+                            {% if query['date_start'] is defined %}
+                            <td>{{query['date_start'][0:10]}} / {{query['date_end'][0:10]}}</td>
+                            {% else %}
+                                <td></td>
+                            {% endif %}
+
+                            <!-- -->
+                            <td class="text-center"> 
+                                <a href="/view-videos/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countVideos']}}
+                                <a href="/download/videos/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-comments/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countComments']}}
+                                <a href="/download/comments/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-captions/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countCaptions']}}
+                                <a href="/download/captions/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %} {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header" id="headingChannels">
+              <h2 class="mb-0">
+                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseChannels" aria-expanded="false" aria-controls="collapseChannels">
+                  Channels
+                </button>
+              </h2>
+            </div>
+            <div id="collapseChannels" class="collapse" aria-labelledby="headingChannels" data-parent="#accordionExample">
+              <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr id="headCol">
+                            <th>Channel_id</th>
+                            <th>Part</th>
+                            <th>CountVideos</th>
+                            <th>CountComments</th>
+                            <th>CountCaptions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
+                        <tr>
+                            <td>{{query['channel_id']}}</td>
+                            <td class="text-center">{{query['part']}}</td>
+
+                            <!-- -->
+                            <td class="text-center"> 
+                                <a href="/view-videos/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countVideos']}}
+                                <a href="/download/videos/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-comments/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countComments']}}
+                                <a href="/download/comments/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-captions/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countCaptions']}}
+                                <a href="/download/captions/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %} {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header" id="headingThree">
+              <h2 class="mb-0">
+                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapsePlaylists" aria-expanded="false" aria-controls="collapsePlaylists">
+                  Playlists
+                </button>
+              </h2>
+            </div>
+            <div id="collapsePlaylists" class="collapse" aria-labelledby="headingPlaylists" data-parent="#accordionExample">
+              <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr id="headCol">
+                            <th>Playlists</th>
+                            <th>Part</th>
+                            <th>CountVideos</th>
+                            <th>CountComments</th>
+                            <th>CountCaptions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
+                        <tr>
+                            <td>{{query['playlist_id']}}</td>
+                            <td class="text-center">{{query['part']}}</td>
+
+                            <!-- -->
+                            <td class="text-center"> 
+                                <a href="/view-videos/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countVideos']}}
+                                <a href="/download/videos/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-comments/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countComments']}}
+                                <a href="/download/comments/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-captions/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countCaptions']}}
+                                <a href="/download/captions/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %} {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header" id="arbitraryLists">
+              <h2 class="mb-0">
+                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseLists" aria-expanded="false" aria-controls="collapseLists">
+                  Arbitrary Lists
+                </button>
+              </h2>
+            </div>
+            <div id="collapseLists" class="collapse" aria-labelledby="headingLists" data-parent="#accordionExample">
+              <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr id="headCol">
+                            <th>Query name set</th>
+                            <th>Part</th>
+                            <th>CountVideos</th>
+                            <th>CountComments</th>
+                            <th>CountCaptions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
+                        <tr>
+                            <td>{{query['query']}}</td>
+                            <td class="text-center">{{query['part']}}</td>
+
+                            <!-- -->
+                            <td class="text-center"> 
+                                <a href="/view-videos/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countVideos']}}
+                                <a href="/download/videos/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-comments/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countComments']}}
+                                <a href="/download/comments/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/view-captions/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                {{query['countCaptions']}}
+                                <a href="/download/captions/{{ query['query_id'] }}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %} {% endif %} {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    </div>
+
+
     <div class='row'>
-        <div class="col-12 table d-flex justify-content-center">
-            <table class="table">
-                <thead>
-                    <tr id="headCol">
-                        <th colspan="4">TYPE</th>
-                        <th colspan="4">PARAMETERS</th>
-                        <th colspan="3">COUNT</th>
-                        <th colspan="4">METHOD</th>
-                    </tr>
-                    <tr>
-                        <th>Search Query</th>
-                        <th>Channel(s)</th>
-                        <th>Playlist(s)</th>
-                        <th>Arbitrary video(s)</th>
-                        <!-- -->
-                        <th>Order</th>
-                        <th>Part(query)</th>
-                        <th>Language</th>
-                        <th>Date start/end </th>
-                        <!-- -->
-                        <th>Videos</th>
-                        <th>Comments</th>
-                        <th>Captions</th>
-                        <!-- -->
-                        <th>Extract unique author</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
-                    <tr>
-                        <td>{{query['query']}}</td>
-                        <td>{{query['channel_id']}}</td>
-                        <td>{{query['playlist_id']}}</td>
-                        <td></td>
-                        <!-- -->
-                        <td>{{query['order']}}</td>
-                        <td>{{query['part']}}</td>
-                        <td class="text-center">{{query['language']}}</td>
-                        {% if query['date_start'] is defined %}
-                        <td>{{query['date_start'][0:10]}} / {{query['date_end'][0:10]}}</td>
-                        {% else %}
-                        <td></td>
-                        {% endif %}
-                        <!-- -->
-                        <td class="text-center"> 
-                            <a href="/view-videos/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
-                            {{query['countVideos']}}
-                            <a href="/download/videos/{{ query['query_id'] }}">
-                                <i class="fa fa-download" aria-hidden="true"></i>
-                            </a>
-                        </td>
-                        <td class="text-center">
-                            <a href="/view-comments/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
-                            {{query['countComments']}}
-                            <a href="/download/comments/{{ query['query_id'] }}">
-                                <i class="fa fa-download" aria-hidden="true"></i>
-                            </a>
-                        </td>
-                        <td class="text-center">
-                            <a href="/view-captions/{{ query['query_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
-                            {{query['countCaptions']}}
-                            <a href="/download/captions/{{ query['query_id'] }}">
-                                <i class="fa fa-download" aria-hidden="true"></i>
-                            </a>
-                        </td>
-                        <!-- -->
-                        <td class="text-center"><a href="/extract_channel/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
-                        <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
-                    </tr>
-                    {% endfor %} {% endif %} {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-12 my-4">
+            <h4>Delete your queries</h4>
+            <p>Warning here you can permantely delete your queries</p>
+        </div>
+
+        <div class="accordion col-12 my-4">
+          <div class="card">
+            <div class="card-header" id="headingOne">
+              <h2 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseDelete" aria-expanded="true" aria-controls="collapseDelete">
+                  Delete Methods
+                </button>
+              </h2>
+            </div>
+
+            <div id="collapseDelete" class="collapse " aria-labelledby="headingDelete">
+              <div class="card-body">
+                
+                <div class="col-12 table d-flex justify-content-center">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Query name</th>
+                                <!-- -->
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
+                            <tr>
+                                <td>{{query['query']}}</td>
+                                <!-- -->
+                                <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
+                            </tr>
+                            {% endfor %} {% endif %} {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+              </div>
+            </div>
+          </div>
         </div>
     </div>
+
+
 </div>
 {% endblock %}
