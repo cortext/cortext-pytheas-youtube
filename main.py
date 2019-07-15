@@ -8,6 +8,9 @@ from uuid import uuid4
 import datetime
 import datetime as dt
 import dateutil.parser as time
+import re
+import zipfile
+from io import BytesIO
 # Flask
 from flask import Flask
 from flask import render_template
@@ -18,6 +21,7 @@ from flask import send_file
 from flask import redirect
 from flask import url_for
 from flask import jsonify
+from flask import send_file
 # Ext lib
 # from flask_bootstrap import Bootstrap
 from furl import furl
@@ -321,8 +325,7 @@ def channel():
         # app.logger.debug(request.form.getlist('testo'))
         # app.logger.debug(request.form.get('testo'))
 
-        list_channel_id = request.form.get('testo')
-        app.logger.debug(type(list_channel_id))
+        list_channel_id = request.form.get('list_id_textarea')
         list_channel_id = list_channel_id.splitlines()
 
         query_name = str(request.form.get('query_name'))
@@ -798,21 +801,22 @@ def download_videos_by_type(query_id, query_type):
     r = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
     query_result = r.json()
 
-    import re
     query_name = re.sub('[^A-Za-z0-9]+', '_', query_name)
     query_type = re.sub('[^A-Za-z0-9]+', '_', query_type)
-    filename = query_name + '_' + query_type + '.json'
-    filename = {'Content-Disposition':'attachment;filename=' + filename}
-
-    # send back response
-    response = app.response_class(
-        response=json.dumps(query_result),
-        status=200,
-        mimetype='application/json',
-        headers=filename
-    )
-    return response
+    filename = query_name + '_' + query_type
     
+    # have to switch to "with opens()" forms because more safe closing file style
+    in_memory = BytesIO()
+    zf = zipfile.ZipFile(in_memory, mode="w", compression=zipfile.ZIP_DEFLATED)
+    zf.writestr(filename + '.json', json.dumps(query_result))
+    zf.close()
+    in_memory.seek(0)
+    data = in_memory.read()
+
+    return Response(data,
+            mimetype='application/zip',
+            headers={'Content-Disposition':'attachment;filename='+filename+'.zip'})
+
 ##########################################################################
 # Config
 ##########################################################################
