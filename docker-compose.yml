@@ -3,33 +3,34 @@ services:
 # Back
   # mongo server
   mongo:
-    container_name: pytheas_mongoserver
+    container_name: py_mongoserver
+    hostname: mongo
     image: "mongo:3.4"
     restart: always
-    command: mongod
+    command: mongod --port 27018
     ports:
-     - "27017:27017"
+     - "27018:27018"
     volumes: 
      - './data/mongo:/data/db'
     network_mode: bridge
-    hostname: mongod
   
   # restapp
   restapp:
-    container_name: pytheas_restapp
-    build: ./rest/
-    network_mode: bridge
+    container_name: py_restapp
     hostname: restapp
+    build: ./restapp/
+    network_mode: bridge
     restart: always
     depends_on:
       - mongo
     links:
       - mongo
     ports:
-     - "5003:5003"
+     - "5053:5053"
     volumes:
-     - './rest:/opt/pytheas_rest'
-     - './rest/conf:/opt/pytheas_rest/conf'
+     - './restapp:/opt/pytheas_rest'
+     - './conf:/opt/pytheas_rest/conf'
+     - './logs:/opt/pytheas_rest/logs'
 
   # # worker:
   #   container_name: restapp
@@ -47,32 +48,33 @@ services:
 
 # Front
   # mongo client
-  mongoclient:
-    container_name: pytheas_mongoclient
-    image: "mongoclient/mongoclient"
-    restart: always
-    ports:
-     - "3000:3000"
-    depends_on:
-      - mongo
-    links:
-      - mongo
+  # mongoclient:
+    # container_name: py_mongoclient
+    # image: "mongoclient/mongoclient"
+    # restart: always
+    # ports:
+    #  - "3000:3000"
+    # depends_on:
+    #   - mongo
+    # links:
+    #   - mongo
 
   # wepapp
   webapp:
-    container_name: pytheas_webapp
-    build: ./
-    network_mode: bridge
+    container_name: py_webapp
     hostname: webapp
+    build: ./webapp/
+    network_mode: bridge
     restart: always
     ports:
-     - "5000:5000"
+     - "5050:5050"
     depends_on:
      - restapp
     links:
       - restapp
       - mongo
     volumes:
-     - '.:/opt/pytheas'
-     - './data:/opt/pytheas/data'
-     - './conf:/opt/pytheas/conf'
+     - './webapp/:/opt/pytheas_webapp'
+     - './data:/opt/pytheas_webapp/data'
+     - './logs:/opt/pytheas_webapp/logs'
+     - './conf:/opt/pytheas_webapp/conf'

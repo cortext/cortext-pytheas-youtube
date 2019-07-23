@@ -39,7 +39,7 @@ from code_country import language_code
 # from celery import Celery
 
 def create_app():
-    with open('conf/conf.json') as conf_file:
+    with open('./conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         app = Flask(__name__)
         app.register_blueprint(oauth)

@@ -7,20 +7,20 @@ RUN apt-get update
 RUN apt-get install nano -y
 
 # copy scripts
-RUN mkdir /opt/pytheas
-COPY . /opt/pytheas
+RUN mkdir /opt/pytheas_rest
+COPY . /opt/pytheas_rest
 
 #prepare work directory
-WORKDIR /opt/pytheas
+WORKDIR /opt/pytheas_rest
 
 # install flask & co
 RUN pip install -r requirements.txt
 
 # prepare port
-EXPOSE 8080
+EXPOSE 5053
 
 # Define working volumes
-VOLUME ["/opt/pytheas", "/opt/pytheas/data", "/opt/pytheas/conf"]
+VOLUME ["/opt/pytheas_rest", "/opt/pytheas_rest/conf", "/opt/pytheas_rest/logs"]
 
 #lauch app
-CMD python main.py
+CMD python rest.py
