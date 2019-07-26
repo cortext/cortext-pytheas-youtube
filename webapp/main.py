@@ -48,7 +48,7 @@ def create_app():
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
-        app.config['MONGO_URI'] = "mongodb://mongod:"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
+        app.config['MONGO_URI'] = "mongodb://"+str(conf_data['MONGO_HOST'])+":"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
         app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
         app.config['api_key_test'] = conf_data['api_key_test']
         app.config['api_key'] = conf_data['api_key']
@@ -318,16 +318,10 @@ def channel():
         query_id = str(uuid4())
         
         list_channel_username = [YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_username') ]
-        list_channel_id = [YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_id') ]
+        list_channel_id = [ YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_id') ]
         list_channel = list_channel_username + list_channel_id
         
-
-        # app.logger.debug(request.form.getlist('testo'))
-        # app.logger.debug(request.form.get('testo'))
-
-        list_channel_id = request.form.get('list_id_textarea')
-        list_channel_id = list_channel_id.splitlines()
-
+        list_channel_id = list_channel_id[0].splitlines()
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
         
