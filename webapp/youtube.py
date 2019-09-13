@@ -293,60 +293,59 @@ class Video():
     snippet_fields = ['']
     stats_fields = ['']
 
-    def __init__(self, mongo_curs, video_id=None, query_id=None):
+    def __init__(self, mongo_curs, video_id=None, query_id=None, api_key=None):
         self.db = mongo_curs.db
         if video_id:
             self.id_video = id_video
         if query_id:
             self.query_id = query_id
+        if api_key:
+            self.api_key = api_key
+            self.api = YouTube(api_key=api_key)
 
-    def get_one_video(self, ressource_id):
-        try:
-            current = self.db.videos.find_one({ '_id' : ressource_id })
-            return current
+    def add_stats_for_each_entry(self, query_id):
+        try:        
+            current_videos = self.db.videos.find({ 'query_id': query_id})
+            for video in current_videos:
+                id_video = video['videoId']
+                stat_result = self.api.get_query('videos', id=id_video, part='id,statistics')
+                
+                logger.error(stat_result)
+                logger.error(id_video)
+                logger.error(query_id)
+
+                # add new stats
+                self.db.videos.update_one(
+                    {   
+                        '$and':
+                            [{ 'videoId': id_video },
+                            { 'query_id': query_id }] 
+                         
+                    },{ 
+                        '$set': {
+                            'statistics': stat_result['items'][0]['statistics']
+                        }
+                    }, upsert=False
+                )
+
+                # add new part
+                # seems like $concat method didnt work with pymongo and update method (cf. $set)
+                # have to make two call to db...
+                part_value = self.db.queries.find_one_or_404({ 'query_id': query_id})
+                self.db.queries.update_one(
+                    {
+                        'query_id': query_id
+                    },{
+                        '$set': {
+                            'part': part_value['part'] + ", statistics",                             
+                        } 
+                    }, upsert=False
+                )
+
         except BaseException as e:
-            logger.error('video not found : ', str(e))
+            logger.error('add_stats_for_each_entry get an error : ', str(e))
             return e
-
-    def get_one_query_videos(self, query_id):
-        try:
-            current_videos = self.db.videos.find({ 'query_id': self.query_id})
-            logger.debug('get one query videos : ', current_user['query_id'])
-        except BaseException as e:
-            logger.error('one query videos not found : ', str(e))
         return
-
-    # future update methode
-    def add_stats_for_each_entry(self, video_result, ressource_id):
-        if len(video_result['items']) != 0 :
-            self.db.videos.update(
-                {   
-                    'id' : {
-                        'videoId': ressource_id
-                    } 
-                },{ 
-                    '$set': {
-                        'statistics': video_result['items'][0]['statistics']
-                    }
-                }, upsert=False
-            )
-        else:
-            logger.debug('ELSE')
-        return 
-
-    # def update(self, dataUser):
-    #     user_update = self.db.users.update_one(
-    #       { 'id_pytheas' : self.id_pytheas },
-    #       { '$set': { 'username': dataUser['username']} }
-    #     )
-    #     return user_update
-
-    # def add_metrics_for_each(self, list_video):
-    #     for each in list_video:
-    #         print(each)
-    #         # if 'youtube#video' in result['kind']:
-    #             # print(results['kind'])
-    #     return
 
     def delete():
         return

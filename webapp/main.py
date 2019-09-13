@@ -690,20 +690,8 @@ def aggregate():
             if 'statistics' in options_api:
                 # Here we will just add 'statistics' part from youtube to our videos set
                 # also we have to work with unique object id instead of id_video to avoid duplicate etc.
-                
-                current_query = Video(mongo_curs)
-                for id_video in list_vid:
-                    # after ressources id taking videoId
-                    get_video_by_id = current_query.get_one_video(id_video)
-                    video_result = api.get_query('videos', id=id_video, part='id,statistics')
-                    app.logger.debug('GROSOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  : {}'.format(video_result))
-                    # call add_stats to update()
-                    current_query.add_stats_for_each_entry(video_result, id_video)
-                    
-                mongo_curs.db.queries.update_one(
-                    { 'query_id': query_id },
-                    { '$set': {'metrics_added': True } }
-                )
+                current_query = Video(mongo_curs, api_key=api_key)
+                current_query.add_stats_for_each_entry(query_id)
 
             return redirect(url_for('manage'))
 
