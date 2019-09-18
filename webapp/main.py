@@ -35,6 +35,7 @@ from youtube import YouTubeTranscriptApi
 from youtube import Comment
 from youtube import Caption
 from youtube import Video
+from youtube import RelatedVideos
 from code_country import language_code
 # from celery import Celery
 
@@ -677,15 +678,60 @@ def aggregate():
                         { '$set': {'count_comments': count_comments } }
                     )
             
-            if 'relatedVideos' in options_api:
-                current_relatedVideos = relatedVideos(mongo_curs, query_id)
+            if 'related' in options_api:
+                current_relatedVideos = RelatedVideos(mongo_curs, query_id)
+                
                 for id_video in list_vid:
-                    current_relatedVideos.create_if_not_exist(id_video)
-                # dirty but mark it as added
+                    search_results = api.get_query(
+                        'search',
+                        part='id,snippet',
+                        maxResults= 50,
+                        relatedToVideoId=id_video,
+                        type='video',
+                    )
+
+                    for each in search_results['items']:
+                        each.update({'query_id': query_id})
+                        each.update({'videoId': id_video})
+                        mongo_curs.db.relatedVideos.insert_one(each)
+
+                    ## Loop and save
+                    while 'nextPageToken' in search_results:
+                        search_results = api.get_query(
+                            'search',
+                            part='id,snippet',
+                            maxResults= 50,
+                            relatedToVideoId=id_video,
+                            type='video',
+                            pageToken=search_results['nextPageToken']
+                        )
+                        if not search_results['items']:
+                            return redirect(url_for('manage'))
+                        else:
+                            for each in search_results['items']:
+                                each.update({'query_id': query_id})
+                                each.update({'videoId': id_video})
+                                mongo_curs.db.relatedVideos.insert_one(each)
+                    
+                # add metrics for query in json
+                count_videos = int(mongo_curs.db.relatedVideos.find({'query_id': query_id}).count())
                 mongo_curs.db.queries.update_one(
                     { 'query_id': query_id },
-                    { '$set': {'related_added': True } }
+                    { '$set': {'count_relatedVideos': count_videos } }
                 )
+
+                # add part as indicator
+                part_value = mongo_curs.db.queries.find_one_or_404({ 'query_id': query_id})
+                mongo_curs.db.queries.update_one(
+                    {
+                        'query_id': query_id
+                    },{
+                        '$set': {
+                            'part': part_value['part'] + ", relatedVideos",                             
+                        } 
+                    }, upsert=False
+                )
+
                 
             if 'statistics' in options_api:
                 # Here we will just add 'statistics' part from youtube to our videos set

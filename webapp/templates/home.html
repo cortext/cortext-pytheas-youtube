@@ -1,29 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
-  <div class="row">
+  <div class="row mb-4">
     <div class="col-md-12">
       <h2 class="">Hello {% if user_info %} <strong>{{ user_info['name'] }}</strong> ! {% endif %} </h2>
-
       <hr/>
-
       {% if api_key is defined and api_key %}
-      <h3>Your key is set and ready to download (you can always go to 'configuration' later) </h3>
-      {% else %}
-      <h4><strong class="text-danger">You can try Pytheas but to go further you will need to get an api_key from Google services
-        <br>Please go to <a href="./config" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines</strong></h4>
-      {% endif %}
+      <em>
+        <p>Your key is set and ready to download (you can always go to 'configuration' later) </p>
+        {% else %}
+        <h4><strong class="text-danger">You can try Pytheas but to go further you will need to get an api_key from Google services
+          <br>Please go to <a href="./config" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Config</a> and follow guidelines</strong></h4>
+        {% endif %}
+      </em>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <h2>What is Pytheas ?</h2>
+      <h4>Pytheas a simple webtool helping you to download data from youtube API, manage and exporting in json.</h4>
     </div>
   </div>
 
   <div class="jumbotron">
-    <div class="row">
-      <div class="col-12">
-        <h2>What is Pytheas ?</h2>
-        <p>Pytheas a simple webtool helping you to download data from youtube API, permitting you to manage and export data in json.</p>
-      </div>
-    </div>
-
     <div class="row">
       <div class="col-md-offset-1 col-10">
         <form action="/video_info" id="video" method="POST">
@@ -46,6 +46,18 @@
           <button type="submit" class="btn btn-primary center-block">Submit</button>
         </form>
       </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <h2>How work Pytheas for you ?</h2>
+      <ol>
+        <li><strong>Explore :</strong> simple view of what youtube share to us as data from a given ressource (video, playlist or channel)</li>
+        <li><strong>Download :</strong> simplified form that allow you to ask data from youtube and download it for you.</li>
+        <li><strong>Enrich :</strong> aggregate your data existing in Pytheas to </li>
+      </ol>
+      <p>Remember that at any time you can access to your data download in /manage webpages. </p>
     </div>
   </div>
 

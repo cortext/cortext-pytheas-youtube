@@ -328,19 +328,19 @@ class Video():
                     }, upsert=False
                 )
 
-                # add new part
-                # seems like $concat method didnt work with pymongo and update method (cf. $set)
-                # have to make two call to db...
-                part_value = self.db.queries.find_one_or_404({ 'query_id': query_id})
-                self.db.queries.update_one(
-                    {
-                        'query_id': query_id
-                    },{
-                        '$set': {
-                            'part': part_value['part'] + ", statistics",                             
-                        } 
-                    }, upsert=False
-                )
+            # add new part
+            # seems like $concat method didnt work with pymongo and update method (cf. $set)
+            # have to make two call to db...
+            part_value = self.db.queries.find_one_or_404({ 'query_id': query_id})
+            self.db.queries.update_one(
+                {
+                    'query_id': query_id
+                },{
+                    '$set': {
+                        'part': part_value['part'] + ", statistics",                             
+                    } 
+                }, upsert=False
+            )
 
         except BaseException as e:
             logger.error('add_stats_for_each_entry get an error : ', str(e))
@@ -360,20 +360,6 @@ class Comment():
         #super(Executive, self).__init__(*args)
         self.db = mongo_curs.db
         self.query_id = query_id
-
-    # taken from cloned Captions
-    def create_if_not_exist(self, video_id):
-        query_id = self.query_id
-        try:
-            current_comment = self.db.comment.find_one_or_404(
-                { '$and':[{ 'query_id': query_id }, { 'id.videoId': video_id }] }
-            )
-        except BaseException as e:
-            self.create_captions(id_video)
-            logger.warning(
-                str('comment not found or error. Log is here : ') + str(e) + str(type(e))
-            )
-        return
 
     def create_comment_for_each(self, commentThread):
         if not 'error' in commentThread:
@@ -445,25 +431,20 @@ class RelatedVideos():
     def __init__(self, mongo_curs, query_id):
         self.db = mongo_curs.db
         self.query_id = query_id
+        self.maxResults = 50
+        self.type = 'video'
 
     def create_relatedVideos(self, video_id):
         self.db.relatedVideos.insert_one({
             'query_id' : self.query_id,
             'relatedToVideoId' : video_id,
             'part' : 'id,snippet',
-            'type' : 'video',
+            'type' : self.type,
         })
 
-    def create_if_not_exist(self, video_id):
+    def createRelatedVideos_if_not_exist(self, video_id):
         query_id = self.query_id
-        search_results = YouTube(self.api_key).get_query(
-                'search',
-                part='id,snippet',
-                maxResults=50,
-                relatedToVideoId=video_id,
-                type='video',
-            )
-
+        
         for x in search_results['items']:
             logger.debug(
                 str('FIKNJKBNJKFNDJKNFJKNKNFNDJKN') + str(x) + str(type(x))
