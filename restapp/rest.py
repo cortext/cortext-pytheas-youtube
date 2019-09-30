@@ -1,5 +1,6 @@
 import logging
 import json
+import requests
 from logging.handlers import RotatingFileHandler
 from flask import Flask, current_app
 from flask import jsonify
@@ -34,13 +35,6 @@ try:
     #log_dir = rest.config['LOG_DIR']
 except BaseException as error:
     rest.logger.debug('An exception occurred : {}'.format(error))
-
-
-# all queries 
-@rest.route('/', methods=['GET'])
-def hello():
-    return 'hello'
-
 
 #################
 # WORKER 
@@ -95,6 +89,7 @@ def get_one_video():
     
     rest.logger.debug(video_result)
     
+
     #     data_post = { 
     #     'id_video' : id_video,
     #     'part' : part,
@@ -103,10 +98,10 @@ def get_one_video():
 
     # r = requests.post(app.config['REST_URL'] + 'get_one_video', data=data_post )
 
-
+    return 'DONE'
 
 ##########################################################################
-# REST view - all
+# REST GET
 ##########################################################################
 # all queries 
 @rest.route('/queries/', methods=['GET'])
@@ -164,7 +159,8 @@ def queries_list(user_id):
 # one query by user
 @rest.route('/<user_id>/queries/<query_id>', methods=['GET'])
 def query_search(user_id, query_id):
-    result = mongo_curs.db.queries.find_one_or_404({'query_id': query_id})
+    result = mongo_curs.db.queries.find_one_or_404({'query_id': query_id, 
+        'author_id' : user_id})
     json_res = json_util.dumps(
         result, sort_keys=True, indent=2, separators=(',', ': '))
     rest.logger.info(
@@ -256,9 +252,101 @@ def caption_search(user_id, caption_id):
 #         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
 #     return jsonify(json.loads(json_res))
 
+
+
+
 ##########################################################################
 # REST POST
 ##########################################################################
+# add_query
+@rest.route('/<user_id>/add_queries/<query_id>/', methods=['POST', 'GET'])
+def add_query(user_id, query_id):
+    rest.logger.debug(user_id)
+    rest.logger.debug(query_id)
+
+    r = requests.post("http://worker:5003/" + user_id + "/add_queries/" + query_id + "/", json=request.get_json())
+    
+    return 'POST REQUEST IS SENT'
+
+# add_captions
+@rest.route('/<user_id>/query/<query_id>/add_captions', methods=['POST', 'GET'])
+def add_captions(user_id, query_id):
+    rest.logger.debug(user_id)
+    rest.logger.debug(query_id)
+    
+    # first list videos from a query
+    param = request.get_json()
+    results_query = requests.get("http://restapp:5053/" + user_id + "/queries/" + query_id + "/videos/")
+
+    list_vid = []
+    for result in results_query.json():
+        if 'videoId' in result:
+            id_video = result['videoId']
+        elif result['kind'] == 'youtube#playlistItem':
+            id_video = result['snippet']['resourceId']['videoId']
+        else:
+            id_video = result['id']['videoId']
+        list_vid.append(id_video)
+    
+    # Then send job to worker
+    param['list_vid'] = list_vid
+    r = requests.post("http://worker:5003/" + user_id + "/add_captions/" + query_id + "/", json=param)
+    
+    return 'POST REQUEST add_captions IS SENT'
+
+# add_comments
+@rest.route('/<user_id>/query/<query_id>/add_comments', methods=['POST', 'GET'])
+def add_comments(user_id, query_id):
+    rest.logger.debug(user_id)
+    rest.logger.debug(query_id)
+
+    # first list videos from a query
+    param = request.get_json()
+    results_query = requests.get("http://restapp:5053/" + user_id + "/queries/" + query_id + "/videos/")
+    
+    list_vid = []
+    for result in results_query.json():
+        if 'videoId' in result:
+            id_video = result['videoId']
+        elif result['kind'] == 'youtube#playlistItem':
+            id_video = result['snippet']['resourceId']['videoId']
+        else:
+            id_video = result['id']['videoId']
+        list_vid.append(id_video)
+
+    # Then send job to worker
+    param['list_vid'] = list_vid
+    r = requests.post("http://worker:5003/" + user_id + "/add_comments/" + query_id + "/", json=param)
+    
+    return 'POST REQUEST add_comments IS SENT'
+
+# add_related
+@rest.route('/<user_id>/query/<query_id>/add_related', methods=['POST', 'GET'])
+def add_related(user_id, query_id):
+    rest.logger.debug(user_id)
+    rest.logger.debug(query_id)
+
+    # first list videos from a query
+    param = request.get_json()
+    results_query = requests.get("http://restapp:5053/" + user_id + "/queries/" + query_id + "/videos/")
+
+    list_vid = []
+    for result in results_query.json():
+        if 'videoId' in result:
+            id_video = result['videoId']
+        elif result['kind'] == 'youtube#playlistItem':
+            id_video = result['snippet']['resourceId']['videoId']
+        else:
+            id_video = result['id']['videoId']
+        list_vid.append(id_video)
+
+    # Then send job to worker
+    param['list_vid'] = list_vid
+    r = requests.post("http://worker:5003/" + user_id + "/add_related/" + query_id + "/", json=param)
+    
+    return 'POST REQUEST add_related IS SENT'
+
+
 
 # run app
 if __name__ == '__main__':

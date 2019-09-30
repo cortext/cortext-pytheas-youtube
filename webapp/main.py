@@ -215,56 +215,29 @@ def video():
         uid = str(uuid4())
         if 'api_key' in session:
             api = YouTube(api_key=session['api_key'])
-            
-            list_videos = request.form.get('list_videos')
-            list_videos = list_videos.splitlines()
-            list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]
-            list_results = {'items': [] }
 
-            for id_video in list_videos:
-                part = ', '.join(request.form.getlist('part'))                
-                video_result = api.get_query('videos', id=id_video, part=part)
-                print(video_result)
-                try:
-                    list_results['items'].append(video_result['items'][0])
-                except:
-                    continue
-
+            list_videos = request.form.get('list_videos').splitlines()
+            list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]            
             name_query = str(request.form.get('name_query'))
-            mongo_curs.db.queries.insert_one(
-                {
-                    'author_id': session['profil']['id'],
-                    'query_id': uid,
-                    'query': name_query,
-                    'part': part,
-                }
-            )
+            part = ', '.join(request.form.getlist('part'))
+            
+            payload = {
+                'list_videos':list_videos,
+                'uid':uid,
+                'name_query': name_query,
+                'part': part,
+                'api_key' : session['api_key']
+            }
 
-            # this is because not same organizing inside youtube class
-            for each in list_results['items']:
-                each.update({'query_id': uid})
-                if 'id' in each:
-                    each.update({'videoId': each['id']})
-                elif 'snippet' in each:
-                    if 'videoId' in each['id']:
-                        each.update({'videoId': each['id']['videoId']})
-                    elif 'playlistId' in each['id']:
-                        each.update({'playlistId' : each['id']['playlistId']})
-                elif 'videoId' in each['id']:
-                    each.update({'videoId': each['id']['videoId']})
-                elif 'playlistId' in each['id']:
-                    each.update({'playlistId': each['id']['playlistId']})
-                mongo_curs.db.videos.insert_one(each)
-
-            count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-            mongo_curs.db.queries.update_one(
-                { 'query_id': uid },
-                { '$set': {'count_videos': count_videos } }
-            )
+            r = requests.post("http://restapp:5053/" + session['profil']['id'] + "/add_queries/" + uid + "/", json=payload)
 
         else:
             return render_template('explore.html', message='api key not set')
     return redirect(url_for('manage'))
+
+
+
+
 
 @app.route('/playlist', methods=['POST'])
 def playlist():
@@ -597,9 +570,9 @@ def complete_data():
 
 @app.route('/aggregate', methods=['POST', 'GET'])
 def aggregate():
-    stats = { 'list_queries': [], }
-
+    
     if request.method == 'GET':
+        stats = { 'list_queries': [], }
         result = requests.get(app.config['REST_URL']+ session['profil']['id'] +'/queries/')
         result = result.json()
         for doc in result:
@@ -611,131 +584,32 @@ def aggregate():
                 doc['countVideos'] = 'NA'
             stats['list_queries'].append(doc)
         
+    
     if request.method == 'POST':
         if request.form and request.form.get('optionsRadios'):
-
-            ## NEED TO REFACT HERE FOR CAPTIONS DATA...
+            user_id = session['profil']['id']
             query_id = request.form.get('optionsRadios')
+            api_key = session['api_key']
+
             options_api = request.form.getlist('api_part')
             part = ', '.join(request.form.getlist('part'))
-
-            api_key = session['api_key']
-            api = YouTube(api_key=api_key)
-            # qui ont un id de type str ou un id video qui existe
-            # ET un id query
-            results = mongo_curs.db.videos.find({
-                "$and": [
-                    {"$or" : [ {"id": {"$type": "string"}}, {"id.videoId": {"$exists": "True"}} ]} ,
-                    {"query_id": query_id}
-                ]
-            })
-
-            list_vid = []
-            # need to fix this later
-            for result in results:
-                if 'videoId' in result:
-                    id_video = result['videoId']
-                elif result['kind'] == 'youtube#playlistItem':
-                    id_video = result['snippet']['resourceId']['videoId']
-                else:
-                    id_video = result['id']['videoId']
-
-                list_vid.append(id_video)
-                query_id = result['query_id']
+            
+            payload = {
+                'part': part,
+                'api_key' : api_key
+            }
 
             if 'captions' in options_api:
-                current_captions = Caption(mongo_curs, query_id)
-                for id_video in list_vid:
-                    current_captions.create_if_not_exist(id_video)
-                count_captions = int(mongo_curs.db.captions.find({'query_id': query_id}).count())
-                mongo_curs.db.queries.update_one(
-                    { 'query_id': query_id },
-                    { '$set': {'count_captions': count_captions } }
-                )
+                r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_captions", json=payload)
 
             if 'comments' in options_api:
-                current_comment_thread = Comment(mongo_curs, query_id)
+                r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_comments", json=payload)
 
-                for id_video in list_vid:
-                    commentThreads_result = api.get_query(
-                        'commentThreads',
-                        videoId=id_video,
-                        part='id, replies, snippet')
-                    current_comment_thread.create_comment_for_each(commentThreads_result)
-                    
-                    ## Loop and save while there is content
-                    while 'nextPageToken' in commentThreads_result:
-                        commentThreads_result = api.get_query(
-                            'commentThreads',
-                            videoId=id_video,
-                            part='id, replies, snippet',
-                            pageToken=commentThreads_result['nextPageToken'])
-                        current_comment_thread.create_comment_for_each(commentThreads_result)
-
-                    count_comments = int(mongo_curs.db.comments.find({'query_id': query_id}).count())
-                    mongo_curs.db.queries.update_one(
-                        { 'query_id': query_id },
-                        { '$set': {'count_comments': count_comments } }
-                    )
-            
             if 'related' in options_api:
-                current_relatedVideos = RelatedVideos(mongo_curs, query_id)
-                
-                for id_video in list_vid:
-                    search_results = api.get_query(
-                        'search',
-                        part='id,snippet',
-                        maxResults= 50,
-                        relatedToVideoId=id_video,
-                        type='video',
-                    )
+                r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_related", json=payload)
 
-                    for each in search_results['items']:
-                        each.update({'query_id': query_id})
-                        each.update({'videoId': id_video})
-                        mongo_curs.db.relatedVideos.insert_one(each)
-
-                    ## Loop and save
-                    while 'nextPageToken' in search_results:
-                        search_results = api.get_query(
-                            'search',
-                            part='id,snippet',
-                            maxResults= 50,
-                            relatedToVideoId=id_video,
-                            type='video',
-                            pageToken=search_results['nextPageToken']
-                        )
-                        if not search_results['items']:
-                            return redirect(url_for('manage'))
-                        else:
-                            for each in search_results['items']:
-                                each.update({'query_id': query_id})
-                                each.update({'videoId': id_video})
-                                mongo_curs.db.relatedVideos.insert_one(each)
-                    
-                # add metrics for query in json
-                count_videos = int(mongo_curs.db.relatedVideos.find({'query_id': query_id}).count())
-                mongo_curs.db.queries.update_one(
-                    { 'query_id': query_id },
-                    { '$set': {'count_relatedVideos': count_videos } }
-                )
-
-                # add part as indicator
-                part_value = mongo_curs.db.queries.find_one_or_404({ 'query_id': query_id})
-                mongo_curs.db.queries.update_one(
-                    {
-                        'query_id': query_id
-                    },{
-                        '$set': {
-                            'part': part_value['part'] + ", relatedVideos",                             
-                        } 
-                    }, upsert=False
-                )
-
-                
             if 'statistics' in options_api:
-                # Here we will just add 'statistics' part from youtube to our videos set
-                # also we have to work with unique object id instead of id_video to avoid duplicate etc.
+                # r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_statistics", json=payload)
                 current_query = Video(mongo_curs, api_key=api_key)
                 current_query.add_stats_for_each_entry(query_id)
 
