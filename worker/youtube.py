@@ -449,7 +449,7 @@ class RelatedVideos():
         for x in search_results['items']:
             logger.debug(
                 str('FIKNJKBNJKFNDJKNFJKNKNFNDJKN') + str(x) + str(type(x))
-            ) 
+            )
 
         try:
             current_relatedVideos = self.db.relatedVideos.find_one_or_404(
@@ -477,12 +477,12 @@ class Caption():
     def create_captions(self, video_id):
         # for x in language_code:
         #     logger.debug(x[0])
-        transcript = YouTubeTranscriptApi().get_transcript(video_id, languages=x[0])
+        transcript = YouTubeTranscriptApi().get_transcript(video_id)
         self.db.captions.insert_one({
             'query_id' : self.query_id,
             'videoId' : video_id,
             'captions' : transcript,
-            'language' : x[0]
+            # 'language' : x[0]
         })
 
     def create_if_not_exist(self, video_id):

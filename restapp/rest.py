@@ -19,7 +19,7 @@ def create_rest_app():
         rest = Flask(__name__)
         rest.config['LOG_DIR'] = conf_data['LOG_DIR']
         rest.config['REST_PORT'] = str(conf_data['REST_PORT'])
-        rest.config['WORKER_PORT'] = conf_data['WORKER_PORT']
+        rest.config['WORKER_PORT'] = str(conf_data['WORKER_PORT'])
         rest.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         rest.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         rest.config['MONGO_PORT'] = conf_data['MONGO_PORT']
@@ -255,7 +255,7 @@ def add_query(user_id, query_id):
     rest.logger.debug(user_id)
     rest.logger.debug(query_id)
 
-    r = requests.post("http://worker:" + app.config['WORKER_PORT'] + "/" + user_id + "/add_queries/" + query_id + "/", json=request.get_json())
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_queries/" + query_id + "/", json=request.get_json())
     
     return 'POST REQUEST IS SENT'
 
@@ -267,7 +267,7 @@ def add_captions(user_id, query_id):
     
     # first list videos from a query
     param = request.get_json()
-    results_query = requests.get("http://restapp:" + app.config['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+    results_query = requests.get("http://restapp:" + rest.config['REST_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
 
     list_vid = []
     for result in results_query.json():
@@ -281,7 +281,7 @@ def add_captions(user_id, query_id):
     
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + app.config['WORKER_PORT'] + "/" + user_id + "/add_captions/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_captions/" + query_id + "/", json=param)
     
     return 'POST REQUEST add_captions IS SENT'
 
@@ -293,7 +293,7 @@ def add_comments(user_id, query_id):
 
     # first list videos from a query
     param = request.get_json()
-    results_query = requests.get("http://restapp:" + app.config['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+    results_query = requests.get("http://restapp:" + rest.config['REST_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
     
     list_vid = []
     for result in results_query.json():
@@ -307,7 +307,7 @@ def add_comments(user_id, query_id):
 
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:5003/" + user_id + "/add_comments/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_comments/" + query_id + "/", json=param)
     
     return 'POST REQUEST add_comments IS SENT'
 
@@ -319,7 +319,7 @@ def add_related(user_id, query_id):
 
     # first list videos from a query
     param = request.get_json()
-    results_query = requests.get("http://restapp:" + app.config['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+    results_query = requests.get("http://restapp:" + rest.config['REST_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
 
     list_vid = []
     for result in results_query.json():
@@ -333,7 +333,7 @@ def add_related(user_id, query_id):
 
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + app.config['WORKER_PORT'] + "/" + user_id + "/add_related/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_related/" + query_id + "/", json=param)
     
     return 'POST REQUEST add_related IS SENT'
 
@@ -343,9 +343,10 @@ def add_related(user_id, query_id):
 if __name__ == '__main__':
     # config logger (prefering builtin flask logger)
     formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
-    handler = RotatingFileHandler('activity.log', maxBytes=10000, backupCount=1)
+    handler = RotatingFileHandler('./' + rest.config['LOG_DIR'] + '/activity.log', maxBytes=10000, backupCount=1)
     handler.setFormatter(formatter)
     #logger = logging.getLogger(__name__)
+
     rest.logger.setLevel(logging.DEBUG)
     rest.logger.addHandler(handler)
     rest.run(debug=rest.config['debug_level'], host='0.0.0.0', port=rest.config['REST_PORT'], threaded=True )

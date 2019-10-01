@@ -232,7 +232,7 @@ def add_related(user_id, query_id):
 if __name__ == '__main__':
     # config logger (prefering builtin flask logger)
     formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
-    handler = RotatingFileHandler('activity.log', maxBytes=10000, backupCount=1)
+    handler = RotatingFileHandler('./'+ worker.config['LOG_DIR'] +'/activity.log', maxBytes=10000, backupCount=1)
     handler.setFormatter(formatter)
     #logger = logging.getLogger(__name__)
     worker.logger.setLevel(logging.DEBUG)

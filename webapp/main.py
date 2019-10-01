@@ -4,6 +4,7 @@ import shutil
 import json
 import requests
 from uuid import uuid4
+import logging
 # need to recheck here later...
 import datetime
 import datetime as dt
@@ -37,21 +38,26 @@ from youtube import Caption
 from youtube import Video
 from youtube import RelatedVideos
 from code_country import language_code
-# from celery import Celery
 
 def create_app():
     with open('./conf/conf.json') as conf_file:
         conf_data = json.load(conf_file)
         app = Flask(__name__)
         app.register_blueprint(oauth)
+        app.config['LOG_DIR'] = conf_data['LOG_DIR']
         app.config['DATA_DIR'] = conf_data['DATA_DIR']
-        app.config['PORT'] = conf_data['PORT']
+
+        app.config['MONGO_PORT'] = str(conf_data['MONGO_PORT'])
         app.config['REST_PORT'] = str(conf_data['REST_PORT'])
+        app.config['PORT'] = str(conf_data['PORT'])
+        
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
-        app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
-        app.config['MONGO_URI'] = "mongodb://"+str(conf_data['MONGO_HOST'])+":"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
-        app.config['REST_URL'] = 'http://' + conf_data['REST_HOST'] + ':' + str(conf_data['REST_PORT']) + '/'
+        app.config['REST_HOST'] = conf_data['REST_HOST']
+        
+        app.config['MONGO_URI'] = "mongodb://"+app.config['MONGO_HOST']+":"+app.config['MONGO_PORT']+"/"+app.config['MONGO_DBNAME']
+        app.config['REST_URL'] = 'http://' + app.config['REST_HOST'] + ':' + app.config['REST_PORT'] + '/'
+        
         app.config['api_key_test'] = conf_data['api_key_test']
         app.config['api_key'] = conf_data['api_key']
         app.config['oauth_status'] = conf_data['oauth_status']
@@ -65,7 +71,8 @@ try:
     # fixed this parameter until real charge management (if necessary)
     maxResults = 50
 except BaseException as error:
-    app.logger.debug('An exception occurred : {}'.format(error))
+    # app.logger.debug('An exception occurred : {}'.format(error))
+    print("ERROR creating app...")
 
 @app.before_request
 def before_request():
@@ -780,4 +787,15 @@ if __name__ == '__main__':
     app.jinja_env.auto_reload = True
     app.secret_key = os.urandom(24)
     app.session_cookie_path = '/'
+
+    from logging.handlers import RotatingFileHandler
+    # config logger (prefering builtin flask logger)
+    formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
+    handler = RotatingFileHandler('./' + app.config['LOG_DIR'] + '/activity.log', maxBytes=10000, backupCount=1)
+    handler.setFormatter(formatter)
+    #logger = logging.getLogger(__name__)
+
+    app.logger.setLevel(logging.DEBUG)
+    app.logger.addHandler(handler)
+
     app.run(debug=app.config['debug_level'], host='0.0.0.0', port=app.config['PORT'], threaded=True )
