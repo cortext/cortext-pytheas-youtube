@@ -1,17 +1,23 @@
 {
-    "DATA_DIR": "data/",
-    "PORT": 8080,
-    "REDIRECT_URI": "http://localhost:8080/auth",
-    "GRANT_HOST_URL": "https://auth.cortext.net",
+  "DATA_DIR": "data/",
+  "LOG_DIR": "logs/",
+  
+  "PORT": 8080,
+  "REDIRECT_URI": "http://localhost:8080/auth",
+  "GRANT_HOST_URL": "https://auth.cortext.net",
 
-    "MONGO_HOST": "mongo",
-    "MONGO_DBNAME": "youtube",
-    "MONGO_PORT": 27017,
+  "MONGO_HOST": "mongo",
+  "MONGO_DBNAME": "youtube",
+  "MONGO_PORT": 27017,
+  
+  "REST_HOST": "restapp",
+  "REST_PORT": 5053,
 
-    "REST_HOST": "restapp",
-    "REST_PORT": 5002,
-
-    "api_key": "",
-    "oauth_status": "True",
-    "debug_level": "False"
+  "WORKER_HOST": "worker",
+  "WORKER_PORT": 5003,
+  
+  "api_key": "",
+  "api_key_test": "",
+  "oauth_status" : "True",
+  "debug_level": "False"
 }
