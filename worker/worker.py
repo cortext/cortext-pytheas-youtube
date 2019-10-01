@@ -26,7 +26,7 @@ def create_worker():
         conf_data = json.load(conf_file)
         worker = Flask(__name__)
         worker.config['LOG_DIR'] = conf_data['LOG_DIR']
-        worker.config['WORKER_PORT'] = conf_data['WORKER_PORT']
+        worker.config['WORKER_PORT'] = str(conf_data['WORKER_PORT'])
         worker.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         worker.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         worker.config['MONGO_PORT'] = conf_data['MONGO_PORT']

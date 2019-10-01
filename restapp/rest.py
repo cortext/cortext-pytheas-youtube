@@ -18,7 +18,7 @@ def create_rest_app():
         conf_data = json.load(conf_file)
         rest = Flask(__name__)
         rest.config['LOG_DIR'] = conf_data['LOG_DIR']
-        rest.config['REST_PORT'] = conf_data['REST_PORT']
+        rest.config['REST_PORT'] = str(conf_data['REST_PORT'])
         rest.config['WORKER_PORT'] = conf_data['WORKER_PORT']
         rest.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         rest.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
