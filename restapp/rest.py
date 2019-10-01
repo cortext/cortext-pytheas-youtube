@@ -255,7 +255,7 @@ def add_query(user_id, query_id):
     rest.logger.debug(user_id)
     rest.logger.debug(query_id)
 
-    r = requests.post("http://worker:" + conf_data['WORKER_PORT'] + "/" + user_id + "/add_queries/" + query_id + "/", json=request.get_json())
+    r = requests.post("http://worker:" + app.config['WORKER_PORT'] + "/" + user_id + "/add_queries/" + query_id + "/", json=request.get_json())
     
     return 'POST REQUEST IS SENT'
 
@@ -267,7 +267,7 @@ def add_captions(user_id, query_id):
     
     # first list videos from a query
     param = request.get_json()
-    results_query = requests.get("http://restapp:" + conf_data['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+    results_query = requests.get("http://restapp:" + app.config['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
 
     list_vid = []
     for result in results_query.json():
@@ -281,7 +281,7 @@ def add_captions(user_id, query_id):
     
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + conf_data['WORKER_PORT'] + "/" + user_id + "/add_captions/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + app.config['WORKER_PORT'] + "/" + user_id + "/add_captions/" + query_id + "/", json=param)
     
     return 'POST REQUEST add_captions IS SENT'
 
@@ -293,7 +293,7 @@ def add_comments(user_id, query_id):
 
     # first list videos from a query
     param = request.get_json()
-    results_query = requests.get("http://restapp:" + conf_data['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+    results_query = requests.get("http://restapp:" + app.config['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
     
     list_vid = []
     for result in results_query.json():
@@ -319,7 +319,7 @@ def add_related(user_id, query_id):
 
     # first list videos from a query
     param = request.get_json()
-    results_query = requests.get("http://restapp:" + conf_data['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+    results_query = requests.get("http://restapp:" + app.config['WORKER_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
 
     list_vid = []
     for result in results_query.json():
@@ -333,7 +333,7 @@ def add_related(user_id, query_id):
 
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + conf_data['WORKER_PORT'] + "/" + user_id + "/add_related/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + app.config['WORKER_PORT'] + "/" + user_id + "/add_related/" + query_id + "/", json=param)
     
     return 'POST REQUEST add_related IS SENT'
 

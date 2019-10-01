@@ -230,7 +230,7 @@ def video():
                 'api_key' : session['api_key']
             }
 
-            r = requests.post("http://restapp:" + conf_data['REST_PORT'] + "/" + session['profil']['id'] + "/add_queries/" + uid + "/", json=payload)
+            r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + session['profil']['id'] + "/add_queries/" + uid + "/", json=payload)
 
         else:
             return render_template('explore.html', message='api key not set')
@@ -601,13 +601,13 @@ def aggregate():
             }
 
             if 'captions' in options_api:
-                r = requests.post("http://restapp:" + conf_data['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_captions", json=payload)
+                r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_captions", json=payload)
 
             if 'comments' in options_api:
-                r = requests.post("http://restapp:" + conf_data['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_comments", json=payload)
+                r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_comments", json=payload)
 
             if 'related' in options_api:
-                r = requests.post("http://restapp:" + conf_data['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_related", json=payload)
+                r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_related", json=payload)
 
             if 'statistics' in options_api:
                 # r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_statistics", json=payload)
