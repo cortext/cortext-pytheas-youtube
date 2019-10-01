@@ -46,6 +46,7 @@ def create_app():
         app.register_blueprint(oauth)
         app.config['DATA_DIR'] = conf_data['DATA_DIR']
         app.config['PORT'] = conf_data['PORT']
+        app.config['REST_PORT'] = conf_data['REST_PORT']
         app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
         app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
         app.config['MONGO_PORT'] = conf_data['MONGO_PORT']
