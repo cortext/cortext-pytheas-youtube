@@ -188,6 +188,25 @@ def captions_list_by_query(user_id, query_id):
         'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
     return jsonify(json.loads(json_res))
 
+
+
+
+
+# list of related Videos by queries
+@rest.route('/<user_id>/queries/<query_id>/related/', methods=['GET'])
+def related_list_by_query(user_id, query_id):
+    result = mongo_curs.db.relatedVideos.find({'query_id': query_id})
+    json_res = json_util.dumps(
+        result, sort_keys=True, indent=2, separators=(',', ': '))
+    rest.logger.info(
+        'try_request success on {url} for {user_id}'.format(url=request.endpoint, user_id=user_id))
+    return jsonify(json.loads(json_res))
+
+
+
+
+
+
 ## by VIDEOS
 @rest.route('/<user_id>/videos/<video_id>', methods=['GET'])
 def video_search(user_id, video_id):

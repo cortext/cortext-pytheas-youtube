@@ -710,6 +710,29 @@ def extract_channel(query_id):
             mimetype='application/zip',
             headers={'Content-Disposition':'attachment;filename='+filename+'.zip'})
 
+@app.route('/extract_related/<query_id>', methods=['GET'])
+def extract_related(query_id):
+    # find name of query for filename download
+    r_name = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id)
+    query = r_name.json()
+    query_name = re.sub('[^A-Za-z0-9]+', '_', str(query['query']))
+    filename = query_name + '_related_videos'
+
+    # extract related rest query
+    r = requests.get(app.config['REST_URL'] + session['profil']['id'] +'/queries/' + query_id + '/related/').json()
+
+    in_memory = BytesIO()
+    zf = zipfile.ZipFile(in_memory, mode="w", compression=zipfile.ZIP_DEFLATED)
+    zf.writestr(filename + '.json', str(r))
+    zf.close()
+    in_memory.seek(0)
+    data = in_memory.read()
+
+    return Response(data,
+            mimetype='application/zip',
+            headers={'Content-Disposition':'attachment;filename='+filename+'.zip'})
+
+
 ## View in-db human readable
 # request by type_data and query_id to rest urls then rendering html template
 @app.route('/view-<data_type>/<query_id>', methods=['POST','GET'])

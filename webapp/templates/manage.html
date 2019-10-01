@@ -339,6 +339,7 @@
                         <th>Comments</th>
                         <th>Captions</th>
                         <!-- -->
+                        <th>Extract related Videos</th>
                         <th>Extract unique author</th>
                         <th>Delete</th>
                     </tr>
@@ -382,6 +383,7 @@
                             </a>
                         </td>
                         <!-- -->
+                        <td class="text-center"><a href="/extract_related/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
                         <td class="text-center"><a href="/extract_channel/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
                         <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
                     </tr>

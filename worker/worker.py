@@ -191,7 +191,7 @@ def add_related(user_id, query_id):
             else:
                 for each in search_results['items']:
                     each.update({'query_id': query_id})
-                    each.update({'videoId': id_video})
+                    each.update({'belongTo': id_video})
                     mongo_curs.db.relatedVideos.insert_one(each)
         
     # add metrics for query in json
