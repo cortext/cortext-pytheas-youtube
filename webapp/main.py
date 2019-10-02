@@ -37,7 +37,6 @@ from youtube import Comment
 from youtube import Caption
 from youtube import Video
 from youtube import RelatedVideos
-from youtube import Methods
 from code_country import language_code
 
 def create_app():
