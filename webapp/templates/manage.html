@@ -325,10 +325,12 @@
                         <th colspan="4">METHOD</th>
                     </tr>
                     <tr>
-                        <th>Search Query</th>
+                        <th colspan="2">Name</th>
+                        <th colspan="2">Type</th>
+                        {# <th>Search Query</th>
                         <th>Channel(s)</th>
                         <th>Playlist(s)</th>
-                        <th>Arbitrary video(s)</th>
+                        <th>Arbitrary video(s)</th> #}
                         <!-- -->
                         <th>Order</th>
                         <th>Part(query)</th>
@@ -347,10 +349,22 @@
                 <tbody>
                     {% for key, parent_val in stats.items() %} {% if key == 'list_queries' %} {% for query in parent_val %}
                     <tr>
-                        <td>{{query['query']}}</td>
-                        <td>{{query['channel_id']}}</td>
-                        <td>{{query['playlist_id']}}</td>
-                        <td></td>
+                        {% if query['channel_id'] %}
+                            <td colspan="2">{{query['query']}} : <br/>
+                            {{query['channel_id']}}</td>
+                            <td colspan="2">Channel list</td>
+                        {% elif query['playlist_id'] %}
+                            <td colspan="2">{{query['query']}} : <br/>
+                            {{query['playlist_id']}}</td>
+                            <td colspan="2">playlist</td>
+                        {% elif query['order'] %}
+                            <td colspan="2" >{{query['query']}}</td>
+                            <td colspan="2">Search videos</td>
+                        {% elif query['query'] %}
+                            <td colspan="2">{{query['query']}}</td>
+                            <td colspan="2">Arbitrary videos list</td>
+                        {% endif %}
+                        </td>
                         <!-- -->
                         <td>{{query['order']}}</td>
                         <td>{{query['part']}}</td>
@@ -383,9 +397,11 @@
                             </a>
                         </td>
                         <!-- -->
-                        <td class="text-center"><a href="/extract_related/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
+                        <td class="text-center">{{query['countRelated']}}
+                            <a href="/extract_related/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
                         <td class="text-center"><a href="/extract_channel/{{ query['query_id'] }}"><i class="fa fa-download" aria-hidden="true"></i></a></td>
-                        <td class="text-center"><a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
+                        <td class="text-center">
+                            <a href="/delete/{{ query['query_id'] }}"><i class="fa fa-trash" aria-hidden="true"></i></a></td>
                     </tr>
                     {% endfor %} {% endif %} {% endfor %}
                 </tbody>

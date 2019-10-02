@@ -37,6 +37,7 @@ from youtube import Comment
 from youtube import Caption
 from youtube import Video
 from youtube import RelatedVideos
+from youtube import Methods
 from code_country import language_code
 
 def create_app():
@@ -660,6 +661,11 @@ def manage():
                 doc['countCaptions'] = doc['count_captions']
             else:
                 doc['countCaptions'] = 'NC'
+
+            if 'count_related' in doc:
+                doc['countRelated'] = doc['count_related']
+            else:
+                doc['countRelated'] = 'NC'
             list_queries.append(doc)
 
         # send all as json, template will manage it
@@ -757,7 +763,39 @@ def download_videos_by_type(query_id, query_type):
 
     # get results
     r = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
-    query_result = r.json()
+    
+    if query_type == 'captions':
+        #Methods = Methods()
+        # query_result = Methods.AppendCaption(r.json())
+        data = r.json()
+        lst = []
+        print(len(data))
+        for i in range(len(data)):
+            text = ''
+            if(data[i]['captions']):
+                for j in range(len(data[i]['captions'])):
+                    caption = data[i]['captions'][j]['text']
+                    regex = re.search('(\[[a-zA-Z])',caption)
+                    print(regex)
+                    if(regex):
+                        print('There is a sound or action')
+                    else: 
+                        text+=str(caption)
+                        text+=' '
+                print(text)
+                results_json = {
+                'query_id':data[i]['query_id'],
+                'videoId':data[i]['videoId'],
+                'text': text
+                }
+                lst.append(results_json)
+                
+            else:
+                print('There is no captions')
+        query_result = json.dumps(lst,sort_keys=True, indent=4, separators=(',', ': '))
+    else:
+        query_result = r.json()
+        query_result = json.dumps(query_result,sort_keys=True, indent=4, separators=(',', ': '))
 
     query_name = re.sub('[^A-Za-z0-9]+', '_', query_name)
     query_type = re.sub('[^A-Za-z0-9]+', '_', query_type)
@@ -767,7 +805,7 @@ def download_videos_by_type(query_id, query_type):
     # have to switch to "with opens()" forms because more safe closing file style
     in_memory = BytesIO()
     zf = zipfile.ZipFile(in_memory, mode="w", compression=zipfile.ZIP_DEFLATED)
-    zf.writestr(filename + '.json', json.dumps(query_result))
+    zf.writestr(filename + '.json', query_result)
     zf.close()
     in_memory.seek(0)
     data = in_memory.read()

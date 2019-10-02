@@ -119,6 +119,8 @@ def add_captions(user_id, query_id):
         { '$set': {'count_captions': count_captions } }
     )
 
+    
+
     return 'POST REQUEST add_captions IS RECEIVED'
 
 
