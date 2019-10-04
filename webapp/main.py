@@ -3,8 +3,9 @@ import os
 import shutil
 import json
 import requests
-from uuid import uuid4
 import logging
+from uuid import uuid4
+from threading import Thread
 # need to recheck here later...
 import datetime
 import datetime as dt
@@ -24,7 +25,6 @@ from flask import url_for
 from flask import jsonify
 from flask import send_file
 # Ext lib
-# from flask_bootstrap import Bootstrap
 from furl import furl
 # local modules
 from oauth import oauth
@@ -606,15 +606,21 @@ def aggregate():
                 'part': part,
                 'api_key' : api_key
             }
-
+            
             if 'captions' in options_api:
-                r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_captions", json=payload)
+                def send_request():
+                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_captions", json=payload)
+                Thread(target=send_request).start()
 
             if 'comments' in options_api:
-                r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_comments", json=payload)
+                def send_request():
+                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_comments", json=payload)
+                Thread(target=send_request).start()
 
             if 'related' in options_api:
-                r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_related", json=payload)
+                def send_request():
+                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_related", json=payload)
+                Thread(target=send_request).start()
 
             if 'statistics' in options_api:
                 # r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_statistics", json=payload)
