@@ -679,7 +679,7 @@ if __name__ == '__main__':
     from logging.handlers import RotatingFileHandler
     # config logger (prefering builtin flask logger)
     formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
-    handler = RotatingFileHandler('./' + app.config['LOG_DIR'] + '/activity.log', maxBytes=10000, backupCount=1)
+    handler = RotatingFileHandler('./' + app.config['LOG_DIR'] + '/activity_webapp.log', maxBytes=100000, backupCount=1)
     handler.setFormatter(formatter)
     #logger = logging.getLogger(__name__)
 

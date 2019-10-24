@@ -379,7 +379,7 @@ def add_related(user_id, query_id):
 if __name__ == '__main__':
     # config logger (prefering builtin flask logger)
     formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
-    handler = RotatingFileHandler('./' + rest.config['LOG_DIR'] + '/activity.log', maxBytes=10000, backupCount=1)
+    handler = RotatingFileHandler('./' + rest.config['LOG_DIR'] + '/activity_rest.log', maxBytes=100000, backupCount=1)
     handler.setFormatter(formatter)
     #logger = logging.getLogger(__name__)
 
