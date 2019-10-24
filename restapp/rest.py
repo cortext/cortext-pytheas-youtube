@@ -269,14 +269,31 @@ def caption_search(user_id, caption_id):
 # REST POST
 ##########################################################################
 # add_query
-@rest.route('/<user_id>/add_queries/<query_id>/', methods=['POST', 'GET'])
+@rest.route('/<user_id>/add_query/<query_id>', methods=['POST', 'GET'])
 def add_query(user_id, query_id):
     rest.logger.debug(user_id)
     rest.logger.debug(query_id)
+    rest.logger.debug(request.get_json())
 
-    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_queries/" + query_id + "/", json=request.get_json())
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_query/" + query_id, json=request.get_json())
     
     return 'POST REQUEST IS SENT'
+
+
+
+# add_video by type of (channel, searchResults, videosList, playlistItem)
+@rest.route('/<user_id>/query/<query_id>/add_video/<query_type>', methods=['POST', 'GET'])
+def add_video(user_id, query_id, query_type):
+    rest.logger.debug(user_id)
+    rest.logger.debug(query_id)
+    rest.logger.debug(query_type)
+
+    requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/" + query_type, json=request.get_json())
+    
+    return 'POST REQUEST IS SENT'
+
+
+
 
 # add_captions
 @rest.route('/<user_id>/query/<query_id>/add_captions', methods=['POST', 'GET'])
@@ -300,7 +317,7 @@ def add_captions(user_id, query_id):
     
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_captions/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_captions/" + query_id, json=param)
     
     return 'POST REQUEST add_captions IS SENT'
 
@@ -326,7 +343,7 @@ def add_comments(user_id, query_id):
 
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_comments/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_comments/" + query_id, json=param)
     
     return 'POST REQUEST add_comments IS SENT'
 
@@ -352,7 +369,7 @@ def add_related(user_id, query_id):
 
     # Then send job to worker
     param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_related/" + query_id + "/", json=param)
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_related/" + query_id, json=param)
     
     return 'POST REQUEST add_related IS SENT'
 

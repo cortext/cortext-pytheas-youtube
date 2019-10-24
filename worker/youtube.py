@@ -1,4 +1,5 @@
 import requests
+import pprint as pp
 import json
 import os
 import datetime as dt
@@ -56,7 +57,12 @@ class YouTube():
         except requests.exceptions.RequestException as e:
             logger.warning('try_request failed on ' + url)
             logger.warning('error is : ' + str(e))
-        logger.debug(self.response(req))    
+
+        logger.debug(self.response(req))
+        # if 'error' in req.json():
+        #     logger.debug(str(pp.pprint(json.loads(self.response(req)) )))
+        # else:
+        #     logger.debug(req.json())
         return req.json()
 
     # prepare request with same obligatory param
@@ -120,56 +126,57 @@ class YouTube():
             )
         return search_results
     
-    def get_channel_videos(self, mongo_curs, param):
+    def get_channel_videos(self, mongo_curs, id_channel, param):
         # taking paramaters pre-formated in Youtube style
-        query_id = param['query_id']
-        query_name = param['query']
-        param_lighted = param.copy()
-        del param_lighted['query']
-        del param_lighted['query_id']
-
+        # youtube video from a channel are in a special playlist
         api = YouTube(self.api_key)
+        param_query = {
+            'id' : id_channel,
+            **param,
+        } 
+        rm_list = ['query','query_id','author_id','channel_id','channel_username']
+        [param_query.pop(key) for key in rm_list] 
+
+        # have to go trought playlistItems from /channel ressources 
         channel_playlistId = api.get_query(
             'channels',
-            **param_lighted
+            **param_query 
         )
 
-        param_lighted['part'] = param_lighted['part'].replace(', statistics', '')
+        # (with his specifics param_query & settings except for query & query_id)
+        param_query['part'] = param_query['part'].replace(', statistics', '')
         for items in channel_playlistId['items']:
-
-            del param_lighted['id']
-            param_lighted.update({'playlistId' : items['contentDetails']['relatedPlaylists']['uploads']})
+            del param_query['id']
+            param_query.update({'playlistId' : items['contentDetails']['relatedPlaylists']['uploads']})
 
             channel_results = api.get_query(
                 'playlistItems',
-                **param_lighted
+                **param_query
             )
-
-            # insert videos
+            # insert videos 
             for each in channel_results['items']:
-                each.update({'query_id'   : query_id,
-                             'query' : query_name})
+                each.update({'query_id'   : param['query_id'],
+                             'query' : param['query'],
+                             'channel_id' : id_channel,
+                             'kind' : 'youtube#channelItems',
+                             })
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
-
             ## Loop and save
             while 'nextPageToken' in channel_results:
                 channel_results = api.get_query(
                     'playlistItems',
-                    **param_lighted,
+                    **param_query,
                     pageToken=channel_results['nextPageToken']
                 )
-
                 for each in channel_results['items']:
-                    each.update({'query_id'   : query_id,
-                                 'query' : query_name})
+                    each.update({'query_id'   : param['query_id'],
+                                 'query' : param['query']})
                     each = YouTube.cleaning_each(each)
                     mongo_curs.db.videos.insert_one(each)
-
                 # check if not last result 
                 if not channel_results['items']:
                     break
-
         return
 
     # same as get_playlist (could be merged later maybe)
@@ -178,7 +185,7 @@ class YouTube():
         query_name = param['query']
         playlist_id = param['playlist_id']
         part = param['part']
-        maxResults = param['maxResults']
+        maxResults = 50
         
         api = YouTube(self.api_key)
         playlist_results = api.get_query(

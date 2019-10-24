@@ -24,6 +24,88 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 
+
+
+class Methods():
+    ###Append Function
+    def AppendCaption(EntryFile):
+        data = json.load(EntryFile)
+        lst = []
+        print(len(data))
+        for i in range(len(data)):
+            text = ''
+            if(data[i]['captions']):
+                for j in range(len(data[i]['captions'])):
+                    caption = data[i]['captions'][j]['text']
+                    regex = re.search('(\[[a-zA-Z])',caption)
+                    print(regex)
+                    if(regex):
+                        print('There is a sound or action')
+                    else: 
+                        text+=str(caption)
+                        text+=' '
+                print(text)
+                results_json = {
+                'query_id':data[i]['query_id'],
+                'videoId':data[i]['videoId'],
+                'text': text
+                }
+                lst.append(results_json)
+                
+            else:
+                print('There is no captions')
+        return json.dumps(lst,sort_keys=True, indent=4, separators=(',', ': '))
+
+
+    def AppendTranslate(EntryFile,Lang):
+        data = json.load(EntryFile)
+        lst = []
+        print(len(data))
+        for i in range(len(data)):
+            text = ''
+            if(data[i]['captions']):
+                for j in range(len(data[i]['captions'])):
+                    caption = data[i]['captions'][j]['text']
+                    regex = re.search('(\[[a-zA-Z])',caption)
+                    if(regex):
+                        print('There is a sound')
+                    else: 
+                        print(type(caption))
+                        print(caption)
+                        src = 'en'
+                        try:
+                            src = detect(caption)
+                            print(src)
+                        except:
+                            pass
+                        translator= Translator(to_lang=Lang,from_lang=src)
+                        translation = translator.translate(caption)
+                        print(translation)
+                        text+=str(caption)
+                        text+=' '
+                print(text)
+                results_json = {
+                'query_id':data[i]['query_id'],
+                'videoId':data[i]['videoId'],
+                'text': text,
+                'translatedText': translation
+                }
+                lst.append(results_json)
+            
+            else:
+                print('There is no captions')
+
+        return json.dump(lst,OutputFile,sort_keys=True, indent=4, separators=(',', ': '))
+
+
+
+
+
+
+
+
+
+
 ##########################################################################
 # Youtube Data Api request
 # used to make all http request to Youtube Data Api

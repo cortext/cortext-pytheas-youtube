@@ -74,6 +74,14 @@ except BaseException as error:
     # app.logger.debug('An exception occurred : {}'.format(error))
     print("ERROR creating app...")
 
+
+if app.config['debug_level'] == 'False':
+    @app.errorhandler(Exception)
+    def page_not_found(error):
+        app.logger.debug(error)
+        return render_template('structures/error.html', error=error)
+
+
 @app.before_request
 def before_request():
     try:
@@ -106,13 +114,6 @@ def before_request():
         # else nothing let continue  
     except BaseException as e:
         app.logger.debug(e)
-
-
-if app.config['debug_level'] == 'False':
-    @app.errorhandler(Exception)
-    def page_not_found(error):
-        app.logger.debug(error)
-        return render_template('structures/error.html', error=error)
 
 
 @app.route('/')
@@ -156,6 +157,7 @@ def video_info():
         return render_template('methods/view_results.html', result=video_result, string=video_result_string)
     return render_template('explore.html')
 
+
 @app.route('/channel_info', methods=['POST'])
 def channel_info():
     if request.method == 'POST':
@@ -183,6 +185,7 @@ def channel_info():
         else:
             return render_template('explore.html', message='api key not set')
     return render_template('explore.html')
+
 
 @app.route('/playlist_info', methods=['POST'])
 def playlist_info():
@@ -220,31 +223,32 @@ def get_data():
 @app.route('/videos-list', methods=['POST'])
 def video():
     if request.method == 'POST':
-        uid = str(uuid4())
-        if 'api_key' in session:
-            api = YouTube(api_key=session['api_key'])
-
-            list_videos = request.form.get('list_videos').splitlines()
-            list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]            
-            name_query = str(request.form.get('name_query'))
-            part = ', '.join(request.form.getlist('part'))
-            
-            payload = {
-                'list_videos':list_videos,
-                'uid':uid,
-                'name_query': name_query,
-                'part': part,
-                'api_key' : session['api_key']
-            }
-
-            r = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + session['profil']['id'] + "/add_queries/" + uid + "/", json=payload)
-
-        else:
+        if not 'api_key' in session:
             return render_template('explore.html', message='api key not set')
+        
+        query_id = str(uuid4())
+        user_id = session['profil']['id']
+        list_videos = request.form.get('list_videos').splitlines()
+        list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]            
+        query_name = str(request.form.get('name_query'))    
+        part = ', '.join(request.form.getlist('part'))
+
+        payload = {
+            'query_id':query_id,
+            'query': query_name,
+            'part': part,
+            'api_key' : session['api_key'],
+            'kind': 'videosList',
+            'videos':list_videos,
+        }
+        
+        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
+    
+        def send_request():  
+            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/videos", json=payload)
+        Thread(target=send_request).start()  
+    
     return redirect(url_for('manage'))
-
-
-
 
 
 @app.route('/playlist', methods=['POST'])
@@ -253,114 +257,68 @@ def playlist():
         if not 'api_key' in session:
             return render_template('explore.html', message='api key not set')
 
+        user_id = session['profil']['id']
         query_id = str(uuid4())
-        list_playlist = request.form.getlist('list_url')        
+        app.logger.debug(request.form)
+        list_playlist = request.form.getlist('list_url_id')        
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
-        param = {
+        payload = {   
+            'author_id': session['profil']['id'],
+            'api_key' : session['api_key'],
+            'query_id': query_id,
+            'query': query_name,
+            'playlist_id': list_playlist,
             'part': part,
             'maxResults': maxResults,
-            'query_id' : query_id,
-            'query': query_name
+            'kind': 'playlistItems',
         }
 
-        # insert query
-        mongo_curs.db.queries.insert_one(
-            {   
-                'author_id': session['profil']['id'],
-                'query_id': query_id,
-                'query': query_name,
-                'playlist_id': list_playlist,
-                'part': part,
-                'maxResults': maxResults,
-            }
-        )
+        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
+        
+        def send_request():
+            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/playlist", json=payload)
+        Thread(target=send_request).start()
 
-        for playlist_id in list_playlist:
-            param.update({'playlist_id' : playlist_id})
-            
-            # call request
-            api = YouTube(api_key=session['api_key'])
-            playlist_results = api.get_playlist(mongo_curs, param)
-            
-        # add metrics for query in json
-        count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
-        mongo_curs.db.queries.update_one(
-            { 'query_id': query_id },
-            { '$set': {'count_videos': count_videos } }
-        )
+    return redirect(url_for('manage'))
 
-        return redirect(url_for('manage'))
 
 @app.route('/channel', methods=['POST'])
 def channel():
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('explore.html', message='api key not set')
+        
+        user_id = session['profil']['id']
         query_id = str(uuid4())
-        
-        list_channel_username = [YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_username') ]
-        list_channel_id = [ YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_url_id') ]
-        list_channel = list_channel_username + list_channel_id
-        
-        list_channel_id = list_channel_id[0].splitlines()
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
+        list_channel_username = [YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_username') ]
+        list_channel_id = [ YouTube.cleaning_channel(username_or_id) for username_or_id in request.form.getlist('list_id') ]
+        list_channel = list_channel_username + list_channel_id
+        list_channel_id = list_channel_id[0].splitlines()
         
-        # insert query
-        mongo_curs.db.queries.insert_one(
-            {   
-                'author_id': session['profil']['id'],
-                'query_id': query_id,
-                'query': query_name,
-                'channel_id': list_channel,
-                'part': part,
-                'maxResults': maxResults,
-            }
-        )
-
-        # tricks to detect username or channel id
-        # need to refact with cleaning_channel methods (also used in /explore)    
-        api = YouTube(api_key=session['api_key'])
-        param = {
-            'part': part,
-            'maxResults': maxResults,
+        payload = {   
+            'author_id': session['profil']['id'],
+            'api_key' : session['api_key'],
             'query_id': query_id,
             'query': query_name,
+            'channel_id': list_channel_id,
+            'channel_username': list_channel_username,
+            'part': part,
+            'maxResults': maxResults,
+            'kind' : 'channelItems',
         }
 
-        # looking for ID of an username
-        for channel_username in list_channel_username:
-            param_lighted = param.copy()
-            param_lighted.update({ 'forUsername' : channel_username})
-            
-            del param_lighted['query']
-            del param_lighted['query_id']
-            
-            find_channel_id = api.get_query(
-                'channels',
-                **param_lighted
-            )
-            
-            supposed_channel_id = find_channel_id['items'][0]['id']
-            
-            if supposed_channel_id:
-                param.update({ 'id' : supposed_channel_id})
-                api.get_channel_videos(mongo_curs, param)
-        
-        # then for ID
-        for channel_id in list_channel_id:
-            param.update({ 'id' : channel_id})
-            api.get_channel_videos(mongo_curs, param)
-            
-        # finally add metrics for query in json
-        count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
-        mongo_curs.db.queries.update_one(
-            { 'query_id': query_id },
-            { '$set': {'count_videos': count_videos } }
-        )
+        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
 
-        return redirect(url_for('manage'))
+        def send_request():
+            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/channel", json=payload)
+        Thread(target=send_request).start()
+
+    return redirect(url_for('manage'))
+
+
 
 @app.route('/search', methods=['POST', 'GET'])
 def search():
@@ -368,7 +326,8 @@ def search():
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('download/search.html', message='api key not set')
-        uid = str(uuid4())
+
+        query_id = str(uuid4())
         api = YouTube(api_key=session['api_key'])
         user_id = session['profil']['id']
         query =  str(request.form.get('query'))
@@ -376,184 +335,47 @@ def search():
         order = str(request.form.get('order'))
         language = str(request.form.get('language'))
 
-        # IF DATE = ONE SEARCH BY DAY
+        payload = {   
+                'author_id': session['profil']['id'],
+                'api_key' : session['api_key'],
+                'query_id': query_id,
+                'query': query,
+                'part': part,
+                'order': order,
+                'language': language,
+                'maxResults': maxResults,
+                'kind' : 'searchResults',
+        }
+
         if request.form.get('advanced'):
             # get date points & convert them
             st_point = request.form.get('startpoint') + 'T00:00:00Z'
             ed_point = request.form.get('endpoint') + 'T00:00:00Z'
-            d_start = datetime.datetime.strptime(
-                st_point, "%Y-%m-%dT%H:%M:%SZ")
-            d_end = datetime.datetime.strptime(
-                ed_point, "%Y-%m-%dT%H:%M:%SZ")
-
-            # insert query in mongo
-            uid = str(uuid4())
-            user_info = {
-                    'query_id': uid,
-                    'author_id':user_id,
-                    'query': query, 
+            payload = {   
+                **payload,
+                'mode' : 'advanced',
+                'publishedAfter' : st_point,
+                'publishedBefore' : ed_point,
             }
-            youtube_data = {
-                    'query_id': uid,
-                    'author_id':user_id,
-                    'query': query,
-                    'q': query,
-                    'part':part,
-                    'language': language,
-                    'maxResults': maxResults,
-                    'order': order,
-                    'date_start': st_point,
-                    'date_end': ed_point
-            }
-            mongo_curs.db.queries.insert_one(
-                youtube_data
-            )
-            [ youtube_data.pop(x) for x in ['query_id', 'author_id', 'query', 'date_start', 'date_end'] ]
-            
-            if language == 'None':
-                youtube_data.pop('language')
-                language = ''
-            
-            # Parse date time from form
-            r_before = time.parse(ed_point)
-            r_after = time.parse(st_point)
-            delta = r_before - r_after
-            delta_days = delta.days + 1
+            import pprint as pp
+            app.logger.debug(type(payload))
+            app.logger.debug(payload)
+            app.logger.debug(pp.pprint(payload))
 
-            app.logger.debug('# DELTA DAYS = ' + str(delta_days))
+            r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
 
-            # # Then iterate for each days
-            for n in range(delta.days + 1):
-                app.logger.debug(str(n))
-                # increment one day later to get a one-day period
-                r_after_next = r_after + dt.timedelta(days=1)
-                st_point = r_after.isoformat()
-                ed_point = r_after_next.isoformat()
-
-                youtube_data['publishedAfter'] = st_point
-                youtube_data['publishedBefore'] = ed_point 
-                
-                app.logger.debug(str(st_point))
-                app.logger.debug(str(ed_point))
-
-                # Querying
-                date_results = api.get_chrono_search(youtube_data)
-                app.logger.debug('count is : ' + str(len(date_results['items'])))
-
-                # saving
-                for each in date_results['items']:
-                    each.update(user_info)
-                    each = YouTube.cleaning_each(each)
-                    mongo_curs.db.videos.insert_one(each)
-                # loop
-                while 'nextPageToken' in date_results and len(date_results['items']) != 0:
-                    youtube_data['pageToken'] = date_results['nextPageToken']
-                    if language == 'None':
-                        date_results = api.get_query(
-                            'search',
-                            q = query,
-                            part = part,
-                            relevenceLanguage = language,
-                            maxResults = maxResults,
-                            order = 'date',
-                            publishedAfter = ed_point,
-                            publishedBefore = st_point,
-                            pageToken = date_results['nextPageToken']
-                        )
-                    else:
-                        date_results = api.get_query(
-                            'search',
-                            q = query,
-                            part = part,
-                            maxResults = maxResults,
-                            order = 'date',
-                            publishedAfter = ed_point,
-                            publishedBefore = st_point,
-                            pageToken = date_results['nextPageToken']
-                        )
-
-                    # insert video-info except if last result
-                    # only if "items" not empty 
-                    for each in date_results['items']:
-                        each.update({'query_id': uid})
-                        each = YouTube.cleaning_each(each) 
-                        mongo_curs.db.videos.insert_one(each)
-
-                # finally increment next after day
-                r_after += dt.timedelta(days=1)
-
-            count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-            mongo_curs.db.queries.update_one(
-                { 'query_id': uid },
-                { '$set': {'count_videos': count_videos } }
-            )
-             
-            return redirect(url_for('manage'))
+            def send_request():
+                requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/search", json=payload)
+            Thread(target=send_request).start()
 
         else:
-            search_results = api.get_query(
-                'search',
-                q = query,
-                part = part,
-                language = language,
-                maxResults=maxResults,
-                order = order
-            )
+            r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
 
-            # insert query
-            mongo_curs.db.queries.insert_one(
-                {
-                    'author_id': user_id,
-                    'query_id': uid,
-                    'query': query,
-                    'part': part,
-                    'language': language,
-                    'maxResults': maxResults,
-                    'order': order,
-                }
-            )
-            # insert videos
-            for each in search_results['items']:
-                each.update({'query_id': uid})
-                # thing is search query can provide video, an playlist id...
-                if 'snippet' in each:
-                    if 'videoId' in each['id']:
-                        each['snippet'].update({'videoId': each['id']['videoId']})
-                    elif 'playlistId' in each['id']:
-                        each['snippet'].update({'playlistId' : each['id']['playlistId']})
-                elif 'videoId' in each['id']:
-                    each.update({'videoId': each['id']['videoId']})
-                elif 'playlistId' in each['id']:
-                    each.update({'playlistId': each['id']['playlistId']})
-                mongo_curs.db.videos.insert_one(each)
+            def send_request():
+                requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/search", json=payload)
+            Thread(target=send_request).start()
 
-            ## Loop and save
-            while 'nextPageToken' in search_results:
-                search_results = api.get_query(
-                    'search',
-                    q=query,
-                    part=part,
-                    language=language,
-                    maxResults=maxResults,
-                    order=order,
-                    pageToken=search_results['nextPageToken']
-                )
-                if not search_results['items']:
-                    # add metrics for query in json
-                    count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
-                    mongo_curs.db.queries.update_one(
-                        { 'query_id': uid },
-                        { '$set': {'count_videos': count_videos } }
-                    )
-                    return redirect(url_for('manage'))
-
-                # insert video-info
-                for each in search_results['items']:
-                    each.update({'query_id': uid})
-                    each = YouTube.cleaning_each(each)
-                    mongo_curs.db.videos.insert_one(each)
-
-            return redirect(url_for('manage'))
+    return redirect(url_for('manage'))
 
 
 ##########################################################################
