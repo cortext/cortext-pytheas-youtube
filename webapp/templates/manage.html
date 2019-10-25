@@ -57,8 +57,8 @@
                             <td>{{query['order']}}</td>
                             <td>{{query['part']}}</td>
                             <td class="text-center">{{query['language']}}</td>
-                            {% if query['date_start'] is defined %}
-                            <td>{{query['date_start'][0:10]}} / {{query['date_end'][0:10]}}</td>
+                            {% if query['publishedAfter'] is defined %}
+                            <td>{{query['publishedAfter'][0:10]}} / {{query['publishedBefore'][0:10]}}</td>
                             {% else %}
                                 <td></td>
                             {% endif %}

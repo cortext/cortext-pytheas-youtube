@@ -220,6 +220,10 @@ def playlist_info():
 def get_data():
     return render_template('get_data.html', language_code=language_code)
 
+@app.route('/input_csv', methods=['POST', 'GET'])
+def input_csv():
+    return render_template('get_data.html')
+
 @app.route('/videos-list', methods=['POST'])
 def video():
     if request.method == 'POST':
@@ -248,7 +252,7 @@ def video():
             requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/videos", json=payload)
         Thread(target=send_request).start()  
     
-    return redirect(url_for('manage'))
+    return render_template('methods/download_process.html')
 
 
 @app.route('/playlist', methods=['POST'])
@@ -263,7 +267,7 @@ def playlist():
         list_playlist = request.form.getlist('list_url_id')        
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
-        payload = {   
+        payload = {
             'author_id': session['profil']['id'],
             'api_key' : session['api_key'],
             'query_id': query_id,
@@ -280,7 +284,7 @@ def playlist():
             requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/playlist", json=payload)
         Thread(target=send_request).start()
 
-    return redirect(url_for('manage'))
+    return render_template('methods/download_process.html')
 
 
 @app.route('/channel', methods=['POST'])
@@ -298,7 +302,7 @@ def channel():
         list_channel = list_channel_username + list_channel_id
         list_channel_id = list_channel_id[0].splitlines()
         
-        payload = {   
+        payload = {
             'author_id': session['profil']['id'],
             'api_key' : session['api_key'],
             'query_id': query_id,
@@ -316,7 +320,7 @@ def channel():
             requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/channel", json=payload)
         Thread(target=send_request).start()
 
-    return redirect(url_for('manage'))
+    return render_template('methods/download_process.html')
 
 
 
@@ -335,7 +339,7 @@ def search():
         order = str(request.form.get('order'))
         language = str(request.form.get('language'))
 
-        payload = {   
+        payload = {
                 'author_id': session['profil']['id'],
                 'api_key' : session['api_key'],
                 'query_id': query_id,
@@ -357,11 +361,6 @@ def search():
                 'publishedAfter' : st_point,
                 'publishedBefore' : ed_point,
             }
-            import pprint as pp
-            app.logger.debug(type(payload))
-            app.logger.debug(payload)
-            app.logger.debug(pp.pprint(payload))
-
             r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
 
             def send_request():
@@ -375,7 +374,7 @@ def search():
                 requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/search", json=payload)
             Thread(target=send_request).start()
 
-    return redirect(url_for('manage'))
+    return render_template('methods/download_process.html')
 
 
 ##########################################################################
@@ -413,7 +412,6 @@ def aggregate():
             else:
                 doc['countVideos'] = 'NA'
             stats['list_queries'].append(doc)
-        
     
     if request.method == 'POST':
         if request.form and request.form.get('optionsRadios'):
@@ -449,7 +447,7 @@ def aggregate():
                 current_query = Video(mongo_curs, api_key=api_key)
                 current_query.add_stats_for_each_entry(query_id)
 
-            return redirect(url_for('manage'))
+            return render_template('methods/download_process.html')
 
     return render_template('aggregate.html', stats=stats)
 

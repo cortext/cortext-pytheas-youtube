@@ -53,7 +53,22 @@
         <div class="col-8 align-self-center">
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active" id="" role="tabpanel" aria-labelledby="list-home-list">
-                    <h4>Choose one</h4>                    
+                    <h4>Or upload csv file (see doc for format) <a class="btn btn-primary btn-sm float-right" href="https://pytheas.cortext.net/documentation">csv import doc</a></h4>
+
+                    <form action="/import_csv" method="POST">
+                        <div class="input-group ">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
+                            </div>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="input_csv_channel" aria-describedby="inputGroupFileAddon01">
+                                <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+
+
                 </div>
                 <div class="tab-pane fade show" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
                     <a class="btn btn-secondary btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/channels/list">youtube docs channels</a>
@@ -138,9 +153,9 @@
                                     <input type="date" value="publishedBefore" name="endpoint">
                                 </div>
                             </div>
-                            <br>
+                            <!-- <br>
                             <label for="customRange2">Example range</label>
-                            <input type="range" class="custom-range" min="0" max="5" id="customRange2">
+                            <input type="range" class="custom-range" min="0" max="5" id="customRange2"> -->
 
                             <button type="submit" class="center-block btn btn-primary">Submit</button>
                         </div>
