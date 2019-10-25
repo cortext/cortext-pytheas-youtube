@@ -59,7 +59,9 @@ def add_query(user_id, query_id):
         'query_id': query_id,
         'part': param['part'],
         'kind' : param['kind'],
-        'query' : param['query']
+        'query' : param['query'],
+        'status' : 'starting',
+        'date_query' : dt.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
     }
 
     if param['kind'] == 'channelItems':
@@ -163,7 +165,8 @@ def add_video(user_id, query_id, query_type):
         count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
         mongo_curs.db.queries.update_one(
             { 'query_id': query_id },
-            { '$set': {'count_videos': count_videos } }
+            { '$set': {'count_videos': count_videos,
+                       'status' : 'done'} }
         )
 
     ###############################
@@ -282,7 +285,8 @@ def add_video(user_id, query_id, query_type):
         count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
         mongo_curs.db.queries.update_one(
             { 'query_id': uid },
-            { '$set': {'count_videos': count_videos } }
+            { '$set': {'count_videos': count_videos,
+                       'status' : 'done' } }
         )
 
     ###############################
@@ -300,7 +304,8 @@ def add_video(user_id, query_id, query_type):
         count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
         mongo_curs.db.queries.update_one(
             { 'query_id': uid },
-            { '$set': {'count_videos': count_videos } } 
+            { '$set': {'count_videos': count_videos,
+                       'status' : 'done' } } 
         )
 
     ###############################
@@ -316,11 +321,9 @@ def add_video(user_id, query_id, query_type):
         count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
         mongo_curs.db.queries.update_one(
             { 'query_id': query_id },
-            { '$set': {'count_videos': count_videos } }
+            { '$set': {'count_videos': count_videos,
+                       'status' : 'done' } }
         )        
-
-
-
     return 'videos added'
 
 
@@ -343,9 +346,6 @@ def add_captions(user_id, query_id):
         { 'query_id': query_id },
         { '$set': {'count_captions': count_captions } }
     )
-
-    
-
     return 'POST REQUEST add_captions IS RECEIVED'
 
 
