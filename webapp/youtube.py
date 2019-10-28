@@ -228,7 +228,7 @@ class Video():
         try:        
             current_videos = self.db.videos.find({ 'query_id': query_id})
             for video in current_videos:
-                id_video = video['videoId']
+                id_video = video['id']
                 stat_result = self.api.get_query('videos', id=id_video, part='id,statistics')
                 
                 logger.error(stat_result)
