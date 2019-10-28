@@ -1,104 +1,47 @@
-{% extends "base.html" %} {% block content %}
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h2>Search</h2>
-                <hr/>
-                <h3>Download a search query </h3>
-                {% if message %} {{ message }} {% endif %}
-            </div>
-        </div>
-        <div class="row ">
-            <div class="col-md-6">
-                <h4>Order</h4>
-                <p>
-                Here you can download a query from youtube in which you will have to choose your language area and the ranking order result (called <strong>order</strong> by google).</p>
-                <p>
-                    <a href="https://developers.google.com/youtube/v3/docs/search/list#order" class="btn btn-primary">youtube docs list#order</a></p>
-                    <h4>Part</h4>
-                    <ul>
-                        <li>
-                            <strong>date</strong> – Resources are sorted in reverse chronological order based on the date they were created.
-                        </li>
-                        <li>
-                            <strong>rating</strong> – Resources are sorted from highest to lowest rating.
-                        </li>
-                        <li>
-                            <strong>relevance</strong> – Resources are sorted based on their relevance to the search query. This is the default value for this parameter.
-                        </li>
-                        <li>
-                            <strong>title</strong> – Resources are sorted alphabetically by title.
-                        </li>
-                        <li>
-                            <strong>videoCount</strong> – Channels are sorted in descending order of their number of uploaded videos.
-                        </li>
-                        <li>
-                            <strong>viewCount</strong> – Resources are sorted from highest to lowest number of views. For live broadcasts, videos are sorted by number of concurrent viewers while the broadcasts are ongoing.
-                        </li>
-                    </ul>
-                    <p>
-                        By default Part option here will download only snippet information. But you can only choose to download id from video if you get very high costing query in order to be a little more saver.
-                    </p>
-                    <p>
-                        <a href="https://developers.google.com/youtube/v3/docs/search/list#part" class="btn btn-primary">youtube docs list#part</a>
-                    </p>
+{% block content %}
+<a class="btn btn-info btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/search/list">youtube docs Search query</a>
 
-                    <h4>Language</h4>
-                    <p>
-                        Choose your language.
-                    </p>
-                    <p>
-                        <a href="https://developers.google.com/youtube/v3/docs/search/list#part" class="btn btn-primary">youtube docs list#part</a>
-                    </p>
-            </div>
-                
-            <div class="col-md-6">
-                <form action="/search" method="POST">
-                    <div class="form-group">
-                        <h4>Query</h4>
-                        <input type="text" name="query" class="form-control" placeholder="Search">
-                        
-                        <h4>Language</h4>
-                        <select class="form-control" name="language" placeholder="fr">
-                            <option value="" disabled selected>Select your language area</option>
-                            {% for lang in language_code %}
-                                <option value="{{ lang[0] }}">{{ lang[1] }}</option>
-                            {% endfor %}
-                        </select>
+<h4>Query</h4>
+<input type="text" name="query" class="form-control" placeholder="Search">
 
-                        <h4>Order</h4>
-                        <select class="form-control" name="order">
-                            <option>relevance</option>
-                            <option>date</option>
-                            <option>rating</option>
-                            <option>title</option>
-                            <option>viewCount</option>
-                            <option>videoCount</option>
-                        </select>
+<h4>Language</h4>
+<select class="form-control" name="language" placeholder="fr">
+    <option value="" disabled selected>Select your language area</option>
+    {% for lang in language_code %}
+    <option value="{{ lang[0] }}">{{ lang[1] }}</option>
+    {% endfor %}
+</select>
 
-                        <h4>Part</h4>
-                        <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                        <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+<h4>Order</h4>
+<select class="form-control" name="order">
+    <option>relevance</option>
+    <option>date</option>
+    <option>rating</option>
+    <option>title</option>
+    <option>viewCount</option>
+    <option>videoCount</option>
+</select>
 
-                        <h4>Advanced</h4>
-                        <p><input type="checkbox" name="advanced"> Will search day by day (with a max at ~500/day)</p>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for='startpoint'>Début :</label>
-                                <input type="date" value="publishedAfter" name="startpoint">
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label for='endpoint'>Fin :</label>
-                                <input type="date" value="publishedBefore" name="endpoint">
-                            </div>
-                        </div>
-                        <br>
-                        
-                        <button type="submit" class="center-block btn btn-default">Submit</button>
-                    </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    {% endblock %}
+<h4>Part</h4>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+
+<h4>Advanced</h4>
+<p><input type="checkbox" name="advanced"> Will search day by day (with a max at ~500/day)</p>
+<div class="row mb-4">
+    <div class="col-md-6">
+        <label for='startpoint'>Début :</label>
+        <input type="date" value="publishedAfter" name="startpoint">
+    </div>
+
+    <div class="col-md-6">
+        <label for='endpoint'>Fin :</label>
+        <input type="date" value="publishedBefore" name="endpoint">
+    </div>
+</div>
+<!-- <br>
+<label for="customRange2">Example range</label>
+<input type="range" class="custom-range" min="0" max="5" id="customRange2"> -->
+
+<button type="submit" class="center-block btn btn-secondary">Submit</button>
+{% endblock %}

@@ -293,59 +293,56 @@ def add_video(user_id, query_id, query_type):
     return 'POST REQUEST IS SENT'
 
 
+# add_comments
+@rest.route('/<user_id>/query/<query_id>/add_comments', methods=['POST', 'GET'])
+def add_comments(user_id, query_id):
+    # first list videos from a query
+    param = request.get_json() 
+    results_query = requests.get("http://restapp:" + rest.config['REST_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+        
+    list_vid = []
+    for result in results_query.json():
+        if 'videoId' in result:
+            id_video = result['videoId']
+        elif result['kind'] == 'youtube#playlistItem':
+            id_video = result['snippet']['resourceId']['videoId']
+        else:
+            id_video = result['id']
+        list_vid.append(id_video)
+    # Then send job to worker 
+    param['list_vid'] = list_vid
+    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_comments/" + query_id, json=param)
+    
+    return 'POST REQUEST add_comments IS SENT'
 
 
 # add_captions
 @rest.route('/<user_id>/query/<query_id>/add_captions', methods=['POST', 'GET'])
 def add_captions(user_id, query_id):
-    rest.logger.debug(user_id)
-    rest.logger.debug(query_id)
-    
     # first list videos from a query
     param = request.get_json()
     results_query = requests.get("http://restapp:" + rest.config['REST_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
+    rest.logger.debug('NIET1')
 
     list_vid = []
     for result in results_query.json():
+        
         if 'videoId' in result:
             id_video = result['videoId']
         elif result['kind'] == 'youtube#playlistItem':
             id_video = result['snippet']['resourceId']['videoId']
         else:
-            id_video = result['id']['videoId']
+            id_video = result['id']
+        rest.logger.debug(id_video)
         list_vid.append(id_video)
-    
-    # Then send job to worker
+    rest.logger.debug('NIET2')
+    # Then send job to worker 
     param['list_vid'] = list_vid
     r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_captions/" + query_id, json=param)
     
     return 'POST REQUEST add_captions IS SENT'
 
-# add_comments
-@rest.route('/<user_id>/query/<query_id>/add_comments', methods=['POST', 'GET'])
-def add_comments(user_id, query_id):
-    rest.logger.debug(user_id)
-    rest.logger.debug(query_id)
 
-    # first list videos from a query
-    param = request.get_json()
-    results_query = requests.get("http://restapp:" + rest.config['REST_PORT'] + "/" + user_id + "/queries/" + query_id + "/videos/")
-    
-    list_vid = []
-    for result in results_query.json():
-        if 'videoId' in result:
-            id_video = result['videoId']
-        elif result['kind'] == 'youtube#playlistItem':
-            id_video = result['snippet']['resourceId']['videoId']
-        else:
-            id_video = result['id']['videoId']
-        list_vid.append(id_video)
-
-    # Then send job to worker
-    param['list_vid'] = list_vid
-    r = requests.post("http://worker:" + rest.config['WORKER_PORT'] + "/" + user_id + "/add_comments/" + query_id, json=param)
-    
-    return 'POST REQUEST add_comments IS SENT'
 
 # add_related
 @rest.route('/<user_id>/query/<query_id>/add_related', methods=['POST', 'GET'])
@@ -364,7 +361,7 @@ def add_related(user_id, query_id):
         elif result['kind'] == 'youtube#playlistItem':
             id_video = result['snippet']['resourceId']['videoId']
         else:
-            id_video = result['id']['videoId']
+            id_video = result['id']
         list_vid.append(id_video)
 
     # Then send job to worker

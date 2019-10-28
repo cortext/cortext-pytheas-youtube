@@ -6,10 +6,6 @@ import requests
 import logging
 from uuid import uuid4
 from threading import Thread
-# need to recheck here later...
-import datetime
-import datetime as dt
-import dateutil.parser as time
 import re
 import zipfile
 from io import BytesIO
@@ -32,11 +28,7 @@ from database import Database
 # Main class
 from user import User
 from youtube import YouTube
-from youtube import YouTubeTranscriptApi
-from youtube import Comment
-from youtube import Caption
 from youtube import Video
-from youtube import RelatedVideos
 from code_country import language_code
 
 def create_app():
@@ -220,24 +212,89 @@ def playlist_info():
 def get_data():
     return render_template('get_data.html', language_code=language_code)
 
-@app.route('/input_csv', methods=['POST', 'GET'])
-def input_csv():
-    return render_template('get_data.html')
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = ['csv']
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/import_csv', methods=['POST'])
+def import_csv():
+    import pandas as pd
+    if request.files['input_csv_channel']:
+        file = request.files['input_csv_channel']
+        parsed_file = pd.read_csv(file, delimiter=";")
+        # key_type =  ['channel_id', 'channel_username', 'playlist_id', 'video_id', 'search_terms',]
+
+        dataset = {
+            'videos' : [],
+            'channel': [],
+            'search': [],
+            'playlistItems': [], 
+        }
+
+        for i, value in parsed_file.iterrows():
+            if value['type'] == 'videos':
+                dataset['videos'].append(value['items'])
+            elif value['type'] == 'channel':
+                dataset['channel'].append(value['items'])
+                            
+            elif value['type'] == 'search':
+                dataset['search'].append(value['items'])
+            
+            elif value['type'] == 'playlist_id':
+                dataset['playlist_id'].append(value['items'])
+    
+        if dataset['videos']:
+            payload = {
+                'query': 'query_name',
+                'part': 'id, snippet',
+                'videos':dataset['videos'],
+            }
+            video(payload)
+        if dataset['channel']:
+            payload = {
+                'query': 'query_name',
+                'part': 'id, snippet',
+                'channel_id':dataset['channel'],
+            }
+            channel(payload)
+        if dataset['playlistItems']:
+            payload = {
+                'query': 'query_name',
+                'part': 'id, snippet',
+                'playlist_id':dataset['playlist_id'],
+            }
+            playlist(payload)
+        if dataset['search']:
+            payload = {
+                'query': 'query_name',
+                'part': 'id, snippet',
+                'search':dataset['search'],
+            }
+            search(payload)
+    return render_template('methods/download_process.html')
 
 @app.route('/videos-list', methods=['POST'])
-def video():
+def video(payload=None):
     if request.method == 'POST':
         if not 'api_key' in session:
             return render_template('explore.html', message='api key not set')
-        
         query_id = str(uuid4())
         user_id = session['profil']['id']
-        list_videos = request.form.get('list_videos').splitlines()
-        list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]            
-        query_name = str(request.form.get('name_query'))    
+        query_name = str(request.form.get('name_query'))
         part = ', '.join(request.form.getlist('part'))
 
-        payload = {
+        # come from input_csv
+        if payload:
+            query_name = payload['query']
+            part = payload['part']
+            list_videos = payload['videos']
+            list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]
+        else:
+            list_videos = request.form.get('list_videos').splitlines()
+            list_videos = [ YouTube.cleaning_video(x) for x in list_videos ]
+
+        param = {
             'query_id':query_id,
             'query': query_name,
             'part': part,
@@ -245,13 +302,11 @@ def video():
             'kind': 'videosList',
             'videos':list_videos,
         }
+        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=param)
         
-        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
-    
         def send_request():  
-            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/videos", json=payload)
-        Thread(target=send_request).start()  
-    
+            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/videos", json=param)
+        Thread(target=send_request).start()
     return render_template('methods/download_process.html')
 
 
@@ -263,11 +318,10 @@ def playlist():
 
         user_id = session['profil']['id']
         query_id = str(uuid4())
-        app.logger.debug(request.form)
         list_playlist = request.form.getlist('list_url_id')        
         query_name = str(request.form.get('query_name'))
         part = ', '.join(request.form.getlist('part'))
-        payload = {
+        param = {
             'author_id': session['profil']['id'],
             'api_key' : session['api_key'],
             'query_id': query_id,
@@ -278,10 +332,10 @@ def playlist():
             'kind': 'playlistItems',
         }
 
-        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
+        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=param)
         
         def send_request():
-            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/playlist", json=payload)
+            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/playlist", json=param)
         Thread(target=send_request).start()
 
     return render_template('methods/download_process.html')
@@ -302,7 +356,7 @@ def channel():
         list_channel = list_channel_username + list_channel_id
         list_channel_id = list_channel_id[0].splitlines()
         
-        payload = {
+        param = {
             'author_id': session['profil']['id'],
             'api_key' : session['api_key'],
             'query_id': query_id,
@@ -314,10 +368,10 @@ def channel():
             'kind' : 'channelItems',
         }
 
-        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
+        r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=param)
 
         def send_request():
-            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/channel", json=payload)
+            requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/channel", json=param)
         Thread(target=send_request).start()
 
     return render_template('methods/download_process.html')
@@ -339,7 +393,7 @@ def search():
         order = str(request.form.get('order'))
         language = str(request.form.get('language'))
 
-        payload = {
+        param = {
                 'author_id': session['profil']['id'],
                 'api_key' : session['api_key'],
                 'query_id': query_id,
@@ -355,23 +409,23 @@ def search():
             # get date points & convert them
             st_point = request.form.get('startpoint') + 'T00:00:00Z'
             ed_point = request.form.get('endpoint') + 'T00:00:00Z'
-            payload = {   
-                **payload,
+            param = {   
+                **param,
                 'mode' : 'advanced',
                 'publishedAfter' : st_point,
                 'publishedBefore' : ed_point,
             }
-            r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
+            r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=param)
 
             def send_request():
-                requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/search", json=payload)
+                requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/search", json=param)
             Thread(target=send_request).start()
 
         else:
-            r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=payload)
+            r_query = requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/add_query/" + query_id, json=param)
 
             def send_request():
-                requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/search", json=payload)
+                requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/search", json=param)
             Thread(target=send_request).start()
 
     return render_template('methods/download_process.html')
@@ -422,28 +476,28 @@ def aggregate():
             options_api = request.form.getlist('api_part')
             part = ', '.join(request.form.getlist('part'))
             
-            payload = {
+            param = {
                 'part': part,
                 'api_key' : api_key
             }
             
             if 'captions' in options_api:
                 def send_request():
-                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_captions", json=payload)
+                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_captions", json=param)
                 Thread(target=send_request).start()
 
             if 'comments' in options_api:
                 def send_request():
-                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_comments", json=payload)
+                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_comments", json=param)
                 Thread(target=send_request).start()
 
             if 'related' in options_api:
                 def send_request():
-                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_related", json=payload)
+                    requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_related", json=param)
                 Thread(target=send_request).start()
 
             if 'statistics' in options_api:
-                # r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_statistics", json=payload)
+                # r = requests.post("http://restapp:5053/" + user_id + "/query/" + query_id + "/add_statistics", json=param)
                 current_query = Video(mongo_curs, api_key=api_key)
                 current_query.add_stats_for_each_entry(query_id)
 
@@ -594,29 +648,26 @@ def download_videos_by_type(query_id, query_type):
         # query_result = Methods.AppendCaption(r.json())
         data = r.json()
         lst = []
-        print(len(data))
         for i in range(len(data)):
             text = ''
             if(data[i]['captions']):
                 for j in range(len(data[i]['captions'])):
                     caption = data[i]['captions'][j]['text']
                     regex = re.search('(\[[a-zA-Z])',caption)
-                    print(regex)
                     if(regex):
-                        print('There is a sound or action')
+                        app.logger.debug('There is a sound or action')
                     else: 
                         text+=str(caption)
                         text+=' '
-                print(text)
                 results_json = {
-                'query_id':data[i]['query_id'],
-                'videoId':data[i]['videoId'],
-                'text': text
+                    'query_id':data[i]['query_id'],
+                    'videoId':data[i]['videoId'],
+                    'text': text
                 }
                 lst.append(results_json)
                 
             else:
-                print('There is no captions')
+                app.logger.debug('There is no captions')
         query_result = json.dumps(lst,sort_keys=True, indent=4, separators=(',', ': '))
     else:
         query_result = r.json()

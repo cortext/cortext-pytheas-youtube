@@ -1,47 +1,23 @@
-{% extends "base.html" %}
 {% block content %}
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12">
-				<h2>Arbitrary list</h2>
-				<hr/>
-				<h3>Download from list of id </h3>
-				{% if message %} {{ message }} {% endif %}
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-6">
-				<h4>
-					Copy your url list here or upload text file.
-				</h4>
-			</div>
+<a class="btn btn-info btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/videos/list">youtube docs on video</a>
 
-			<div class="col-md-6">
-				<form action="/videos-list" method="POST" >
-					<div class="form-group">
-						<h4>Id video (or paste url)</h4>
-						<textarea rows="6" name='list_videos' class="form-control" placeholder="4Jc3zt1GEAs
-						&#10;4Jc3zt1GEAs
-						&#x0a; 4Jc3zt1GEAs
-						"></textarea>
-						<hr/>
-						<h4>Name your query</h4>
-						<input type="text" class="form-control" name="name_query">
-						<h4>Part</h4>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-						<label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-						<hr/>
-						<button type="submit" class="center-block btn btn-default">Submit</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-</div>
+<h4>name your query</h4>
+<input type="text" class="form-control" name="name_query">
+
+<h4>Id video (or paste url)</h4>
+<textarea rows="6" name='list_videos' class="form-control" placeholder="NKocNRNGw_c&#10;4Jc3zt1GEAs&#x0a;i--pZZEmFgU"></textarea>
+
+<h4>Part</h4>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
+<label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
+<hr/>
+
+<button type="submit" class="center-block btn btn-secondary">Submit</button>
+
 {%- endblock %}

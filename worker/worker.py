@@ -49,11 +49,9 @@ except BaseException as error:
     worker.logger.debug('An exception occurred : {}'.format(error))
 
 
-
 @worker.route('/<user_id>/add_query/<query_id>', methods=['POST', 'GET'])
 def add_query(user_id, query_id):
-    param = request.get_json() 
-    worker.logger.debug(param)
+    param = request.get_json()
     common = {
         'author_id': user_id,
         'query_id': query_id,
@@ -73,7 +71,7 @@ def add_query(user_id, query_id):
         mongo_curs.db.queries.insert_one(
             common
         )
-    elif param['kind'] == 'searchResults':
+    elif param['kind'] == 'searchResults': 
         if 'mode' in param:
             common.update({
                 'q': param['query'],
@@ -95,12 +93,12 @@ def add_query(user_id, query_id):
         mongo_curs.db.queries.insert_one(
             common
         ) 
-    elif param['kind'] == 'videos':
+    elif param['kind'] == 'videosList':
         common['name_query'] = param['query']
+        
         mongo_curs.db.queries.insert_one(
             common
         )
-
     elif param['kind'] == 'playlistItems': 
         common.update({
             'playlist_id': param['playlist_id'],
@@ -200,7 +198,6 @@ def add_video(user_id, query_id, query_type):
 
             ## Then iterate for each days 
             for n in range(delta.days + 1):
-                worker.logger.debug(str(n))
                 # increment one day later to get a one-day period
                 r_after_next = r_after + dt.timedelta(days=1)
                 st_point = r_after.isoformat()
@@ -292,13 +289,15 @@ def add_video(user_id, query_id, query_type):
     ###############################
     ## RESULTS FOR SET OF videosList
     ###############################
-    elif query_type == 'video':
-        for each in param['list_videos']:
-            id_video = each
-            video_result = api.get_query('videos', id=id_video, part=param['part'])
+    elif query_type == 'videos':
+        param['videos'] = [x.strip() for x in param['videos'][0].split(',')]
+        param['videos'] = [i for i in param['videos'] if i]
+
+        for each in param['videos']:
+            video_result = api.get_query('videos', id=each, part=param['part'])
             video_result = video_result['items'][0]
             video_result.update({'query_id': uid})
-            
+
             mongo_curs.db.videos.insert_one(video_result)
 
         count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
@@ -338,13 +337,14 @@ def add_captions(user_id, query_id):
     
     list_vid = param['list_vid']
     for id_video in list_vid:
+        worker.logger.debug(id_video)
         current_captions.create_if_not_exist(id_video)
     
     count_captions = int(mongo_curs.db.captions.find({'query_id': query_id}).count())
     
     mongo_curs.db.queries.update_one(
         { 'query_id': query_id },
-        { '$set': {'count_captions': count_captions } }
+        { '$set': {'count_captions': count_captions } } 
     )
     return 'POST REQUEST add_captions IS RECEIVED'
 

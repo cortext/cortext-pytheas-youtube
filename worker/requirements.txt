@@ -3,3 +3,5 @@ Flask_PyMongo==0.4.1
 requests>=2.20.0
 furl==0.5.7
 python_dateutil==2.6.0
+youtube_transcript_api
+

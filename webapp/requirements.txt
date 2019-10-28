@@ -4,5 +4,6 @@ requests>=2.20.0
 furl==0.5.7
 python_dateutil==2.6.0
 pprint
+pandas
 # not implemented yet
 # Celery==3.1.23

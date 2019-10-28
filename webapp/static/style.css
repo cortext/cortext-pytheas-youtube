@@ -46,3 +46,14 @@ label {
     border-bottom-color: #e52d27;
     border-left-color: #e52d27;*/
 }
+
+
+.btn-info {
+  background-color: #cc181e99 !important;
+  border-color: #CC181E !important;  
+}
+
+.list-group-item.active {
+    background-color: #CC181E !important;
+    border-color: #CC181E !important;
+}

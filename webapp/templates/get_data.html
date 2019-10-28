@@ -50,28 +50,27 @@
         </div>
 
         <!-- forms -->
-        <div class="col-8 align-self-center">
+        <div class="col-7 align-self-center offset-1">
             <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane fade show active" id="" role="tabpanel" aria-labelledby="list-home-list">
-                    <h4>Or upload csv file (see doc for format) <a class="btn btn-primary btn-sm float-right" href="https://pytheas.cortext.net/documentation">csv import doc</a></h4>
+                    <h4>Or upload csv file (see doc for format) <a class="btn btn-info btn-sm float-right" href="https://pytheas.cortext.net/documentation">csv import doc</a></h4>
 
-                    <form action="/import_csv" method="POST">
+                    <form action="/import_csv" method="POST" name="input_csv_channel" enctype="multipart/form-data">
                         <div class="input-group ">
                             <div class="input-group-prepend">
                                 <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
                             </div>
                             <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="input_csv_channel" aria-describedby="inputGroupFileAddon01">
+                                <input name="input_csv_channel" type="file" class="custom-file-input">
                                 <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit" class="btn btn-secondary">Submit</button>
                     </form>
 
 
                 </div>
                 <div class="tab-pane fade show" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
-                    <a class="btn btn-secondary btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/channels/list">youtube docs channels</a>
                     <form action="/channel" method="POST">
                         <div class="form-group multiSelect">
                             {% include 'download/channel.html' %}
@@ -90,24 +89,7 @@
                 <div class="tab-pane fade" id="list-settings" role="tabpanel" aria-labelledby="list-settings-list">
                     <form action="/videos-list" method="POST" >
                         <div class="form-group">
-                            <h4>name your query</h4>
-                            <input type="text" class="form-control" name="name_query">
-
-                            <h4>Id video (or paste url)</h4>
-                            <textarea rows="6" name='list_videos' class="form-control" placeholder="NKocNRNGw_c&#10;4Jc3zt1GEAs&#x0a;i--pZZEmFgU"></textarea>
-                            
-                            <h4>Part</h4>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="contentDetails" checked>contentDetails</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="status" checked>status</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="statistics" checked>statistics</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="player" checked>player</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="topicDetails" checked>topicDetails</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="localizations" checked>localizations</label>
-                            <hr/>
-                            
-                            <button type="submit" class="center-block btn btn-primary">Submit</button>
+                            {% include 'download/videos_list.html' %}
                         </div>
                     </form>
                 </div>
@@ -115,49 +97,7 @@
                 <div class="tab-pane fade" id="list-messages" role="tabpanel" aria-labelledby="list-messages-list">
                     <form action="/search" method="POST">
                         <div class="form-group">
-                            <h4>Query</h4>
-                            <input type="text" name="query" class="form-control" placeholder="Search">
-
-                            <h4>Language</h4>
-                            <select class="form-control" name="language" placeholder="fr">
-                                <option value="" disabled selected>Select your language area</option>
-                                {% for lang in language_code %}
-                                <option value="{{ lang[0] }}">{{ lang[1] }}</option>
-                                {% endfor %}
-                            </select>
-
-                            <h4>Order</h4>
-                            <select class="form-control" name="order">
-                                <option>relevance</option>
-                                <option>date</option>
-                                <option>rating</option>
-                                <option>title</option>
-                                <option>viewCount</option>
-                                <option>videoCount</option>
-                            </select>
-
-                            <h4>Part</h4>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="id" checked>id</label>
-                            <label class="checkbox-inline"><input name='part' type="checkbox" value="snippet" checked>snippet</label>
-
-                            <h4>Advanced</h4>
-                            <p><input type="checkbox" name="advanced"> Will search day by day (with a max at ~500/day)</p>
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <label for='startpoint'>Début :</label>
-                                    <input type="date" value="publishedAfter" name="startpoint">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label for='endpoint'>Fin :</label>
-                                    <input type="date" value="publishedBefore" name="endpoint">
-                                </div>
-                            </div>
-                            <!-- <br>
-                            <label for="customRange2">Example range</label>
-                            <input type="range" class="custom-range" min="0" max="5" id="customRange2"> -->
-
-                            <button type="submit" class="center-block btn btn-primary">Submit</button>
+                            {% include 'download/search.html' %}
                         </div>
                     </form>
                 </div>
@@ -168,10 +108,10 @@
     <div class="row mb-4">
         <div class="col-12">
             <p>Of course you can consult each of referent documentation :</p>
-            <a class="btn btn-secondary btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/videos/list">youtube docs on video</a>
-            <a class="btn btn-secondary btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/channels/list">youtube docs channels</a>
-            <a class="btn btn-secondary btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/playlists/list">youtube docs playlist</a>
-            <a class="btn btn-secondary btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/search/list">youtube docs Search query</a>
+            <a class="btn btn-info btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/videos/list">youtube docs on video</a>
+            <a class="btn btn-info btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/channels/list">youtube docs channels</a>
+            <a class="btn btn-info btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/playlists/list">youtube docs playlist</a>
+            <a class="btn btn-info btn-sm ml-auto" href="https://developers.google.com/youtube/v3/docs/search/list">youtube docs Search query</a>
         </div>
     </div>
 
