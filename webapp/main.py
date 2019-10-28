@@ -278,7 +278,7 @@ def import_csv():
 def video(payload=None):
     if request.method == 'POST':
         if not 'api_key' in session:
-            return render_template('explore.html', message='api key not set')
+            return render_template('config.html', message='api key not set')
         query_id = str(uuid4())
         user_id = session['profil']['id']
         query_name = str(request.form.get('name_query'))
@@ -655,7 +655,8 @@ def download_videos_by_type(query_id, query_type):
                     caption = data[i]['captions'][j]['text']
                     regex = re.search('(\[[a-zA-Z])',caption)
                     if(regex):
-                        app.logger.debug('There is a sound or action')
+                        continue
+                        # app.logger.debug('There is a sound or action')
                     else: 
                         text+=str(caption)
                         text+=' '
