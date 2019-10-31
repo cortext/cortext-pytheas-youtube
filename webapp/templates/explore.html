@@ -14,21 +14,11 @@
                 <p>
                     Here you can explore what type of data youtube give us access. Choose one of the 3 main ressources from youtube (<strong>video</strong>, <strong>channel</strong> or <strong>playlist</strong>) and click to his associate button.
                 </p>
-                <ul>
-                    <li>Main <a href="https://developers.google.com/youtube/v3/docs/videos/list">Video documentation</a></li>
-                    <li>Main <a href="https://developers.google.com/youtube/v3/docs/channels/list">Channel documentation</a></li>
-                    <li>Main <a href="https://developers.google.com/youtube/v3/docs/playlists/list">Playlist documentation</a></li>
-                </ul>
             </div>
             <div class="row">
                 <h4>"Part" parameter</h4>
                 <p>Also you will have to choose "<strong>Part</strong>" parameter. It is a requirement from youtube to choose which aspects of data we want. To get the entire documentation from youtube its recomanded to visit documentation website
                 </p>
-                <ul>
-                    <li>Part <a href="https://developers.google.com/youtube/v3/docs/videos/list#part">Video documentation</a></li>
-                    <li>Part <a href="https://developers.google.com/youtube/v3/docs/channels/list#part">Channel documentation</a></li>
-                    <li>Part <a href="https://developers.google.com/youtube/v3/docs/playlists/list#part">Playlist documentation</a></li>
-                </ul>
             </div>
         </div>
 
@@ -36,9 +26,10 @@
             <div id="accordion">
                 <div class="card">
                     <div class="card-header"  data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" id="headingOne">
-                        <button class="btn btn-primary"><h5 class="mb-0">
-                            What is a Video?
-                        </h5>
+                        <button class="btn btn-primary">
+                            <h5 class="mb-0">What is a Video?</h5>
+                        </button>
+                        <a class="btn btn-info btn-sm float-right" href="https://developers.google.com/youtube/v3/docs/videos/list">Video documentation</a>
                     </div>
 
                     <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
@@ -49,10 +40,12 @@
                 </div>
                 <div class="card">
                     <div class="card-header collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" id="headingTwo">
-                        <button class="btn btn-primary"><h5 class="mb-0">
-                            What is a Channel?
-                        </h5>
+                        <button class="btn btn-primary">
+                            <h5 class="mb-0">What is a Channel?</h5>
+                        </button>
+                        <a class="btn btn-info btn-sm float-right" href="https://developers.google.com/youtube/v3/docs/channels/list">Channel documentation</a>
                     </div>
+
                     <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
                         <div class="card-body">
                             {% include 'explore/channel_info.html' %}
@@ -61,9 +54,10 @@
                 </div>
                 <div class="card">
                     <div class="card-header collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" id="headingThree">
-                        <button class="btn btn-primary"><h5 class="mb-0">
-                            What is a Playlist?
-                        </h5></button>
+                        <button class="btn btn-primary">
+                        <h5 class="mb-0">What is a Playlist?</h5>
+                        </button>
+                        <a class="btn btn-info btn-sm float-right" href="https://developers.google.com/youtube/v3/docs/playlists/list">Playlist documentation</a>
                     </div>
                     <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
                         <div class="card-body">

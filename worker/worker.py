@@ -58,7 +58,7 @@ def add_query(user_id, query_id):
         'part': param['part'],
         'kind' : param['kind'],
         'query' : param['query'],
-        'status' : 'starting',
+        'status' : 'working',
         'date_query' : dt.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
     }
 

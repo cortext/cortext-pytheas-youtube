@@ -547,12 +547,7 @@ def manage():
                 doc['countRelated'] = 'NC'
             list_queries.append(doc)
 
-        # send all as json, template will manage it
-        stats = {
-            'list_queries': list_queries
-        }
-
-    return render_template('manage.html', stats=stats)
+    return render_template('manage.html', stats=list_queries)
 
 # Delete dataset
 # should be partially moved to /rest

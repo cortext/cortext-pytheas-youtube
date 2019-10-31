@@ -45,7 +45,7 @@
 		                <table class="table dataTableView">
 		                    <thead>
 		                        <tr>
-		                            <th>id</th>
+		                            <th>Iframe</th>
 		                            <th>Author</th>
 		                            <th>Title</th>
 		                            <th>Desc</th>
@@ -55,7 +55,13 @@
 		                    <tbody>
 		                        {% for q in list_queries %}
 		                        	<tr>
-		                        		<td>{{ q['_id'] }}</td>
+		                        		<td>
+                                            {% if q['player'] %}
+                                              {{ q['player']['embedHtml']|safe }}
+                                            {% elif q['snippet'] %}
+                                              <img src="{{ q['snippet']['thumbnails']['medium']['url']|safe }}">
+                                            {% endif %}
+                                        </td>
 		                        		<td>{{ q['snippet']['channelTitle'] }}</td>
 		                                <td>{{ q['snippet']['title'] }}</td>
 		                                <td>{{ q['snippet']['description'] }}</td>
