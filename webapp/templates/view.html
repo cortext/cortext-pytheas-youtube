@@ -31,7 +31,7 @@
 		                    <tbody>
 		                        {% for q in list_queries %}
 		                        	<tr>
-		                        		<td>{{ q['_id'] }}</td>
+		                        		<td> <img src="{{ q['snippet']['authorProfileImageUrl']|safe }}"> </td>
 		                        		<td>{{ q['snippet']['authorDisplayName'] }}</td>
 		                                <td>{{ q['snippet']['likeCount'] }}</td>
 		                                <td>{{ q['snippet']['textDisplay'] }}</td>
