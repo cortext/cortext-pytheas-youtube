@@ -57,9 +57,11 @@
 		                        	<tr>
 		                        		<td>
                                             {% if q['player'] %}
-                                              {{ q['player']['embedHtml']|safe }}
-                                            {% elif q['snippet'] %}
-                                              <img src="{{ q['snippet']['thumbnails']['medium']['url']|safe }}">
+                                                {{ q['player']['embedHtml']|safe }}
+                                            {% elif 'resourceId' in q['snippet'] %}
+                                                <iframe type="text/html" width="640" height="360" src="http://www.youtube.com/embed/{{q['snippet']['resourceId']['videoId']}}"></iframe>
+                                            {% else %}
+                                                <img src="{{ q['snippet']['thumbnails']['medium']['url']|safe }}">
                                             {% endif %}
                                         </td>
 		                        		<td>{{ q['snippet']['channelTitle'] }}</td>
