@@ -41,19 +41,9 @@ Pytheas/
 ## Installation
 It is higly recommanded to instal and use it via Docker but it is still possible to install it as separated python processes (see [**python environment**](#python-environment) ) .
 
-#### 3 parameters to set up (see below)
-1. [**MongoDB**](#mongodb)
-2. [**Configuration file**](#configuration-file)
-3. [**Dockers**](#dockers)
-
-
-### MongoDB
-Config mongoclient : 
-- port: 27017
-- db-name : youtube
 
 ### Configuration file
-A normally **conf.json** file should looked like this. It is located in conf/conf.json and a default file exist.
+You can here manage your paths, db name, machines names and port, fixe api_key, modify statue for debug and oauth.
 
 - **DATA_DIR** and **LOG_DIR** need each a separated directory (fixed by default but can be moved)
 - **PORT**, **MONGO**, **REST** and **WORKER** need each an assignated port number
@@ -61,6 +51,10 @@ A normally **conf.json** file should looked like this. It is located in conf/con
 - **api_key_test**: api key only for trying form on homepage
 - **oauth_status** : True or False (deactive it for being on your own)
 - **debug_level** : True or False
+
+A normally **conf/conf-default.json** exist and can be copied as **conf/conf.json**. It should looked like this :
+
+#### conf/conf.json
 ``` json
 {
   "DATA_DIR": "data/",
@@ -88,7 +82,7 @@ A normally **conf.json** file should looked like this. It is located in conf/con
 ```
 
 ### Dockers
-On production server docker-compose will follow:
+On production server docker-compose file will follow this:
 
 - **webapp**: front interface. Give orders that can be threaded to restapp
 - **restapp**: make interface between webapp and restapp. Will be also used for an external opening
@@ -96,6 +90,7 @@ On production server docker-compose will follow:
 - **mongodb**: main database
 - **mongodbclient**: client used to access db from http
 
+#### docker-compose.yaml
 ``` yaml    
 version: '3'
 services:
@@ -193,9 +188,7 @@ pip install -R requirements.txt
 python main.py
 ```
 
-
 ## First deployment 
-
 From cloned repository (/pytheas-youtube) :
 ``` bash
 docker-compose build
@@ -208,7 +201,6 @@ docker-compose up
 ```
 
 ## Workflow
-
 ### Update
 In repository just git pull (machine have normally auto-reload):
 ``` bash
@@ -224,7 +216,6 @@ docker-compose start
 ```
 
 ## Other informations :
-
 All of this is documented in /documentation and should be have better integration soon.
 
 ### API Key from Google :
@@ -252,7 +243,8 @@ All of this is documented in /documentation and should be have better integratio
 * [ ] integrate api openSpec and swagger file (see rest.py path)
 * [ ] continue to integrate methods : channel as list (for description field) 
 * [ ] new page to associate metrics, stats and other methods to analyze query (or set of queries?)
-
+* [ ] script to manage conf file and docker port/location/name...
+* [ ] work UX
 
 
 
