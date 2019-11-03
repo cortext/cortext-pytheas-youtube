@@ -521,6 +521,7 @@ def manage():
     if request.method == 'GET':
         # get all query fur user
         r = requests.get(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
+        app.logger.debug(r)
         result = r.json()
         list_queries = []
 
@@ -621,7 +622,35 @@ def view_data_by_type(query_id, data_type):
         redirect(url_for(page_not_found))
     url = app.config['REST_URL']+ session['profil']['id'] +'/queries/' + query_id + '/' + data_type + '/'
     r = requests.get(url)
-    return render_template('view.html', list_queries=r.json())
+
+    def AppendCaption(data):
+        lst = []
+        n_words = 0
+        for i in range(len(data)):
+            text = ''
+            if(data[i]['captions']):
+                for j in range(len(data[i]['captions'])):
+                    n_words += len(data[i]['captions'][j]['text'])
+                    caption = data[i]['captions'][j]['text']
+                    regex = re.search('(\[[a-zA-Z])',caption)
+                    if not regex:
+                        text+=str(caption)
+                        text+=' '
+                results_json = {
+                    'query_id':data[i]['query_id'],
+                    'videoId':data[i]['videoId'],
+                    'text': text,
+                    'countwords': n_words
+                }
+                lst.append(results_json)
+
+        return lst
+
+    if data_type == 'captions':
+        query_result = AppendCaption(r.json())
+    else:
+        query_result = r.json()
+    return render_template('view.html', list_queries=query_result)
 
 # Download videos, comments set
 @app.route('/download/<query_type>/<query_id>', methods=['GET'])
@@ -639,8 +668,6 @@ def download_videos_by_type(query_id, query_type):
     r = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
     
     if query_type == 'captions':
-        #Methods = Methods()
-        # query_result = Methods.AppendCaption(r.json())
         data = r.json()
         lst = []
         for i in range(len(data)):

@@ -78,13 +78,17 @@
 					<table class="table dataTableView">
 	                    <thead>
 	                        <tr>
-	                            <th>id</th>
+                                <th>videoId</th>
+                                <th>count words</th>
+                                <th>text</th>
 	                        </tr>
 	                    </thead>
 	                    <tbody>
 	                        {% for q in list_queries %}
 	                        	<tr>
-	                        		<td>{{ q['_id'] }}</td>
+	                        		<td> <iframe type="text/html" width="640" height="360" src="http://www.youtube.com/embed/{{ q['videoId'] }}"></iframe></td>
+                                    <td>{{ q['countwords']  }}
+                                    <td>{{ q['text'] }}</td>
 	                            </tr>
 	                        {% endfor %}
 	                    </tbody>
