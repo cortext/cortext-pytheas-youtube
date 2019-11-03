@@ -5,76 +5,79 @@ services:
   mongo:
     container_name: py_mongoserver
     hostname: mongo
+    ports:
+     - "27017:27017"
     image: "mongo:3.4"
     restart: always
     command: mongod
-    ports:
-     - "27017:27017"
+    network_mode: bridge
     volumes: 
      - './data/mongo:/data/db'
-    network_mode: bridge
   
+  # worker 
+  worker:
+    container_name: py_worker
+    hostname: worker
+    ports:
+     - "5003:5003"
+    build: ./worker/
+    network_mode: bridge
+    depends_on:
+      - mongo
+    volumes:
+     - './worker:/opt/pytheas_worker'
+     - './conf:/opt/pytheas_worker/conf'
+     - './logs:/opt/pytheas_worker/logs'
+    links:
+     - mongo
+
   # restapp
   restapp:
     container_name: py_restapp
     hostname: restapp
+    ports:
+     - "5053:5053"
     build: ./restapp/
     network_mode: bridge
     restart: always
     depends_on:
       - mongo
-    links:
-      - mongo
-    ports:
-     - "5002:5002"
     volumes:
      - './restapp:/opt/pytheas_rest'
      - './conf:/opt/pytheas_rest/conf'
      - './logs:/opt/pytheas_rest/logs'
-
-  # # worker:
-  #   container_name: restapp
-  #   build: ./worker/
-  #   network_mode: bridge
-  # ports:
-  #    - "5003:5003"
-  #   hostname: worker
-  #   volumes:
-  #    - './rest:/opt/pytheas_worker'
-  #   depends_on:
-  #     - mongo
-  #   links:
-  #     - mongo
+    links:
+      - mongo
+      - worker
 
 # Front
   # mongo client
-  # mongoclient:
-    # container_name: py_mongoclient
-    # image: "mongoclient/mongoclient"
-    # restart: always
-    # ports:
-    #  - "3000:3000"
-    # depends_on:
-    #   - mongo
-    # links:
-    #   - mongo
+  mongoclient:
+    container_name: py_mongoclient
+    ports:
+     - "3000:3000"
+    image: "mongoclient/mongoclient"
+    restart: always
+    depends_on:
+      - mongo
+    
 
   # wepapp
   webapp:
     container_name: py_webapp
     hostname: webapp
+    ports:
+     - "5050:5050"
     build: ./webapp/
     network_mode: bridge
     restart: always
-    ports:
-     - "5000:5000"
     depends_on:
      - restapp
-    links:
-      - restapp
-      - mongo
     volumes:
      - './webapp/:/opt/pytheas_webapp'
      - './data:/opt/pytheas_webapp/data'
      - './logs:/opt/pytheas_webapp/logs'
      - './conf:/opt/pytheas_webapp/conf'
+    links:
+      - restapp
+      - mongo
