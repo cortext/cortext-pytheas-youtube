@@ -3,7 +3,9 @@
 Pytheas is a webtool used to download youtube data from the latest api version
 (v3)
 
-[pytheas.cortext.net](https://pytheas.cortext.net)
+**[pytheas.cortext.net](https://pytheas.cortext.net)**
+
+YouTube documentation : [developers.google.com/youtube/v3/docs](https://developers.google.com/youtube/v3/docs)
 
 ### Objectives
 - Explore YouTube from a "data point of view"
