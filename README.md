@@ -220,8 +220,8 @@ docker-compose start
 
 ## User guides and documentation
 Helping ressources can be found on :
-- pytheas website user guide : [https://pytheas.cortext.net/documentation](https://pytheas.cortext.net/documentation)
-- pytheas git usage documentation : [https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md](https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md)
+- pytheas develloper documentation : [https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md](https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md)
+- pytheas user guide : [https://pytheas.cortext.net/documentation](https://pytheas.cortext.net/documentation)
 - medium tutorial : [https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418](https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418)
 
 ## To do
