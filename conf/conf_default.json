@@ -4,7 +4,7 @@
   
   "PORT": 8080,
   "REDIRECT_URI": "http://localhost:8080/auth",
-  "GRANT_HOST_URL": "https://auth.cortext.net",
+  "GRANT_HOST_URL": "https://my.own.oauth.server.com",
 
   "MONGO_HOST": "mongo",
   "MONGO_DBNAME": "youtube",
