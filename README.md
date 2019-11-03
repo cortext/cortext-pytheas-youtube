@@ -1,19 +1,21 @@
-# YoutubeExplorer
+# Pytheas from CorTexT
 
 Pytheas is a webtool used to download youtube data from the latest api version
 (v3)
 
+[pytheas.cortext.net](https://pytheas.cortext.net)
+
 ### Objectives
 - Explore YouTube from a "data point of view"
 - Export requested data
-- Make data analyzable by CORTEXT platform
+- Make data analyzable by [CorTexT platform](https://managerv2.cortext.net/)
 
 ### Features
 - Get videos, playlists, channels and search methods as queries
 - Get Comments, captions, metrics and related videos from those queries
 - Explore, manage and download it as JSON files.
 
-## Requirements :
+## Requirements
 - **python3** as main language
 - **mongodb** for database
 - **docker/docker-compose** : container-app
@@ -37,7 +39,7 @@ Pytheas/
 ## Installation
 It is higly recommanded to instal and use it via Docker but it is still possible to install it as separated python processes (see [**python environment**](#python-environment) ) .
 
-#### 3 parameters to set up (see below) :
+#### 3 parameters to set up (see below)
 1. [**MongoDB**](#mongodb)
 2. [**Configuration file**](#configuration-file)
 3. [**Dockers**](#dockers)
@@ -51,18 +53,18 @@ Config mongoclient :
 ### Configuration file
 A normally **conf.json** file should looked like this. It is located in conf/conf.json and a default file exist.
 
-- **DATA_DIR** and **LOG_DIR** need each a separated directory 
-- **PORT**, **MONGO**, **REST** and **WORKER** need each a port number
+- **DATA_DIR** and **LOG_DIR** need each a separated directory (fixed by default but can be moved)
+- **PORT**, **MONGO**, **REST** and **WORKER** need each an assignated port number
 - **api_key** : if you want to overide all query with an api key
-- **api_key_test**: api key only for try form on homepage
-- **oauth_status** : True or False (deactived and you will be ride for REDIRECT_URI and GRANT_HOST_URL)
+- **api_key_test**: api key only for trying form on homepage
+- **oauth_status** : True or False (deactive it for being on your own)
 - **debug_level** : True or False
 ``` json
 {
   "DATA_DIR": "data/",
   "LOG_DIR": "logs/",
   
-  "PORT": 8080,
+  "PORT": 5050,
   "REDIRECT_URI": "http://localhost:8080/auth",
   "GRANT_HOST_URL": "https://my.own.oauth.server.com",
 
@@ -84,7 +86,7 @@ A normally **conf.json** file should looked like this. It is located in conf/con
 ```
 
 ### Dockers
-* On production server docker-compose will follow:
+On production server docker-compose will follow:
 
 - **webapp**: front interface. Give orders that can be threaded to restapp
 - **restapp**: make interface between webapp and restapp. Will be also used for an external opening
@@ -179,11 +181,11 @@ services:
 #### Python environment
 For this variant please be sure 
 ``` bash
-cd cortext-pytheas-youtube
+cd pytheas-youtube
 virtualenv env3 -p python3
 source ./env3/bin/activate
 ```
-Then from two terminal and for each docker machine (webapp, restapp and worker) :
+Then from two terminal and for each docker machine in separated terminal(webapp, restapp and worker) :
 ``` bash
 pip install -R requirements.txt
 python main.py
@@ -192,7 +194,7 @@ python main.py
 
 ## First deployment 
 
-From /pytheas :
+From cloned repository (/pytheas-youtube) :
 ``` bash
 docker-compose build
 docker-compose start
@@ -240,16 +242,14 @@ All of this is documented in /documentation and should be have better integratio
 - Videos-list list of video
 
 ## To do
-- threading management
-- continue refactoring : verify each class from each machine (see youtube.py on webapp and worker)
-- integrate external scripts from /script
-- integrate doc in markdown from /doc
-- better errorhandling (distinguish http error than each machine errors) and management
-- integrate api openSpec and swagger file (see rest.py path)
-- continue to integrate methods : channel as list (for description field) 
-- new page to associate metrics, stats and other methods to analyze query (or set of queries?)
-- ...
-
+* [ ] threading management
+* [ ] continue refactoring : verify each class from each machine (see youtube.py on webapp and worker)
+* [ ] integrate external scripts from /script
+* [ ] integrate doc in markdown from /doc
+* [ ] better errorhandling (distinguish http error than each machine errors) and management
+* [ ] integrate api openSpec and swagger file (see rest.py path)
+* [ ] continue to integrate methods : channel as list (for description field) 
+* [ ] new page to associate metrics, stats and other methods to analyze query (or set of queries?)
 
 
 
