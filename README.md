@@ -1,11 +1,14 @@
 # Pytheas from CorTexT
 
 Pytheas is a webtool used to download youtube data from the latest api version
-(v3)
-
-**[pytheas.cortext.net](https://pytheas.cortext.net)**
+(v3) referenced at : **[pytheas.cortext.net](https://pytheas.cortext.net)**
 
 YouTube documentation : [developers.google.com/youtube/v3/docs](https://developers.google.com/youtube/v3/docs)
+
+### Summary
+1.  [Installation](#installation)
+2.  [Workflow](#workflow)
+3.  [User guides and documentation](#user-guides-and-documentation)
 
 ### Objectives
 - Explore YouTube from a "data point of view"
@@ -215,24 +218,11 @@ docker-compose build
 docker-compose start
 ```
 
-## Other informations :
-All of this is documented in /documentation and should be have better integration soon.
-
-### API Key from Google :
-  1. Obtain an api key from Google and activate the **YoutubeDataAPI** from [console.developers.google.com](https://console.developers.google.com/apis/api/youtube)
-  2. Put api key in Pytheas web interface or in persistant inside config file
-  3. Start exploration
-
-### Limitations
-- Youtube results (api & browser) from search can only provide ~500 results (but you can get more video list by channel, playlist, arbitraty list of videos or even horodated search query)
-- Automatic captions cannot be totally retrieved via API (need to trick with xml request and also with undocumented frontend Youtube API...)
-- Comments gets only one sub-level
-
-### To know
-- Search is list of video
-- Playlist is list from video
-- Author/Channel are different but mixed in pytheas
-- Videos-list list of video
+## User guides and documentation
+Helping ressources can be found on :
+- pytheas website user guide : [https://pytheas.cortext.net/documentation](https://pytheas.cortext.net/documentation)
+- pytheas git usage documentation : [https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md](https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md)
+- medium tutorial : [https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418](https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418)
 
 ## To do
 * [ ] threading management
@@ -245,32 +235,3 @@ All of this is documented in /documentation and should be have better integratio
 * [ ] new page to associate metrics, stats and other methods to analyze query (or set of queries?)
 * [ ] script to manage conf file and docker port/location/name...
 * [ ] work UX
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
