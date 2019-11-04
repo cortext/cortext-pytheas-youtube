@@ -1,7 +1,9 @@
 # Pytheas from CorTexT
 
 Pytheas is a webtool used to download youtube data from the latest api version
-(v3) referenced at : **[pytheas.cortext.net](https://pytheas.cortext.net)**
+(v3) 
+
+>  **[pytheas.cortext.net](https://pytheas.cortext.net)**
 
 YouTube documentation : [developers.google.com/youtube/v3/docs](https://developers.google.com/youtube/v3/docs)
 
@@ -18,7 +20,7 @@ YouTube documentation : [developers.google.com/youtube/v3/docs](https://develope
 ### Features
 - Get videos, playlists, channels and search methods as queries
 - Get Comments, captions, metrics and related videos from those queries
-- Explore, manage and download it as JSON files.
+- Explore, manage and download it as JSON files
 
 ## Requirements
 - **python3** as main language
@@ -31,14 +33,14 @@ Pytheas/
 ├── doc/
 ├── data/
 ├── logs/
-    └── activity_log.json
+    └── **activity_log.json**
 ├── scripts/
 ├── config/
-    └── config.json
+    └── **config.json**
 ├── restapp/
 ├── webapp/
 ├── worker/
-└── docker-compose.yml
+└── **docker-compose.yml**
 ```
 
 ## Installation
@@ -222,7 +224,7 @@ docker-compose start
 Helping ressources can be found on :
 - pytheas develloper documentation : [https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md](https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md)
 - pytheas user guide : [https://pytheas.cortext.net/documentation](https://pytheas.cortext.net/documentation)
-- medium tutorial : [https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418](https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418)
+- medium tutorial from @BerthaBrenes : [https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418](https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418)
 
 ## To do
 * [ ] threading management
@@ -234,4 +236,5 @@ Helping ressources can be found on :
 * [ ] continue to integrate methods : channel as list (for description field) 
 * [ ] new page to associate metrics, stats and other methods to analyze query (or set of queries?)
 * [ ] script to manage conf file and docker port/location/name...
+* [ ] combined to swagger file -> REST methods
 * [ ] work UX
