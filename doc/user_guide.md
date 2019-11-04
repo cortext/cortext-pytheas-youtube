@@ -87,7 +87,8 @@ Permettre simplement la vue en données que nous  montre Google, pour :
 Une **requête** dans pytheas correspond à un ensemble de vidéos delimités selon critères.
 
 ### par moteur de recherche youtube
-https://pytheas.cortext.net/search
+
+https://pytheas.cortext.net/get-data
 
 Utilisation du moteur de recherche de youtube.
 
@@ -99,19 +100,22 @@ Necessite une langue.
 La recherche horodaté permet de repeter une requete du moteur de recherche de youtube en le calibrant sur une journée. Cela permet ainsi d'etendre considerablement les sets recoltés au pris de la baisse en pertinence.
 
 ### par chaines
-https://pytheas.cortext.net/channel
-
 Recherche de vidéos par chaine youtube.
 
+https://pytheas.cortext.net/get-data
+
+
 ### par playlist
-https://pytheas.cortext.net/playlist
 
 Recherche de vidéos par chaine playlist.
 
+https://pytheas.cortext.net/get-data
+
 ### par liste de vidéos arbitraires
-https://pytheas.cortext.net/videos-list
 
 Egalement possible de récolté en fonction de listes de vidéos données arbitrairement.
+
+https://pytheas.cortext.net/get-data
 
 ## Recoltes de données
 
