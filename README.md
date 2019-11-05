@@ -64,7 +64,7 @@ A normally **conf/conf-default.json** exist and can be copied as **conf/conf.jso
   "LOG_DIR": "logs/",
   
   "PORT": 5050,
-  "REDIRECT_URI": "http://localhost:8080/auth",
+  "REDIRECT_URI": "http://localhost:5050/auth",
   "GRANT_HOST_URL": "https://my.own.oauth.server.com",
 
   "MONGO_HOST": "mongo",
