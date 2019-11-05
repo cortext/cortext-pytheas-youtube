@@ -171,10 +171,43 @@ def add_video(user_id, query_id, query_type):
     ## RESULTS FOR searchResults ##
     ###############################
     elif query_type == 'search': 
-        
         if 'mode' in param:
-            if param['language'] == 'None':
-                del param['language']
+            ## FOR NEXT DATE SEARCH INTEGRATION 
+            # param_query = {
+            #     'q': param['query'],
+            #     'part': param['part'],
+            #     'relevenceLanguage': param['language'],
+            #     'maxResults': param['maxResults'],
+            #     'order': param['order'],
+            #     'publishedAfter' : param['publishedAfter'],
+            #     'publishedBefore' : param['publishedBefore'],
+            # } 
+
+            # date_results = api.get_query(
+            #     'search',
+            #     **param_query,
+            # )
+
+            # for each in date_results['items']:
+            #     each.update({'query_id': query_id})
+            #     each = YouTube.cleaning_each(each)
+            #     mongo_curs.db.videos.insert_one(each)
+
+            # while 'nextPageToken' in date_results and len(date_results['items']) != 0:
+            #     worker.logger.debug(date_results['items'][-1]['snippet']['publishedAt'])
+            #     param_query['publishedAfter'] = date_results['items'][-1]['snippet']['publishedAt']
+
+            #     date_results = api.get_query(
+            #         'search',
+            #         **param_query,
+            #         pageToken = date_results['nextPageToken'],
+            #     )
+                
+            #     for each in date_results['items']:
+            #         each.update({'query_id': query_id})
+            #         each = YouTube.cleaning_each(each)
+            #         mongo_curs.db.videos.insert_one(each)
+
 
             # Parse date time from form
             d_start = datetime.datetime.strptime(
@@ -188,13 +221,17 @@ def add_video(user_id, query_id, query_type):
             delta = r_before - r_after
             delta_days = delta.days + 1
 
-            param_query = {
+            param_query = { 
                 'q': param['query'],
                 'part': param['part'],
-                'relevenceLanguage': param['language'],
                 'maxResults': param['maxResults'],
-                'order': param['order'],
-            } 
+                'order': param['order']
+            }
+
+            if not param['language'] == 'None':
+                param_query['language'] = param['language']
+
+            # worker.logger.debug(param_query)
 
             ## Then iterate for each days 
             for n in range(delta.days + 1):
@@ -242,7 +279,7 @@ def add_video(user_id, query_id, query_type):
                 'search',
                 q = param['query'],
                 part = param['part'],
-                language = param['language'],
+                relevanceLanguage = param['language'],
                 maxResults=param['maxResults'],
                 order = param['order']
             )
@@ -259,7 +296,7 @@ def add_video(user_id, query_id, query_type):
                     'search',
                     q=param['query'],
                     part=param['part'],
-                    language=param['language'],
+                    relevanceLanguage=param['language'],
                     maxResults=param['maxResults'],
                     order=param['order'],
                     pageToken=search_results['nextPageToken']

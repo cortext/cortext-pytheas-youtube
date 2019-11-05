@@ -521,7 +521,6 @@ def manage():
     if request.method == 'GET':
         # get all query fur user
         r = requests.get(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
-        app.logger.debug(r)
         result = r.json()
         list_queries = []
 

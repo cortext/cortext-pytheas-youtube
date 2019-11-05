@@ -58,9 +58,10 @@ class YouTube():
             logger.debug('kwargs are ' + str(kwargs))
         except requests.exceptions.RequestException as e:
             logger.warning('try_request failed on ' + url)
+            logger.warning('kwargs are ' + str(kwargs))
             logger.warning('error is : ' + str(e))
-
-        logger.debug(self.response(req))
+ 
+        # logger.debug(self.response(req))
         # if 'error' in req.json():
         #     logger.debug(str(pp.pprint(json.loads(self.response(req)) )))
         # else:
