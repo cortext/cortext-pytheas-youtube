@@ -45,7 +45,6 @@ Pytheas/
 ## Installation
 It is higly recommanded to instal and use it via Docker but it is still possible to install it as separated python processes (see [**python environment**](#python-environment) ) .
 
-
 ### Configuration file
 You can here manage your paths, db name, machines names and port, fixe api_key, modify statue for debug and oauth.
 
@@ -199,7 +198,7 @@ docker-compose build
 docker-compose start
 ```
 
-You can also watch log if mannual debug is needed instead of up:
+You can also watch logs mannually first before:
 ``` bash
 docker-compose up
 ```
@@ -212,18 +211,19 @@ git pull
 ```
 
 ### Mandatory update
-If configuration file or network, or docker settings modified you have to rebuild:
+If configuration file, networks or dockers settings modified you have to rebuild:
 ``` bash
+git pull
 docker-compose stop
 docker-compose build
 docker-compose start
 ```
 
 ## User guides and documentation
-Helping ressources can be found on :
-- pytheas develloper documentation : [https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md](https://gitlab.com/cortext/pytheas-youtube/blob/master/doc/user_guide.md)
-- pytheas user guide : [https://pytheas.cortext.net/documentation](https://pytheas.cortext.net/documentation)
-- medium tutorial from @BerthaBrenes : [https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418](https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418)
+Other helping ressources can be found on :
+- [user guide](https://pytheas.cortext.net/documentation)
+- [medium tutorial](https://medium.com/@bertacaro1996/pytheas-as-a-tool-to-get-youtubedata-3b238d698418) from @BerthaBrenes
+- [developer documentation](https://gitlab.com/cortext/pytheas-youtube/wikis/home)
 
 ## To do
 * [ ] threading management
