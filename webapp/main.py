@@ -654,59 +654,71 @@ def view_data_by_type(query_id, data_type):
 # Download videos, comments set
 @app.route('/download/<query_type>/<query_id>', methods=['GET'])
 def download_videos_by_type(query_id, query_type):
+
+    def chunkList(initialList, chunkSize):
+        finalList = []
+        for i in range(0, len(initialList), chunkSize):
+            finalList.append(initialList[i:i+chunkSize])
+        return finalList
+
     if query_type not in ['videos', 'comments', 'captions']:
         return redirect(url_for('page_not_found'))
-    from bson import json_util
 
     # find name of query for filename download
     r_name = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id)
-    query = r_name.json()
-    query_name = str(query['query'])
+    query_name = re.sub('[^A-Za-z0-9]+', '_', str(r_name.json()['query']))
+    query_type = re.sub('[^A-Za-z0-9]+', '_', query_type)
+    filename = query_name + '_' + query_type
 
     # get results
     r = requests.get(app.config['REST_URL']+session['profil']['id']+'/queries/'+query_id+'/'+query_type+'/')
+
+    # prepare zipping
+    in_memory = BytesIO()
+    zf = zipfile.ZipFile(in_memory, mode="w", compression=zipfile.ZIP_DEFLATED)
     
     if query_type == 'captions':
         data = r.json()
-        lst = []
-        for i in range(len(data)):
-            text = ''
-            if(data[i]['captions']):
-                for j in range(len(data[i]['captions'])):
-                    caption = data[i]['captions'][j]['text']
-                    regex = re.search('(\[[a-zA-Z])',caption)
-                    if(regex):
-                        continue
-                        # app.logger.debug('There is a sound or action')
-                    else: 
-                        text+=str(caption)
-                        text+=' '
-                results_json = {
-                    'query_id':data[i]['query_id'],
-                    'videoId':data[i]['videoId'],
-                    'text': text
-                }
-                lst.append(results_json)
-                
-            else:
-                app.logger.debug('There is no captions')
-        query_result = json.dumps(lst,sort_keys=True, indent=4, separators=(',', ': '))
+        chunkSize = 10
+        
+        n = 0
+        for batch in chunkList(data, chunkSize):
+            lst = []
+            for entry in batch:
+                text = ''
+                if 'captions' in entry:
+                    for caption in entry['captions']:
+                        regex = re.search('(\[[a-zA-Z])', caption['text'])
+                        if(regex):
+                            app.logger.debug('There is a sound or action')
+                            continue
+                        else: 
+                            text+= caption['text'] + ' '
+
+                    results_json = {
+                        'query_id':entry['query_id'],
+                        'videoId':entry['videoId'],
+                        'text': text
+                    }
+                    lst.append(results_json)                    
+                else:
+                    app.logger.debug('There is no captions found in db')
+            query_result = json.dumps(lst,sort_keys=True, indent=2, separators=(',', ': '))            
+            zf.writestr(filename + str(n) + '.json', query_result)
+            n += 1
+
+        zf.close()
+        in_memory.seek(0)
+        data = in_memory.read()
+
     else:
         query_result = r.json()
         query_result = json.dumps(query_result,sort_keys=True, indent=4, separators=(',', ': '))
 
-    query_name = re.sub('[^A-Za-z0-9]+', '_', query_name)
-    query_type = re.sub('[^A-Za-z0-9]+', '_', query_type)
-    filename = query_name + '_' + query_type
-    
-    # zip
-    # have to switch to "with opens()" forms because more safe closing file style
-    in_memory = BytesIO()
-    zf = zipfile.ZipFile(in_memory, mode="w", compression=zipfile.ZIP_DEFLATED)
-    zf.writestr(filename + '.json', query_result)
-    zf.close()
-    in_memory.seek(0)
-    data = in_memory.read()
+        zf.writestr(filename + '.json', query_result)
+        zf.close()
+        in_memory.seek(0)
+        data = in_memory.read()
 
     return Response(data,
             mimetype='application/zip',
