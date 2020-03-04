@@ -3,6 +3,7 @@ FROM python:3.5
 
 # Set the DEBIAN_FRONTEND environment variable only during the build
 ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update
 RUN apt-get install nano -y
 
@@ -17,7 +18,7 @@ WORKDIR /opt/pytheas_rest
 RUN pip install -r requirements.txt
 
 # prepare port
-EXPOSE 5053
+# EXPOSE $PORT
 
 # Define working volumes
 VOLUME ["/opt/pytheas_rest", "/opt/pytheas_rest/conf", "/opt/pytheas_rest/logs"]

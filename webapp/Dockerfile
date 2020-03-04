@@ -16,8 +16,8 @@ WORKDIR /opt/pytheas_webapp
 # install flask & co
 RUN pip install -r requirements.txt
 
-# prepare port
-EXPOSE 8080
+# # prepare port
+EXPOSE $PORT
 
 # Define working volumes
 VOLUME ["/opt/pytheas_webapp", "/opt/pytheas_webapp/data", "/opt/pytheas_webapp/conf","/opt/pytheas_webapp/logs" ]

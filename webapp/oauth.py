@@ -37,10 +37,8 @@ def login():
 
 @oauth.route('/grant', methods=['GET'])
 def grant():
-    with open('conf/conf.json') as conf_file:
-        conf_data = json.load(conf_file)
-        grant_host_url = conf_data['GRANT_HOST_URL']
-        redirect_uri_conf = conf_data['REDIRECT_URI']
+    grant_host_url = os.environ['GRANT_HOST_URL']
+    redirect_uri_conf = os.environ['REDIRECT_URI']
 
     grant_url = grant_host_url + "/auth/authorize" + \
                 "?response_type=code" + \
@@ -57,12 +55,10 @@ def grant():
 @oauth.route('/auth', methods=['GET'])
 def auth():
     code = str(request.args['code']) 
-    state = str(request.args['state']) 
-
-    with open('conf/conf.json') as conf_file:
-        conf_data = json.load(conf_file)
-        redirect_uri_conf = conf_data['REDIRECT_URI']
-        grant_host_url = conf_data['GRANT_HOST_URL']
+    state = str(request.args['state'])
+    
+    redirect_uri_conf = os.environ['REDIRECT_URI']
+    grant_host_url = os.environ['GRANT_HOST_URL']
 
     payload = {
       'code': code,

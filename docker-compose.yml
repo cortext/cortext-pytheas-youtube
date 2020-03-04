@@ -10,26 +10,27 @@ services:
     image: "mongo:3.4"
     restart: always
     command: mongod
-    network_mode: bridge
     volumes: 
      - './data/mongo:/data/db'
+    env_file:
+      - ./conf/conf.env
   
   # worker 
   worker:
     container_name: py_worker
     hostname: worker
+    restart: always
     ports:
      - "5003:5003"
     build: ./worker/
-    network_mode: bridge
     depends_on:
       - mongo
     volumes:
      - './worker:/opt/pytheas_worker'
      - './conf:/opt/pytheas_worker/conf'
      - './logs:/opt/pytheas_worker/logs'
-    links:
-     - mongo
+    env_file:
+      - ./conf/conf.env
 
   # restapp
   restapp:
@@ -38,17 +39,19 @@ services:
     ports:
      - "5053:5053"
     build: ./restapp/
-    network_mode: bridge
     restart: always
     depends_on:
       - mongo
     volumes:
-     - './restapp:/opt/pytheas_rest'
-     - './conf:/opt/pytheas_rest/conf'
-     - './logs:/opt/pytheas_rest/logs'
-    links:
-      - mongo
-      - worker
+      - './restapp:/opt/pytheas_rest'
+      - './conf:/opt/pytheas_rest/conf'
+      - './logs:/opt/pytheas_rest/logs'
+    env_file:
+      - ./conf/conf.env
+    # links:
+    #   - mongo
+    #   - worker
+
 
 # Front
   # mongo client
@@ -61,7 +64,6 @@ services:
     depends_on:
       - mongo
     
-
   # wepapp
   webapp:
     container_name: py_webapp
@@ -69,7 +71,6 @@ services:
     ports:
      - "5050:5050"
     build: ./webapp/
-    network_mode: bridge
     restart: always
     depends_on:
      - restapp
@@ -78,6 +79,5 @@ services:
      - './data:/opt/pytheas_webapp/data'
      - './logs:/opt/pytheas_webapp/logs'
      - './conf:/opt/pytheas_webapp/conf'
-    links:
-      - restapp
-      - mongo
+    env_file:
+      - ./conf/conf.env

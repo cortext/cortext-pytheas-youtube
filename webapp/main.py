@@ -31,33 +31,29 @@ from youtube import YouTube
 from youtube import Video
 from code_country import language_code
 
-def create_app():
-    with open('./conf/conf.json') as conf_file:
-        conf_data = json.load(conf_file)
-        app = Flask(__name__)
-        app.register_blueprint(oauth)
-        app.config['LOG_DIR'] = conf_data['LOG_DIR']
-        app.config['DATA_DIR'] = conf_data['DATA_DIR']
-
-        app.config['MONGO_PORT'] = str(conf_data['MONGO_PORT'])
-        app.config['REST_PORT'] = str(conf_data['REST_PORT'])
-        app.config['PORT'] = str(conf_data['PORT'])
-        
-        app.config['MONGO_HOST'] = conf_data['MONGO_HOST']
-        app.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
-        app.config['REST_HOST'] = conf_data['REST_HOST']
-        
-        app.config['MONGO_URI'] = "mongodb://"+app.config['MONGO_HOST']+":"+app.config['MONGO_PORT']+"/"+app.config['MONGO_DBNAME']
-        app.config['REST_URL'] = 'http://' + app.config['REST_HOST'] + ':' + app.config['REST_PORT'] + '/'
-        
-        app.config['api_key_test'] = conf_data['api_key_test']
-        app.config['api_key'] = conf_data['api_key']
-        app.config['oauth_status'] = conf_data['oauth_status']
-        app.config['debug_level'] = conf_data['debug_level']
-    return app
 
 try:
-    app = create_app()
+    app = Flask(__name__)
+    app.register_blueprint(oauth)
+    app.config['LOG_DIR'] = os.environ['LOG_DIR']
+    app.config['DATA_DIR'] = os.environ['DATA_DIR']
+
+    app.config['MONGO_PORT'] = str(os.environ['MONGO_PORT'])
+    app.config['REST_PORT'] = str(os.environ['REST_PORT'])
+    app.config['PORT'] = str(os.environ['PORT'])
+    
+    app.config['MONGO_HOST'] = os.environ['MONGO_HOST']
+    app.config['MONGO_DBNAME'] = os.environ['MONGO_DBNAME']
+    app.config['REST_HOST'] = os.environ['REST_HOST']
+    
+    app.config['MONGO_URI'] = "mongodb://"+app.config['MONGO_HOST']+":"+app.config['MONGO_PORT']+"/"+app.config['MONGO_DBNAME']
+    app.config['REST_URL'] = 'http://' + app.config['REST_HOST'] + ':' + app.config['REST_PORT'] + '/'
+    
+    app.config['api_key_test'] = os.environ['api_key_test']
+    app.config['api_key'] = os.environ['api_key']
+    app.config['oauth_status'] = os.environ['oauth_status']
+    app.config['debug_level'] = os.environ['debug_level']
+    
     mongo_curs = Database().init_mongo(app)
     data_dir = app.config['DATA_DIR']
     # fixed this parameter until real charge management (if necessary)
@@ -373,6 +369,7 @@ def channel():
         def send_request():
             requests.post("http://restapp:" + app.config['REST_PORT'] + "/" + user_id + "/query/" + query_id + "/add_video/channel", json=param)
         Thread(target=send_request).start()
+        
 
     return render_template('methods/download_process.html')
 
@@ -520,6 +517,7 @@ def documentation():
 def manage():
     if request.method == 'GET':
         # get all query fur user
+        app.logger.debug(app.config['REST_URL'])
         r = requests.get(app.config['REST_URL'] + session['profil']['id'] + '/queries/')
         result = r.json()
         list_queries = []

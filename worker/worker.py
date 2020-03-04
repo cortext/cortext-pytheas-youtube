@@ -1,3 +1,4 @@
+import os
 import datetime
 import datetime as dt
 import dateutil.parser as time
@@ -24,27 +25,21 @@ from bson import json_util
 from bson.objectid import ObjectId
 from database import Database
 
-# config app
-def create_worker():
-    with open('./conf/conf.json') as conf_file:
-        conf_data = json.load(conf_file)
-        worker = Flask(__name__)
-        worker.config['LOG_DIR'] = conf_data['LOG_DIR']
-        worker.config['WORKER_PORT'] = str(conf_data['WORKER_PORT'])
-        worker.config['MONGO_HOST'] = conf_data['MONGO_HOST']
-        worker.config['MONGO_DBNAME'] = conf_data['MONGO_DBNAME']
-        worker.config['MONGO_PORT'] = conf_data['MONGO_PORT']
-        worker.config['MONGO_URI'] = "mongodb://"+conf_data['MONGO_HOST']+":"+str(conf_data['MONGO_PORT'])+"/"+conf_data['MONGO_DBNAME']
-        worker.config['debug_level'] = conf_data['debug_level']
-    return worker
-
 #init app
 try:
-    worker = create_worker()
+    worker = Flask(__name__)
+    worker.config['LOG_DIR'] = os.environ['LOG_DIR']
+    worker.config['WORKER_PORT'] = str(os.environ['WORKER_PORT'])
+    worker.config['MONGO_HOST'] = os.environ['MONGO_HOST']
+    worker.config['MONGO_DBNAME'] = os.environ['MONGO_DBNAME']
+    worker.config['MONGO_PORT'] = os.environ['MONGO_PORT']
+    worker.config['MONGO_URI'] = "mongodb://"+os.environ['MONGO_HOST']+":"+str(os.environ['MONGO_PORT'])+"/"+os.environ['MONGO_DBNAME']
+    worker.config['debug_level'] = os.environ['debug_level']
     worker.logger.debug('app is initied')
+
     mongo_curs = Database().init_mongo(worker)
-    worker.logger.debug('mongo_curs is initiated')
-    #log_dir = worker.config['LOG_DIR']
+
+    
 except BaseException as error:
     worker.logger.debug('An exception occurred : {}'.format(error))
 
@@ -153,10 +148,11 @@ def add_video(user_id, query_id, query_type):
         
         # then for ID 
         if param['channel_id']:
-            channel_ids = re.sub("\r", "", param['channel_id'][0])
-            channel_ids = re.sub("\n", "", channel_ids)
-            channel_ids = channel_ids.split(',')
-            for channel_id in channel_ids:
+            # worker.logger.debug(channel_ids)
+            # channel_ids = re.sub("\r", "", param['channel_id'][0])
+            # channel_ids = re.sub("\n", "", channel_ids)
+            # channel_ids = channel_ids.split(',')
+            for channel_id in param['channel_id']:
                 api.get_channel_videos(mongo_curs, channel_id, param)
         
         # finally add metrics for query in json
@@ -484,7 +480,7 @@ def add_related(user_id, query_id):
 if __name__ == '__main__':
     # config logger (prefering builtin flask logger)
     formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
-    handler = RotatingFileHandler('./'+ worker.config['LOG_DIR'] +'/activity_worker.log', maxBytes=100000, backupCount=1)
+    handler = RotatingFileHandler('./'+ worker.config['LOG_DIR'] +'activity_worker.log', maxBytes=100000, backupCount=1)
     handler.setFormatter(formatter)
     #logger = logging.getLogger(__name__)
     worker.logger.setLevel(logging.DEBUG)

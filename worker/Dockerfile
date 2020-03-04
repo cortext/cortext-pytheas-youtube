@@ -16,8 +16,8 @@ WORKDIR /opt/pytheas_worker
 # install flask & co
 RUN pip install -r requirements.txt
 
-# prepare port
-EXPOSE 5003
+# # prepare port
+# EXPOSE 5003
 
 # Define working volumes
 VOLUME ["/opt/pytheas_worker", "/opt/pytheas_worker/conf", "/opt/pytheas_worker/logs"]
