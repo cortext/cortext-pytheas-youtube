@@ -428,7 +428,6 @@ class Comment():
                 { '$and':[{ 'query_id': query_id }, { 'videoId': video_id }] }
             )
         except:
-            self.create_captions(id_video)
             logger.error(
                 'error need more investigate'
             )
@@ -465,7 +464,7 @@ class RelatedVideos():
             current_relatedVideos = self.db.relatedVideos.find_one_or_404(
                 { '$and':[{ 'query_id': query_id }, { 'relatedToVideoId': video_id }] }
             )
-        except BaseException as e:
+        except Exception as e:
             self.create_relatedVideos(video_id)
             logger.warning(
                 str('relatedVideos not found or error. Log is here : ') + str(e) + str(type(e))
@@ -484,30 +483,77 @@ class Caption():
         self.db = mongo_curs.db
         self.query_id = query_id
 
-    def create_captions(self, video_id):
+
+    def count_captions(self):
         try:
-            transcript = YouTubeTranscriptApi().get_transcript(video_id)
+            count_captions = self.db.captions.find({'query_id': self.query_id}).count()
+            self.db.queries.update_one(
+               { 'query_id': self.query_id },
+               { '$set': {'count_captions': count_captions } } 
+            )
+        except Exception as e:
+            logger.debug(str('Error in counted captions : ') + str(e) + str(type(e)))
+        else:
+            logger.debug(str('Caption successfully counted for query : ') + str(self.query_id))
+        return
+
+
+    def create_if_not_exist(self, video_id):
+        if not self.find_caption(video_id):
+            self.create_caption(video_id)
+        return
+
+    def find_caption(self, video_id):
+        try:
+            current_caption = self.db.captions.find_one_or_404(
+                { '$and':[{ 'query_id': self.query_id }, { 'videoId': video_id }] }
+            )
+        except Exception as e:
+            logger.debug(str('Error in caption : ') + str(e) + str(type(e)))
+            return None
+        else:
+            logger.debug(str('Caption successfully found for : ') + str(video_id))
+            return caption_found
+    
+    def create_caption(self, video_id):
+        try:
+            transcript = YouTubeTranscriptApi().get_transcript(video_id, languages=['fr'])
             self.db.captions.insert_one({
                 'query_id' : self.query_id,
                 'videoId' : video_id,
                 'captions' : transcript,
                 # 'language' : x[0]
             })
-        except:
-            logger.debug(
-                str('Caption not found or error.')
-            ) 
-
-    def create_if_not_exist(self, video_id):
-        query_id = self.query_id
-        try:
-            current_caption = self.db.captions.find_one_or_404(
-                { '$and':[{ 'query_id': query_id }, { 'id.videoId': video_id }] }
-            )
-        except BaseException as e:
-            self.create_captions(video_id)
-            logger.warning(
-                str('Caption not found or error. Log is here : ') + str(e) + str(type(e))
-            ) 
+        except Exception as e:
+            logger.debug(str('Caption not found or error : ')+ str(e) + str(type(e)))
+        else:
+            logger.debug(str('Caption successfully inserted on :') + str(video_id))
         return
+
+    def update_caption(self, video_id, transcript):
+        try:
+            self.db.captions.update_one({
+                'query_id' : self.query_id,
+                'videoId' : video_id,
+                'captions' : transcript,
+                # 'language' : x[0]
+            })
+        except Exception as e:
+            logger.debug(str('Caption not updated : ') + str(e) + str(type(e)))
+        else:
+            logger.debug(str('Caption successfully updated on : ') + str(video_id))
+        return
+
+    def delete_caption(self, video_id):
+        try:
+            self.db.captions.delete_one({
+                'query_id' : self.query_id,
+                'videoId' : video_id
+            })
+        except Exception as e:
+            logger.debug(str('Caption not deleted : ') + str(e) + str(type(e)))
+        else:
+            logger.debug(str('Caption successfully deleted on : ') + str(video_id))
+        return 
+
 

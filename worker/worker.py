@@ -373,12 +373,8 @@ def add_captions(user_id, query_id):
         worker.logger.debug(id_video)
         current_captions.create_if_not_exist(id_video)
     
-    count_captions = int(mongo_curs.db.captions.find({'query_id': query_id}).count())
-    
-    mongo_curs.db.queries.update_one(
-        { 'query_id': query_id },
-        { '$set': {'count_captions': count_captions } } 
-    )
+    # counting captions
+    current_captions.count_captions()
     return 'POST REQUEST add_captions IS RECEIVED'
 
 
