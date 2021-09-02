@@ -2,30 +2,30 @@ import os
 import datetime
 import datetime as dt
 import dateutil.parser as time
-import requests
+# import requests
 import logging
-import json
+# import json
 import re
 from logging.handlers import RotatingFileHandler
 from flask import Flask, current_app
-from flask import jsonify
+# from flask import jsonify
 from flask import request
-from flask import session
+# from flask import session
 from flask import redirect
 from flask import url_for
 
 from youtube import YouTube
-from youtube import YouTubeTranscriptApi
+# from youtube import YouTubeTranscriptApi
 from youtube import Comment
 from youtube import Caption
-from youtube import Video
+# from youtube import Video
 from youtube import RelatedVideos
 
-from bson import json_util
-from bson.objectid import ObjectId
+# from bson import json_util
+# from bson.objectid import ObjectId
 from database import Database
 
-#init app
+# init app
 try:
     worker = Flask(__name__)
     worker.config['LOG_DIR'] = os.environ['LOG_DIR']
@@ -33,13 +33,14 @@ try:
     worker.config['MONGO_HOST'] = os.environ['MONGO_HOST']
     worker.config['MONGO_DBNAME'] = os.environ['MONGO_DBNAME']
     worker.config['MONGO_PORT'] = os.environ['MONGO_PORT']
-    worker.config['MONGO_URI'] = "mongodb://"+os.environ['MONGO_HOST']+":"+str(os.environ['MONGO_PORT'])+"/"+os.environ['MONGO_DBNAME']
+    worker.config['MONGO_URI'] = "mongodb://" + os.environ['MONGO_HOST'] + \
+        ":" + str(os.environ['MONGO_PORT']) + "/" + os.environ['MONGO_DBNAME']
     worker.config['debug_level'] = os.environ['debug_level']
     worker.logger.debug('app is initied')
 
     mongo_curs = Database().init_mongo(worker)
 
-    
+
 except BaseException as error:
     worker.logger.debug('An exception occurred : {}'.format(error))
 
@@ -51,30 +52,30 @@ def add_query(user_id, query_id):
         'author_id': user_id,
         'query_id': query_id,
         'part': param['part'],
-        'kind' : param['kind'],
-        'query' : param['query'],
-        'status' : 'working',
-        'date_query' : dt.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        'kind': param['kind'],
+        'query': param['query'],
+        'status': 'working',
+        'date_query': dt.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
     }
 
     if param['kind'] == 'channelItems':
-        common.update({ 
+        common.update({
             'channel_id': param['channel_id'],
             'maxResults': param['maxResults'],
-            'kind' : param['kind']
+            'kind': param['kind']
         })
         mongo_curs.db.queries.insert_one(
             common
         )
-    elif param['kind'] == 'searchResults': 
+    elif param['kind'] == 'searchResults':
         if 'mode' in param:
             common.update({
                 'q': param['query'],
                 'language': param['language'],
                 'maxResults': param['maxResults'],
                 'order': param['order'],
-                'mode' : 'advanced',
-                # 'ratio' : '', 
+                'mode': 'advanced',
+                # 'ratio' : '',
                 'publishedAfter': param['publishedAfter'],
                 'publishedBefore': param['publishedBefore']
             })
@@ -87,14 +88,14 @@ def add_query(user_id, query_id):
             })
         mongo_curs.db.queries.insert_one(
             common
-        ) 
+        )
     elif param['kind'] == 'videosList':
         common['name_query'] = param['query']
-        
+
         mongo_curs.db.queries.insert_one(
             common
         )
-    elif param['kind'] == 'playlistItems': 
+    elif param['kind'] == 'playlistItems':
         common.update({
             'playlist_id': param['playlist_id'],
             'maxResults': param['maxResults'],
@@ -111,42 +112,51 @@ def add_video(user_id, query_id, query_type):
     param = request.get_json()
     uid = param['query_id']
     query_id = param['query_id']
-    query = param['query'] 
+    query = param['query']
     api_key = param['api_key']
-    api = YouTube(api_key=api_key)  
+    api = YouTube(api_key=api_key)
     maxResults = 50
 
     ###############################
-    ## RESULTS FOR channel
+    # RESULTS FOR channel
     ###############################
+    # clean empty fields here...
+    param["channel_username"] = [x for x in param["channel_username"] if x]
+    param["channel_id"] = [x for x in param["channel_id"] if x]
+
     if query_type == 'channel':
         # looking for IDs & usernames
         # username need to retrieve ID first
-        if param['channel_username']: 
+        if param['channel_username']:
             # HAVE TO PUT ALL OF THIS IN A method FUNCT()
             ######################################
-            param_query = param.copy() 
-            rm_list = ['query','query_id','author_id','channel_id','channel_username']
-            [param_query.pop(key) for key in rm_list] 
+            param_query = param.copy()
+            rm_list = ['query', 'query_id', 'author_id',
+                       'channel_id', 'channel_username']
+            [param_query.pop(key) for key in rm_list]
 
             channel_usernames = re.sub("\r", "", param['channel_username'][0])
             channel_usernames = re.sub("\n", "", channel_usernames)
-            channel_usernames = channel_usernames.split(',')        
+            channel_usernames = channel_usernames.split(',')
             for channel_username in channel_usernames:
-                param_query['forUsername'] = channel_username 
+                param_query['forUsername'] = channel_username
 
                 find_channel_id = api.get_query(
                     'channels',
-                    **param_query 
+                    **param_query
                 )
+                worker.logger.debug("------> find_channel_id")
+                worker.logger.debug(find_channel_id)
+
                 ########################################################
-                if find_channel_id['items'] : 
-                    param['query'] = query  
+                if find_channel_id['items']:
+                    param['query'] = query
                     param['query_id'] = uid
-                    param['channel_id'] += str(', ' + find_channel_id['items'][0]['id']) 
-                    api.get_channel_videos(mongo_curs, find_channel_id['items'][0]['id'], param)
-        
-        # then for ID 
+                    param['channel_id'] += str(', ' + find_channel_id['items'][0]['id'])
+                    api.get_channel_videos(
+                        mongo_curs, find_channel_id['items'][0]['id'], param)
+
+        # then for ID
         if param['channel_id']:
             # worker.logger.debug(channel_ids)
             # channel_ids = re.sub("\r", "", param['channel_id'][0])
@@ -154,21 +164,22 @@ def add_video(user_id, query_id, query_type):
             # channel_ids = channel_ids.split(',')
             for channel_id in param['channel_id']:
                 api.get_channel_videos(mongo_curs, channel_id, param)
-        
+
         # finally add metrics for query in json
-        count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
+        count_videos = int(mongo_curs.db.videos.find(
+            {'query_id': query_id}).count())
         mongo_curs.db.queries.update_one(
-            { 'query_id': query_id },
-            { '$set': {'count_videos': count_videos,
-                       'status' : 'done'} }
+            {'query_id': query_id},
+            {'$set': {'count_videos': count_videos,
+                      'status': 'done'}}
         )
 
     ###############################
     ## RESULTS FOR searchResults ##
     ###############################
-    elif query_type == 'search': 
+    elif query_type == 'search':
         if 'mode' in param:
-            ## FOR NEXT DATE SEARCH INTEGRATION 
+            # FOR NEXT DATE SEARCH INTEGRATION
             # param_query = {
             #     'q': param['query'],
             #     'part': param['part'],
@@ -177,7 +188,7 @@ def add_video(user_id, query_id, query_type):
             #     'order': param['order'],
             #     'publishedAfter' : param['publishedAfter'],
             #     'publishedBefore' : param['publishedBefore'],
-            # } 
+            # }
 
             # date_results = api.get_query(
             #     'search',
@@ -198,26 +209,25 @@ def add_video(user_id, query_id, query_type):
             #         **param_query,
             #         pageToken = date_results['nextPageToken'],
             #     )
-                
+
             #     for each in date_results['items']:
             #         each.update({'query_id': query_id})
             #         each = YouTube.cleaning_each(each)
             #         mongo_curs.db.videos.insert_one(each)
-
 
             # Parse date time from form
             d_start = datetime.datetime.strptime(
                 param['publishedAfter'], "%Y-%m-%dT%H:%M:%SZ")
             d_end = datetime.datetime.strptime(
                 param['publishedBefore'], "%Y-%m-%dT%H:%M:%SZ")
-            
+
             r_after = time.parse(param['publishedAfter'])
-            r_before = time.parse(param['publishedBefore']) 
+            r_before = time.parse(param['publishedBefore'])
 
             delta = r_before - r_after
             delta_days = delta.days + 1
 
-            param_query = { 
+            param_query = {
                 'q': param['query'],
                 'part': param['part'],
                 'maxResults': param['maxResults'],
@@ -229,7 +239,7 @@ def add_video(user_id, query_id, query_type):
 
             # worker.logger.debug(param_query)
 
-            ## Then iterate for each days 
+            # Then iterate for each days
             for n in range(delta.days + 1):
                 # increment one day later to get a one-day period
                 r_after_next = r_after + dt.timedelta(days=1)
@@ -240,8 +250,8 @@ def add_video(user_id, query_id, query_type):
                 date_results = api.get_query(
                     'search',
                     **param_query,
-                    publishedAfter = st_point,
-                    publishedBefore = ed_point,
+                    publishedAfter=st_point,
+                    publishedBefore=ed_point,
                 )
 
                 # saving
@@ -255,38 +265,38 @@ def add_video(user_id, query_id, query_type):
                     date_results = api.get_query(
                         'search',
                         **param_query,
-                        publishedAfter = st_point,
-                        publishedBefore = ed_point,
-                        pageToken = date_results['nextPageToken']
+                        publishedAfter=st_point,
+                        publishedBefore=ed_point,
+                        pageToken=date_results['nextPageToken']
                     )
-                    if date_results['items']: 
+                    if date_results['items']:
                         for each in date_results['items']:
                             each.update({'query_id': query_id})
-                            each = YouTube.cleaning_each(each) 
+                            each = YouTube.cleaning_each(each)
                             mongo_curs.db.videos.insert_one(each)
                     else:
                         break
-                
+
                 # finally increment next after day
                 r_after += dt.timedelta(days=1)
 
         else:
             search_results = api.get_query(
                 'search',
-                q = param['query'],
-                part = param['part'],
-                relevanceLanguage = param['language'],
+                q=param['query'],
+                part=param['part'],
+                relevanceLanguage=param['language'],
                 maxResults=param['maxResults'],
-                order = param['order']
+                order=param['order']
             )
 
-            # insert videos 
+            # insert videos
             for each in search_results['items']:
                 each.update({'query_id': uid})
                 each = YouTube.cleaning_each(each)
                 mongo_curs.db.videos.insert_one(each)
 
-            ## Loop and save
+            # Loop and save
             while 'nextPageToken' in search_results:
                 search_results = api.get_query(
                     'search',
@@ -302,25 +312,27 @@ def add_video(user_id, query_id, query_type):
                     for each in search_results['items']:
                         each.update({'query_id': uid})
                         each = YouTube.cleaning_each(each)
-                        mongo_curs.db.videos.insert_one(each)    
+                        mongo_curs.db.videos.insert_one(each)
                 else:
                     # add metrics for query in json
-                    count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+                    count_videos = int(mongo_curs.db.videos.find(
+                        {'query_id': uid}).count())
                     mongo_curs.db.queries.update_one(
-                        { 'query_id': uid },
-                        { '$set': {'count_videos': count_videos } }
+                        {'query_id': uid},
+                        {'$set': {'count_videos': count_videos}}
                     )
-                    break            
+                    break
 
-        count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+        count_videos = int(mongo_curs.db.videos.find(
+            {'query_id': uid}).count())
         mongo_curs.db.queries.update_one(
-            { 'query_id': uid },
-            { '$set': {'count_videos': count_videos,
-                       'status' : 'done' } }
+            {'query_id': uid},
+            {'$set': {'count_videos': count_videos,
+                      'status': 'done'}}
         )
 
     ###############################
-    ## RESULTS FOR SET OF videosList
+    # RESULTS FOR SET OF videosList
     ###############################
     elif query_type == 'videos':
         param['videos'] = [x.strip() for x in param['videos'][0].split(',')]
@@ -333,54 +345,52 @@ def add_video(user_id, query_id, query_type):
 
             mongo_curs.db.videos.insert_one(video_result)
 
-        count_videos = int(mongo_curs.db.videos.find({'query_id': uid}).count())
+        count_videos = int(mongo_curs.db.videos.find(
+            {'query_id': uid}).count())
         mongo_curs.db.queries.update_one(
-            { 'query_id': uid },
-            { '$set': {'count_videos': count_videos,
-                       'status' : 'done' } } 
+            {'query_id': uid},
+            {'$set': {'count_videos': count_videos,
+                      'status': 'done'}}
         )
 
     ###############################
-    ## RESULTS FOR PLAYLISTITEM
+    # RESULTS FOR PLAYLISTITEM
     ###############################
     elif query_type == 'playlist':
-        for playlist_id in param['playlist_id']: 
-            param.update({'playlist_id' : playlist_id})
+        for playlist_id in param['playlist_id']:
+            param.update({'playlist_id': playlist_id})
             # call request
             playlist_results = api.get_playlist(mongo_curs, param)
-                
+
         # add metrics for query in json
-        count_videos = int(mongo_curs.db.videos.find({'query_id': query_id}).count())
+        count_videos = int(mongo_curs.db.videos.find(
+            {'query_id': query_id}).count())
         mongo_curs.db.queries.update_one(
-            { 'query_id': query_id },
-            { '$set': {'count_videos': count_videos,
-                       'status' : 'done' } }
-        )        
+            {'query_id': query_id},
+            {'$set': {'count_videos': count_videos,
+                      'status': 'done'}}
+        )
     return 'videos added'
 
 
-
-
-
 @worker.route('/<user_id>/add_captions/<query_id>', methods=['POST', 'GET'])
-def add_captions(user_id, query_id): 
+def add_captions(user_id, query_id):
     current_captions = Caption(mongo_curs, query_id)
     param = request.get_json()
     api = YouTube(api_key=param['api_key'])
-    
+
     list_vid = param['list_vid']
     for id_video in list_vid:
         worker.logger.debug(id_video)
         current_captions.create_if_not_exist(id_video)
-    
+
     # counting captions
     current_captions.count_captions()
     return 'POST REQUEST add_captions IS RECEIVED'
 
 
-
 @worker.route('/<user_id>/add_comments/<query_id>', methods=['POST', 'GET'])
-def add_comments(user_id, query_id): 
+def add_comments(user_id, query_id):
     current_comment_thread = Comment(mongo_curs, query_id)
     param = request.get_json()
     api = YouTube(api_key=param['api_key'])
@@ -392,27 +402,28 @@ def add_comments(user_id, query_id):
             videoId=id_video,
             part='id, replies, snippet')
         current_comment_thread.create_comment_for_each(commentThreads_result)
-        
-        ## Loop and save while there is content
+
+        # Loop and save while there is content
         while 'nextPageToken' in commentThreads_result:
             commentThreads_result = api.get_query(
                 'commentThreads',
                 videoId=id_video,
                 part='id, replies, snippet',
                 pageToken=commentThreads_result['nextPageToken'])
-            current_comment_thread.create_comment_for_each(commentThreads_result)
+            current_comment_thread.create_comment_for_each(
+                commentThreads_result)
 
-        count_comments = int(mongo_curs.db.comments.find({'query_id': query_id}).count())
+        count_comments = int(mongo_curs.db.comments.find(
+            {'query_id': query_id}).count())
         mongo_curs.db.queries.update_one(
-            { 'query_id': query_id },
-            { '$set': {'count_comments': count_comments } }
+            {'query_id': query_id},
+            {'$set': {'count_comments': count_comments}}
         )
     return 'POST REQUEST add_comments IS RECEIVED'
 
 
-
 @worker.route('/<user_id>/add_related/<query_id>', methods=['POST', 'GET'])
-def add_related(user_id, query_id): 
+def add_related(user_id, query_id):
     current_relatedVideos = RelatedVideos(mongo_curs, query_id)
     param = request.get_json()
     api = YouTube(api_key=param['api_key'])
@@ -422,7 +433,7 @@ def add_related(user_id, query_id):
         search_results = api.get_query(
             'search',
             part='id,snippet',
-            maxResults= 50,
+            maxResults=50,
             relatedToVideoId=id_video,
             type='video',
         )
@@ -437,7 +448,7 @@ def add_related(user_id, query_id):
             search_results = api.get_query(
                 'search',
                 part='id,snippet',
-                maxResults= 50,
+                maxResults=50,
                 relatedToVideoId=id_video,
                 type='video',
                 pageToken=search_results['nextPageToken']
@@ -449,23 +460,24 @@ def add_related(user_id, query_id):
                     each.update({'query_id': query_id})
                     each.update({'belongTo': id_video})
                     mongo_curs.db.relatedVideos.insert_one(each)
-        
+
     # add metrics for query in json
-    count_videos = int(mongo_curs.db.relatedVideos.find({'query_id': query_id}).count())
+    count_videos = int(mongo_curs.db.relatedVideos.find(
+        {'query_id': query_id}).count())
     mongo_curs.db.queries.update_one(
-        { 'query_id': query_id },
-        { '$set': {'count_relatedVideos': count_videos } }
+        {'query_id': query_id},
+        {'$set': {'count_relatedVideos': count_videos}}
     )
 
     # add part as indicator
-    part_value = mongo_curs.db.queries.find_one_or_404({ 'query_id': query_id})
+    part_value = mongo_curs.db.queries.find_one_or_404({'query_id': query_id})
     mongo_curs.db.queries.update_one(
         {
             'query_id': query_id
-        },{
+        }, {
             '$set': {
-                'part': part_value['part'] + ", relatedVideos",                             
-            } 
+                'part': part_value['part'] + ", relatedVideos",
+            }
         }, upsert=False
     )
 
@@ -475,10 +487,13 @@ def add_related(user_id, query_id):
 # run app
 if __name__ == '__main__':
     # config logger (prefering builtin flask logger)
-    formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
-    handler = RotatingFileHandler('./'+ worker.config['LOG_DIR'] +'activity_worker.log', maxBytes=100000, backupCount=1)
+    formatter = logging.Formatter(
+        '%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
+    handler = RotatingFileHandler(
+        './' + worker.config['LOG_DIR'] + 'activity_worker.log', maxBytes=100000, backupCount=1)
     handler.setFormatter(formatter)
-    #logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
     worker.logger.setLevel(logging.DEBUG)
     worker.logger.addHandler(handler)
-    worker.run(debug=worker.config['debug_level'], host='0.0.0.0', port=worker.config['WORKER_PORT'], threaded=True )
+    worker.run(debug=worker.config['debug_level'], host='0.0.0.0',
+               port=worker.config['WORKER_PORT'], threaded=True)

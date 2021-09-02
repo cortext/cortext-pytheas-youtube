@@ -35,32 +35,33 @@ from code_country import language_code
 try:
     app = Flask(__name__)
     app.register_blueprint(oauth)
+    print(os.environ)
+    print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
     app.config['LOG_DIR'] = os.environ['LOG_DIR']
     app.config['DATA_DIR'] = os.environ['DATA_DIR']
 
     app.config['MONGO_PORT'] = str(os.environ['MONGO_PORT'])
     app.config['REST_PORT'] = str(os.environ['REST_PORT'])
     app.config['PORT'] = str(os.environ['PORT'])
-    
+
     app.config['MONGO_HOST'] = os.environ['MONGO_HOST']
     app.config['MONGO_DBNAME'] = os.environ['MONGO_DBNAME']
     app.config['REST_HOST'] = os.environ['REST_HOST']
-    
-    app.config['MONGO_URI'] = "mongodb://"+app.config['MONGO_HOST']+":"+app.config['MONGO_PORT']+"/"+app.config['MONGO_DBNAME']
+    app.config['MONGO_URI'] = "mongodb://" + app.config['MONGO_HOST'] + ":" + app.config['MONGO_PORT'] + "/" + app.config['MONGO_DBNAME']
     app.config['REST_URL'] = 'http://' + app.config['REST_HOST'] + ':' + app.config['REST_PORT'] + '/'
-    
-    app.config['api_key_test'] = os.environ['api_key_test']
+
+    # app.config['api_key_test'] = os.environ['api_key_test']
     app.config['api_key'] = os.environ['api_key']
     app.config['oauth_status'] = os.environ['oauth_status']
     app.config['debug_level'] = os.environ['debug_level']
-    
+
     mongo_curs = Database().init_mongo(app)
     data_dir = app.config['DATA_DIR']
     # fixed this parameter until real charge management (if necessary)
     maxResults = 50
 except BaseException as error:
     # app.logger.debug('An exception occurred : {}'.format(error))
-    print("ERROR creating app...")
+    print(error, "-> ERROR creating app...")
 
 
 if app.config['debug_level'] == 'False':
@@ -80,7 +81,7 @@ def before_request():
         if 'access_token' not in session:
             # and here to bypass oauth for debug purpose
             if app.config['oauth_status'] == 'False':
-                app.config['MONGO_HOST'] = 'localhost'
+                app.config['MONGO_HOST'] = 'mongo'
                 session['profil'] = {
                       'roles': ['ROLE_ADMIN', 'ROLE_USER'],
                       'username': 'test_user',
@@ -762,7 +763,7 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(filename)s ## [%(asctime)s] %(levelname)s == "%(message)s"', datefmt='%Y/%b/%d %H:%M:%S')
     handler = RotatingFileHandler('./' + app.config['LOG_DIR'] + '/activity_webapp.log', maxBytes=100000, backupCount=1)
     handler.setFormatter(formatter)
-    #logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
 
     app.logger.setLevel(logging.DEBUG)
     app.logger.addHandler(handler)

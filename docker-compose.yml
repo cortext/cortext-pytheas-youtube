@@ -1,4 +1,9 @@
 version: '3'
+
+networks:
+  dev-network:
+    driver: bridge
+
 services:
 # Back
   # mongo server
@@ -14,6 +19,8 @@ services:
      - './data/mongo:/data/db'
     env_file:
       - ./conf/conf.env
+    networks:
+      - "dev-network"
   
   # worker 
   worker:
@@ -23,14 +30,16 @@ services:
     ports:
      - "5003:5003"
     build: ./worker/
-    depends_on:
-      - mongo
+    # depends_on:
+    #   - mongo
     volumes:
      - './worker:/opt/pytheas_worker'
      - './conf:/opt/pytheas_worker/conf'
      - './logs:/opt/pytheas_worker/logs'
     env_file:
       - ./conf/conf.env
+    networks:
+      - "dev-network"
 
   # restapp
   restapp:
@@ -40,40 +49,45 @@ services:
      - "5053:5053"
     build: ./restapp/
     restart: always
-    depends_on:
-      - mongo
+    # depends_on:
+    #   - mongo
     volumes:
       - './restapp:/opt/pytheas_rest'
       - './conf:/opt/pytheas_rest/conf'
       - './logs:/opt/pytheas_rest/logs'
     env_file:
       - ./conf/conf.env
+    networks:
+      - "dev-network"
     # links:
     #   - mongo
     #   - worker
 
 
-# Front
-  # mongo client
-  mongoclient:
-    container_name: py_mongoclient
-    ports:
-     - "3000:3000"
-    image: "mongoclient/mongoclient"
-    restart: always
-    depends_on:
-      - mongo
+# # Front
+#   # mongo client
+#   mongoclient:
+#     container_name: py_mongoclient
+#     ports:
+#      - "3000:3000"
+#     image: "mongoclient/mongoclient"
+#     restart: always
+#     depends_on:
+#       - mongo
+#       networks:
+#       - "dev-network"
+
     
   # wepapp
   webapp:
     container_name: py_webapp
     hostname: webapp
     ports:
-     - "5050:5050"
+     - "8080:8080"
     build: ./webapp/
     restart: always
-    depends_on:
-     - restapp
+    # depends_on:
+    #  - restapp
     volumes:
      - './webapp/:/opt/pytheas_webapp'
      - './data:/opt/pytheas_webapp/data'
@@ -81,3 +95,5 @@ services:
      - './conf:/opt/pytheas_webapp/conf'
     env_file:
       - ./conf/conf.env
+    networks:
+      - "dev-network"

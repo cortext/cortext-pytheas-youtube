@@ -2,8 +2,8 @@ Flask==1.0.2
 Flask_PyMongo==0.4.1
 requests>=2.20.0
 furl==0.5.7
-python-dateutil
-pprint
+# python-dateutil
+# pprint
 pandas
 # not implemented yet
 # Celery==3.1.23
