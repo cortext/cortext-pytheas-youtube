@@ -1,3 +1,6 @@
+***ARCHIVED***
+moved to https://gitlab.com/cortext/pytheas-youtube
+
 # Pytheas from CorTexT
 
 Pytheas is a webtool used to download youtube data from the latest api version
